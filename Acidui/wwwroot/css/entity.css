@@ -1,0 +1,32 @@
+﻿
+.entity-context label {
+    font-variant: small-caps;
+    text-transform: lowercase;
+    color: gray;
+    margin-bottom: 0;
+}
+
+.entity-context fieldset {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.entity-context .column {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+
+.entity-context .relation {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+.entity-context .column,
+.entity-context .relation {
+    margin-bottom: .5em;
+}
+
+.entity-context .null-value:before {
+    font-style: italic;
+    content: "null";
+}
