@@ -66,9 +66,15 @@ namespace Acidui
                 )
                 .ToArray();
 
-            var joinEqualities = forwardEnd.Columns.Zip(forwardEnd.OtherEnd.Columns, (s, p) => $"{alias}.{s.Name} = {aliasPrefix}.{p.Name}").ToArray();
+            var joinPredicates = forwardEnd.Columns.Zip(forwardEnd.OtherEnd.Columns, (s, p) => $"{alias}.{s.Name} = {aliasPrefix}.{p.Name}");
 
-            var whereLine = joinEqualities.Length > 0 ? $"{ispace}where {string.Join($"\n{ispace}  and ", joinEqualities)}\n" : "";
+            if ((extent.Values?.Length ?? 0) > (extent.Order?.Length ?? 0)) throw new Exception("More filter values than order columns");
+
+            var filterPredicates = extent.Values?.Select((v, i) => $"{alias}.{extent.Order[i]} = '{v}'") ?? Enumerable.Empty<String>();
+
+            var allPredicates = filterPredicates.Concat(joinPredicates).ToArray();
+
+            var whereLine = allPredicates.Length > 0 ? $"{ispace}where {string.Join($"\n{ispace}  and ", allPredicates)}\n" : "";
 
             var selectables = new List<String>();
 
@@ -148,6 +154,11 @@ namespace Acidui
 
         public Entity Query(SqlConnection connection, Extent extent)
         {
+            return QueryWithRootExtent(connection, new Extent { Children = new[] { extent } });
+        }
+
+        public Entity QueryWithRootExtent(SqlConnection connection, Extent extent)
+        {
             var xml = connection.QueryXml(GetCompleteSql(extent));
 
             var rootTable = cmRoot.GetTable("");
@@ -208,9 +219,9 @@ namespace Acidui
 
         public String[] Columns { get; set; }
 
-        public Dictionary<String, String> Filter { get; set; }
-
         public String[] Order { get; set; }
+
+        public String[] Values { get; set; }
 
         public Boolean IsDescending { get; set; }
 

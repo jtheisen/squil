@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,14 +22,23 @@ namespace Acidui.Controllers
             public String Html { get; set; }
         }
 
-        [HttpGet("{table}")]
-        public IActionResult Index(String table)
+        [HttpGet("{table}/{index}")]
+        public IActionResult Index(String table, String index = null)
         {
             var cmTable = context.CircularModel.GetTable(table);
 
             var extentFactory = new ExtentFactory();
 
-            var extent = extentFactory.CreateRootExtent(cmTable);
+            var extent = extentFactory.CreateExtent(cmTable);
+
+            if (index != null)
+            {
+                // We're using keys for the time being.
+                var cmKey = cmTable.DomesticKeys.Get(index, $"Could not find index '{index}' in table '{table}'");
+
+                extent.Order = cmKey.Columns.Select(c => c.Name).ToArray();
+                extent.Values = cmKey.Columns.Select(c => (String)Request.Query[c.Name]).TakeWhile(c => c != null).ToArray();
+            }
 
             using var connection = context.GetConnection();
 

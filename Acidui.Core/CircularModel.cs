@@ -82,6 +82,11 @@ namespace Acidui
             }
         }
 
+        //public void PopulatePseudoIndexesFromKeys()
+        //{
+
+        //}
+
         public void PopulateRoot()
         {
             var relations = tables.Values.Select(table => new Relation
@@ -163,14 +168,13 @@ namespace Acidui
 
         public Dictionary<String, CMDomesticKey> DomesticKeys { get; set; }
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
+
+        //public Dictionary<String, CMIndex> Indexes { get; set; }
     }
 
     public class ExtentFactory
     {
         HashSet<CMRelationEnd> path = new HashSet<CMRelationEnd>();
-
-        public Extent CreateRootExtent(CMTable table, Int32 depth = 2)
-            => new Extent { Children = new[] { CreateExtent(table, depth) } };
 
         public Extent CreateExtent(CMTable table, Int32 depth = 2)
         {
@@ -232,12 +236,26 @@ namespace Acidui
         public CMDomesticKey Principal { get; set; }
     }
 
+    //[DebuggerDisplay("{Name}")]
+    //public class CMIndex
+    //{
+    //    public String Name { get; set; }
+
+    //    public Boolean IsReal { get; set; }
+
+    //    public CMTable Table { get; set; }
+
+    //    public CMColumn[] Columns { get; set; }
+    //}
+
     [DebuggerDisplay("{OtherEnd.Name}->{Table.Name}")]
     public class CMRelationEnd
     {
         public String Name { get; set; }
 
         public CMTable Table { get; set; }
+
+        public CMKey Key { get; set; }
 
         public CMColumn[] Columns { get; set; }
 
