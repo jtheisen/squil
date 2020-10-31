@@ -10,38 +10,55 @@ namespace Acidui
     {
         static readonly XElement nullSpan = new XElement("span", new XAttribute("class", "null-value"));
 
+        public String RenderToHtml(Entity entity)
+        {
+            return Render(entity).ToString();
+        }
+
         public String RenderToHtml(RelatedEntities entities)
         {
             return Render(entities).ToString();
         }
 
-        XElement RenderLink(String tableName, Object content)
+        XElement RenderLink(Entity entity, RelatedEntities relatedEntities)
         {
-            return new XElement("a", new XAttribute("href", $"/query/{tableName}"), content);
+            var tableName = relatedEntities.TableName;
+
+            var end = relatedEntities.RelationEnd;
+
+            var key = end.Key;
+
+            var parentKey = end.OtherEnd.Key;
+
+            var keyPart = entity != null && end.Key != null
+                ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={entity.ColumnValues[pc.Order]}"))
+                : "";
+
+            return new XElement("a", new XAttribute("href", $"/query/{tableName}{keyPart.TrimEnd('?')}"), relatedEntities.RelationName);
         }
 
-        XElement Render(Extent extent, Entity entity)
+        XElement Render(Entity entity, String[] columns = null)
         {
             return new XElement("fieldset",
                 new XAttribute("class", "entity"),
-                extent.Columns.Select((c, i) => new XElement("div",
+                columns?.Select((c, i) => new XElement("div",
                     new XAttribute("class", "column"),
                     new XElement("label", c),
                     new XElement("div", entity.ColumnValues[i]?.Apply(t => new XText(t) as XObject) ?? nullSpan)
                 )),
                 new XElement("div",
-                    entity.Related.Select(r => Render(r))
+                    entity.Related.Select(r => Render(r, entity))
                 )
             );
         }
 
-        XElement Render(RelatedEntities entities)
+        XElement Render(RelatedEntities entities, Entity parentEntity = null)
         {
             return new XElement("div",
                 new XAttribute("class", "relation"),
-                new XElement("label", RenderLink(entities.TableName, entities.RelationName)),
+                new XElement("label", RenderLink(parentEntity, entities)),
                 new XElement("ol",
-                    entities.List.Select(entity => new XElement("li", Render(entities.Extent, entity)))
+                    entities.List.Select(entity => new XElement("li", Render(entity, entities.Extent.Columns)))
                 )
             );
         }

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-
-
 
 namespace Acidui.Controllers
 {
@@ -22,8 +19,8 @@ namespace Acidui.Controllers
             public String Html { get; set; }
         }
 
-        [HttpGet("{table}/{index}")]
-        public IActionResult Index(String table, String index = null)
+        [HttpGet("{table?}/{index?}")]
+        public IActionResult Index(String table = "", String index = null)
         {
             var cmTable = context.CircularModel.GetTable(table);
 
@@ -34,7 +31,7 @@ namespace Acidui.Controllers
             if (index != null)
             {
                 // We're using keys for the time being.
-                var cmKey = cmTable.DomesticKeys.Get(index, $"Could not find index '{index}' in table '{table}'");
+                var cmKey = cmTable.Keys.Get(index, $"Could not find index '{index}' in table '{table}'");
 
                 extent.Order = cmKey.Columns.Select(c => c.Name).ToArray();
                 extent.Values = cmKey.Columns.Select(c => (String)Request.Query[c.Name]).TakeWhile(c => c != null).ToArray();
@@ -46,7 +43,7 @@ namespace Acidui.Controllers
 
             var renderer = new HtmlRenderer();
 
-            var html = renderer.RenderToHtml(result.Related.Single());
+            var html = renderer.RenderToHtml(result);
 
             return View(new IndexVm { Html = html });
         }

@@ -154,12 +154,9 @@ namespace Acidui
 
         public Entity Query(SqlConnection connection, Extent extent)
         {
-            return QueryWithRootExtent(connection, new Extent { Children = new[] { extent } });
-        }
+            var sql = GetCompleteSql(extent);
 
-        public Entity QueryWithRootExtent(SqlConnection connection, Extent extent)
-        {
-            var xml = connection.QueryXml(GetCompleteSql(extent));
+            var xml = connection.QueryXml(sql);
 
             var rootTable = cmRoot.GetTable("");
 
@@ -217,6 +214,8 @@ namespace Acidui
 
         public String Alias { get; set; }
 
+        public String Index { get; set; }
+
         public String[] Columns { get; set; }
 
         public String[] Order { get; set; }
@@ -245,6 +244,9 @@ namespace Acidui
 
         public String TableName { get; set; }
 
+        public String KeyName { get; set; }
+
+        // redudant if we always demand a key
         public String[] ColumnNames { get; set; } = EmptyColumnArrays;
     }
 

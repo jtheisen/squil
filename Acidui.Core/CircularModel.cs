@@ -41,8 +41,9 @@ namespace Acidui
             {
                 var table = tables[GetNameForTable(isTable.TABLE_NAME)];
 
-                table.ColumnsInOrder = isTable.Columns.Select(c => new CMColumn
+                table.ColumnsInOrder = isTable.Columns.Select((c, i) => new CMColumn
                 {
+                    Order = i,
                     Name = c.COLUMN_NAME
                 }).ToArray();
 
@@ -61,6 +62,8 @@ namespace Acidui
 
                 foreach (var key in table.DomesticKeys)
                 {
+                    if (key.Value.IsPrimary) table.PrimaryKey = key.Value;
+
                     keys.Add(key.Key, key.Value);
                 }
             }
@@ -79,6 +82,11 @@ namespace Acidui
                         Columns = c.Columns.Select(cc => table.Columns[cc.COLUMN_NAME]).ToArray()
                     })
                     .ToDictionary(c => c.Name, c => c);
+
+                table.Keys = new Dictionary<String, CMKey>();
+
+                foreach (var p in table.DomesticKeys) table.Keys[p.Key] = p.Value;
+                foreach (var p in table.ForeignKeys) table.Keys[p.Key] = p.Value;
             }
         }
 
@@ -89,13 +97,34 @@ namespace Acidui
 
         public void PopulateRoot()
         {
+            // Any key of the dependent is suited here, because any key has the empty column sequence as a prefix.
+            // The one specified is the one the root table will lead to.
             var relations = tables.Values.Select(table => new Relation
             {
-                Principal = new RelationEnd { Name = table.Name, TableName = "" },
-                Dependent = new RelationEnd { Name = null, TableName = table.Name },
+                Principal = new RelationEnd { Name = table.Name, TableName = "", KeyName = "" },
+                Dependent = new RelationEnd { Name = null, TableName = table.Name, KeyName = "" },
             }).ToArray();
 
-            rootTable = tables[""] = new CMTable { Name = "" };
+            rootTable = tables[""] = new CMTable { Name = "", Root = this };
+
+            rootTable.DomesticKeys = new Dictionary<String, CMDomesticKey>();
+            rootTable.ForeignKeys = new Dictionary<String, CMForeignKey>();
+            rootTable.Keys = new Dictionary<String, CMKey>();
+
+            var rootKey = rootTable.DomesticKeys[""] = new CMDomesticKey() { Name = "", IsPrimary = true, Columns = new CMColumn[0], Table = rootTable };
+
+            rootTable.Keys[""] = rootKey;
+
+            foreach (var table in tables.Values)
+            {
+                table.ForeignKeys.Add("", new CMForeignKey
+                {
+                    Name = "",
+                    Principal = rootKey,
+                    Table = table,
+                    Columns = rootKey.Columns
+                });
+            }
 
             Populate(relations);
         }
@@ -107,18 +136,19 @@ namespace Acidui
                 var principalTable = GetTable(relation.Principal.TableName);
                 var dependentTable = GetTable(relation.Dependent.TableName);
 
-                static CMRelationEnd MakeRelationEnd(RelationEnd end, CMTable table) => new CMRelationEnd
+                static CMRelationEnd MakeRelationEnd(RelationEnd end, CMTable table, CMKey key) => new CMRelationEnd
                 {
                     Name = end.Name,
                     Table = table,
+                    Key = key,
                     Columns = end.ColumnNames.Select(n => table.ColumnsInOrder
                         .Where(c => c.Name == n)
                         .Single($"Could not resolve column '{n}' in table '{table.Name}'")
                     ).ToArray()
                 };
 
-                var principalEnd = MakeRelationEnd(relation.Principal, principalTable);
-                var dependentEnd = MakeRelationEnd(relation.Dependent, dependentTable);
+                var principalEnd = MakeRelationEnd(relation.Principal, principalTable, relation.Principal.KeyName?.Apply(n => principalTable.DomesticKeys[n]));
+                var dependentEnd = MakeRelationEnd(relation.Dependent, dependentTable, relation.Dependent.KeyName?.Apply(n => dependentTable.ForeignKeys[n]));
 
                 principalEnd.OtherEnd = dependentEnd;
                 dependentEnd.OtherEnd = principalEnd;
@@ -141,10 +171,13 @@ namespace Acidui
 
                 foreach (var fk in table.ForeignKeys.Values)
                 {
+                    // Those are cared for with better end names
+                    if (fk.Principal.Table == rootTable) continue;
+
                     yield return new Relation
                     {
-                        Dependent = new RelationEnd { TableName = table.Name, Name = fk.Name, ColumnNames = fk.Columns.Select(c => c.Name).ToArray() },
-                        Principal = new RelationEnd { TableName = fk.Principal.Table.Name, Name = fk.Name, ColumnNames = fk.Principal.Columns.Select(c => c.Name).ToArray() }
+                        Dependent = new RelationEnd { TableName = table.Name, Name = fk.Name, KeyName = fk.Name, ColumnNames = fk.Columns.Select(c => c.Name).ToArray() },
+                        Principal = new RelationEnd { TableName = fk.Principal.Table.Name, Name = fk.Name, KeyName = fk.Principal.Name, ColumnNames = fk.Principal.Columns.Select(c => c.Name).ToArray() }
                     };
                 }
             }
@@ -166,6 +199,9 @@ namespace Acidui
 
         public Dictionary<String, CMColumn> Columns = new Dictionary<String, CMColumn>();
 
+        public CMDomesticKey PrimaryKey { get; set; }
+
+        public Dictionary<String, CMKey> Keys { get; set; }
         public Dictionary<String, CMDomesticKey> DomesticKeys { get; set; }
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
 
@@ -178,11 +214,26 @@ namespace Acidui
 
         public Extent CreateExtent(CMTable table, Int32 depth = 2)
         {
-            var root = table.Root.RootTable;
+            if (table == table.Root.RootTable)
+            {
+                return CreateExtentForRoot(table);
+            }
+            else
+            {
+                var root = table.Root.RootTable;
 
-            var rootRelation = root.Relations[table.Name];
+                var rootRelation = root.Relations[table.Name];
 
-            return CreateExtent(rootRelation, depth);
+                return new Extent { Children = new[] { CreateExtent(rootRelation, depth) } };
+            }
+        }
+
+        public Extent CreateExtentForRoot(CMTable rootTable)
+        {
+            return new Extent
+            {
+                Children = CreateExtents(rootTable, 1).ToArray()
+            };
         }
 
         public IEnumerable<Extent> CreateExtents(CMTable table, Int32 depth)
@@ -257,6 +308,7 @@ namespace Acidui
 
         public CMKey Key { get; set; }
 
+        // redudant if we always demand a key
         public CMColumn[] Columns { get; set; }
 
         public CMRelationEnd OtherEnd { get; set; }
@@ -265,6 +317,8 @@ namespace Acidui
     [DebuggerDisplay("{Name}")]
     public class CMColumn
     {
+        public Int32 Order { get; set; }
+
         public String Name { get; set; }
     }
 }

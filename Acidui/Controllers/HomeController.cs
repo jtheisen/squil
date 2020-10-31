@@ -20,7 +20,7 @@ namespace Acidui.Controllers
 
         public IActionResult Index()
         {
-            return Redirect("/query/Regions/PK_Regions");
+            return Redirect("/query");
             //return View();
         }
 
