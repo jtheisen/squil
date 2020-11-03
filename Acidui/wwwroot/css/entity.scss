@@ -1,0 +1,69 @@
+﻿body {
+}
+
+.entity-context {
+    fieldset {
+        min-height: 10px;
+        border-left: solid .2em beige;
+        padding-left: .4em;
+    }
+
+    ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    label {
+        display: block; /* labels are inline by default */
+        font-variant: small-caps;
+        text-transform: lowercase;
+        color: #ccc;
+        margin-bottom: 0;
+    }
+
+    .column label {
+        height: 0;
+        position: relative;
+        top: -1em;
+        font-size: .8em;
+        font-weight: bold;
+    }
+
+    .column, .relation, fieldset {
+        margin-top: 1em;
+    }
+
+    .null-value:before {
+        font-style: italic;
+        content: "null";
+    }
+
+    .empty-value:before {
+        font-style: italic;
+        content: "empty";
+    }
+
+    .ws-value:before {
+        font-style: italic;
+        content: "whitespace";
+    }
+
+    /* data flavors */
+    ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
+        font-size: 2em;
+    }
+
+    ol[data-flavor=inline] {
+        > li {
+            display: inline-block;
+        }
+
+        > li * {
+            display: inline;
+        }
+
+        label {
+            display: none;
+        }
+    }
+}

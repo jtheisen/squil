@@ -53,6 +53,8 @@ namespace Acidui
                     table.ColumnsInOrder.Where(c => c.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
                     table.ColumnsInOrder.Where(c => c.Name.Contains("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? null;
 
+                table.PrimaryNameColumn?.Apply(c => c.IsPrimaryName = true);
+
                 table.DomesticKeys = isTable.Constraints
                     .Where(c => c.CONSTRAINT_TYPE == "PRIMARY KEY" || c.CONSTRAINT_TYPE == "UNIQUE KEY")
                     .Select(c => new CMDomesticKey
@@ -270,5 +272,7 @@ namespace Acidui
         public Int32 Order { get; set; }
 
         public String Name { get; set; }
+
+        public Boolean IsPrimaryName { get; set; }
     }
 }

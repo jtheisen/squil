@@ -1,0 +1,10 @@
+﻿[
+  {
+    "outputFile": "wwwroot/css/entity.css",
+    "inputFile": "wwwroot/css/entity.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/font-classes.css",
+    "inputFile": "wwwroot/css/font-classes.less"
+  }
+]

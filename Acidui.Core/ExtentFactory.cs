@@ -88,7 +88,7 @@ namespace Acidui
             switch (flavor.type)
             {
                 case ExtentFlavorType.Root:
-                    return (ExtentFlavorType.Block, 1);
+                    return (ExtentFlavorType.Page, 1);
                 case ExtentFlavorType.Page:
                     return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Block, flavor.depth - 1);
                 case ExtentFlavorType.Block:
