@@ -49,6 +49,10 @@ namespace Acidui
 
                 table.Columns = table.ColumnsInOrder.ToDictionary(c => c.Name, c => c);
 
+                table.PrimaryNameColumn =
+                    table.ColumnsInOrder.Where(c => c.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
+                    table.ColumnsInOrder.Where(c => c.Name.Contains("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? null;
+
                 table.DomesticKeys = isTable.Constraints
                     .Where(c => c.CONSTRAINT_TYPE == "PRIMARY KEY" || c.CONSTRAINT_TYPE == "UNIQUE KEY")
                     .Select(c => new CMDomesticKey
@@ -136,10 +140,11 @@ namespace Acidui
                 var principalTable = GetTable(relation.Principal.TableName);
                 var dependentTable = GetTable(relation.Dependent.TableName);
 
-                static CMRelationEnd MakeRelationEnd(RelationEnd end, CMTable table, CMKey key) => new CMRelationEnd
+                static CMRelationEnd MakeRelationEnd(Boolean isMany, RelationEnd end, CMTable table, CMKey key) => new CMRelationEnd
                 {
                     Name = end.Name,
                     Table = table,
+                    IsMany = isMany,
                     Key = key,
                     Columns = end.ColumnNames.Select(n => table.ColumnsInOrder
                         .Where(c => c.Name == n)
@@ -147,8 +152,8 @@ namespace Acidui
                     ).ToArray()
                 };
 
-                var principalEnd = MakeRelationEnd(relation.Principal, principalTable, relation.Principal.KeyName?.Apply(n => principalTable.DomesticKeys[n]));
-                var dependentEnd = MakeRelationEnd(relation.Dependent, dependentTable, relation.Dependent.KeyName?.Apply(n => dependentTable.ForeignKeys[n]));
+                var principalEnd = MakeRelationEnd(false, relation.Principal, principalTable, relation.Principal.KeyName?.Apply(n => principalTable.DomesticKeys[n]));
+                var dependentEnd = MakeRelationEnd(true, relation.Dependent, dependentTable, relation.Dependent.KeyName?.Apply(n => dependentTable.ForeignKeys[n]));
 
                 principalEnd.OtherEnd = dependentEnd;
                 dependentEnd.OtherEnd = principalEnd;
@@ -195,6 +200,8 @@ namespace Acidui
 
         public String Name { get; set; }
 
+        public CMColumn PrimaryNameColumn { get; set; }
+
         public CMColumn[] ColumnsInOrder { get; set; } = noColumns;
 
         public Dictionary<String, CMColumn> Columns = new Dictionary<String, CMColumn>();
@@ -206,65 +213,6 @@ namespace Acidui
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
 
         //public Dictionary<String, CMIndex> Indexes { get; set; }
-    }
-
-    public class ExtentFactory
-    {
-        HashSet<CMRelationEnd> path = new HashSet<CMRelationEnd>();
-
-        public Extent CreateExtent(CMTable table, Int32 depth = 2)
-        {
-            if (table == table.Root.RootTable)
-            {
-                return CreateExtentForRoot(table);
-            }
-            else
-            {
-                var root = table.Root.RootTable;
-
-                var rootRelation = root.Relations[table.Name];
-
-                return new Extent { Children = new[] { CreateExtent(rootRelation, depth) } };
-            }
-        }
-
-        public Extent CreateExtentForRoot(CMTable rootTable)
-        {
-            return new Extent
-            {
-                Children = CreateExtents(rootTable, 1).ToArray()
-            };
-        }
-
-        public IEnumerable<Extent> CreateExtents(CMTable table, Int32 depth)
-        {
-            return table.Relations.Values
-                .Where(e => !path.Contains(e))
-                .Select(e => CreateExtent(e, depth - 1))
-                .Where(e => e != null)
-                ;
-        }
-
-        public Extent CreateExtent(CMRelationEnd end, Int32 depth)
-        {
-            if (depth < 0) return null;
-
-            path.Add(end);
-
-            try
-            {
-                return new Extent
-                {
-                    RelationName = end.OtherEnd.Name,
-                    Children = CreateExtents(end.Table, depth - 1).ToArray(),
-                    Columns = end.Table.ColumnsInOrder.Select(c => c.Name).ToArray()
-                };
-            }
-            finally
-            {
-                path.Remove(end);
-            }
-        }
     }
 
     [DebuggerDisplay("{Name}")]
@@ -305,6 +253,8 @@ namespace Acidui
         public String Name { get; set; }
 
         public CMTable Table { get; set; }
+
+        public Boolean IsMany { get; set; }
 
         public CMKey Key { get; set; }
 

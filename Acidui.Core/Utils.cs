@@ -41,6 +41,11 @@ public static class Extensions
         }
     }
 
+    public static IEnumerable<T> ToSingleton<T>(this T value)
+    {
+        return new[] { value };
+    }
+
     [DebuggerHidden]
     public static T Single<T>(this IEnumerable<T> source, String error)
     {

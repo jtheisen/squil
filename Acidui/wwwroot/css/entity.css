@@ -1,4 +1,15 @@
 ﻿
+.entity-context fieldset {
+    min-height: 10px;
+    border-left: solid .2em beige;
+    padding-left: .4em;
+}
+
+.entity-context ol {
+    padding: 0;
+    list-style: none;
+}
+
 .entity-context label {
     font-variant: small-caps;
     text-transform: lowercase;
@@ -22,11 +33,20 @@
 }
 
 .entity-context .column,
-.entity-context .relation {
+.entity-context .relation,
+.entity-context fieldset {
     margin-bottom: .5em;
 }
 
 .entity-context .null-value:before {
     font-style: italic;
     content: "null";
+}
+
+.entity-context ol[data-flavor=inline] > li {
+    display: inline-block;
+}
+
+.entity-context ol[data-flavor=inline] label {
+    display: none;
 }

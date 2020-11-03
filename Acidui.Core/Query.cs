@@ -115,7 +115,7 @@ namespace Acidui
         {
             return new Entity
             {
-                ColumnValues = extent.Columns?.Select(c => element.Attribute(c)?.Value).ToArray(),
+                ColumnValues = extent.Columns?.ToDictionary(c => c, c => element.Attribute(c)?.Value),
                 Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(GetXmlRelationName(c.RelationName))))).ToArray()
             };
         }
@@ -185,7 +185,7 @@ namespace Acidui
 
     public class Entity
     {
-        public String[] ColumnValues { get; set; }
+        public Dictionary<String, String> ColumnValues { get; set; }
 
         public RelatedEntities[] Related { get; set; }
     }
@@ -210,6 +210,8 @@ namespace Acidui
     {
         public String RelationName { get; set; }
 
+        public ExtentFlavor Flavor { get; set; }
+
         public Int32? Limit { get; set; }
 
         public String Alias { get; set; }
@@ -229,6 +231,35 @@ namespace Acidui
         String DebuggerDisplay => RelationName ?? "<root>";
     }
 
+    [DebuggerDisplay("{ToString()}")]
+    public struct ExtentFlavor
+    {
+        public ExtentFlavorType type;
+
+        public Int32 depth;
+
+        public String GetCssValue() => type.ToString().ToLower();
+
+        public override string ToString()
+        {
+            return $"{type}-{depth}";
+        }
+
+        public static implicit operator ExtentFlavor((ExtentFlavorType type, Int32 depth) flavor)
+        {
+            return new ExtentFlavor { type = flavor.type, depth = flavor.depth };
+        }
+    }
+
+    public enum ExtentFlavorType
+    {
+        None,
+        Existence,
+        Inline,
+        Block,
+        Page,
+        Root
+    }
 
     public class Relation
     {

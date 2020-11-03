@@ -26,7 +26,7 @@ namespace Acidui.Controllers
 
             var extentFactory = new ExtentFactory();
 
-            var extent = extentFactory.CreateExtent(cmTable);
+            var extent = extentFactory.CreateRootExtent(cmTable);
 
             if (index != null)
             {
