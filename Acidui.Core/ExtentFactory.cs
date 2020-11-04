@@ -9,7 +9,7 @@ namespace Acidui
     {
         HashSet<CMRelationEnd> path = new HashSet<CMRelationEnd>();
 
-        public Extent CreateRootExtent(CMTable table)
+        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type)
         {
             if (table == table.Root.RootTable)
             {
@@ -23,8 +23,8 @@ namespace Acidui
 
                 return new Extent
                 {
-                    Flavor = (ExtentFlavorType.Root, 2),
-                    Children = new[] { CreateExtent(rootRelation, (ExtentFlavorType.Root, 2)) }
+                    Flavor = (type, 2),
+                    Children = new[] { CreateExtent(rootRelation, (type, 2)) }
                 };
             }
         }
@@ -87,8 +87,10 @@ namespace Acidui
         {
             switch (flavor.type)
             {
-                case ExtentFlavorType.Root:
+                case ExtentFlavorType.PageList:
                     return (ExtentFlavorType.Page, 1);
+                case ExtentFlavorType.BlockList:
+                    return (ExtentFlavorType.Block, 1);
                 case ExtentFlavorType.Page:
                     return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Block, flavor.depth - 1);
                 case ExtentFlavorType.Block:

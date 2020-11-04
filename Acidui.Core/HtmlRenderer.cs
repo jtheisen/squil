@@ -88,10 +88,9 @@ namespace Acidui
             switch (flavorType)
             {
                 case ExtentFlavorType.Inline:
-                    return column.IsPrimaryName;
                 case ExtentFlavorType.Block:
+                    return column.IsPrimaryName;
                 case ExtentFlavorType.Page:
-                case ExtentFlavorType.Root:
                     return true;
                 default:
                     return false;

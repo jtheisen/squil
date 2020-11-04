@@ -258,7 +258,8 @@ namespace Acidui
         Inline,
         Block,
         Page,
-        Root
+        BlockList, // list of blocks
+        PageList // list of pages
     }
 
     public class Relation

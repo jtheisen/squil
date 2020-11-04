@@ -26,16 +26,18 @@ namespace Acidui.Controllers
 
             var extentFactory = new ExtentFactory();
 
-            var extent = extentFactory.CreateRootExtent(cmTable);
+            // We're using keys for the time being.
+            var cmKey = index?.Apply(i => cmTable.Keys.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
-            if (index != null)
-            {
-                // We're using keys for the time being.
-                var cmKey = cmTable.Keys.Get(index, $"Could not find index '{index}' in table '{table}'");
+            var extentOrder = cmKey?.Columns.Select(c => c.Name).ToArray();
+            var extentValues = cmKey?.Columns.Select(c => (String)Request.Query[c.Name]).TakeWhile(c => c != null).ToArray();
 
-                extent.Order = cmKey.Columns.Select(c => c.Name).ToArray();
-                extent.Values = cmKey.Columns.Select(c => (String)Request.Query[c.Name]).TakeWhile(c => c != null).ToArray();
-            }
+            var isSingletonQuery = cmKey != null && extentValues?.Length == extentOrder?.Length;
+
+            var extent = extentFactory.CreateRootExtent(cmTable, isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList);
+
+            extent.Order = extentOrder;
+            extent.Values = extentValues;
 
             using var connection = context.GetConnection();
 
