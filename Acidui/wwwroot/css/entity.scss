@@ -11,6 +11,16 @@
     ol {
         padding: 0;
         list-style: none;
+
+
+    }
+
+    ol[data-flavor=block],
+    ol[data-flavor=page] {
+        > li:not(:first-child),
+        > li > fieldset > .column-group > .column {
+            margin-top: 1em;
+        }
     }
 
     label {
@@ -29,10 +39,6 @@
         font-weight: bold;
     }
 
-    .column, .relation, fieldset {
-        margin-top: 1em;
-    }
-
     .null-value:before {
         font-style: italic;
         content: "null";
@@ -47,7 +53,6 @@
         font-style: italic;
         content: "whitespace";
     }
-
     /* data flavors */
     ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
         font-size: 2.5em;

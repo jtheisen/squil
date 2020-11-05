@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Humanizer;
 
 namespace Acidui
 {
@@ -15,6 +16,7 @@ namespace Acidui
 
     public class HtmlRenderer
     {
+        static readonly Object genericHandleDiv = new XElement("div", "O");
         static readonly Object nullSpan = new XElement("span", new XAttribute("class", "null-value"));
         static readonly Object emptySpan = new XElement("span", new XAttribute("class", "empty-value"));
         static readonly Object wsSpan = new XElement("span", new XAttribute("class", "ws-value"));
@@ -41,7 +43,9 @@ namespace Acidui
                 ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={entity.ColumnValues[pc.Name]}"))
                 : "";
 
-            return new XElement("a", new XAttribute("href", $"/query/{tableName}{keyPart.TrimEnd('?')}"), relatedEntities.RelationName);
+            var content = end.IsMany ? tableName : tableName.Singularize();
+
+            return new XElement("a", new XAttribute("href", $"/query/{tableName}{keyPart.TrimEnd('?')}"), content);
         }
 
         Object RenderLink(Entity entity, CMKey key, Object content)
@@ -71,8 +75,11 @@ namespace Acidui
                 group c by cl
                 ;
 
+            var handle = table != null && table.PrimaryNameColumn == null ? RenderAsPrimaryLink(table, entity, genericHandleDiv) : null;
+
             return new XElement("fieldset",
                 new XAttribute("class", "entity"),
+                handle,
                 groups.Select(g => new XElement("div",
                     new XAttribute("class", "column-group"),
                     new XAttribute("data-group", g.Key.ToString().ToLower()),
@@ -108,13 +115,18 @@ namespace Acidui
             return value;
         }
 
+        Object RenderAsPrimaryLink(CMTable table, Entity entity, Object content)
+        {
+            return table.PrimaryKey?.Apply(k => RenderLink(entity, k, content)) ?? content;
+        }
+
         XElement RenderColumn(Entity entity, CMTable table, CMColumn column, ColumnRenderClass cls)
         {
             var content = RenderText(entity.ColumnValues[column.Name]);
 
-            if (cls == ColumnRenderClass.Name && table.PrimaryKey != null)
+            if (cls == ColumnRenderClass.Name)
             {
-                content = RenderLink(entity, table.PrimaryKey, content);
+                content = RenderAsPrimaryLink(table, entity, content);
             }
 
             return new XElement("div",

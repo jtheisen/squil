@@ -7,6 +7,11 @@
   .entity-context ol {
     padding: 0;
     list-style: none; }
+  .entity-context ol[data-flavor=block] > li:not(:first-child),
+  .entity-context ol[data-flavor=block] > li > fieldset > .column-group > .column,
+  .entity-context ol[data-flavor=page] > li:not(:first-child),
+  .entity-context ol[data-flavor=page] > li > fieldset > .column-group > .column {
+    margin-top: 1em; }
   .entity-context label {
     display: block;
     /* labels are inline by default */
@@ -20,8 +25,6 @@
     top: -1em;
     font-size: .8em;
     font-weight: bold; }
-  .entity-context .column, .entity-context .relation, .entity-context fieldset {
-    margin-top: 1em; }
   .entity-context .null-value:before {
     font-style: italic;
     content: "null"; }

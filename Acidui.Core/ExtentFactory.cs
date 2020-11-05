@@ -94,7 +94,7 @@ namespace Acidui
                 case ExtentFlavorType.Page:
                     return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Block, flavor.depth - 1);
                 case ExtentFlavorType.Block:
-                    return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Block, flavor.depth - 1);
+                    return (ExtentFlavorType.Inline, 1);
                 case ExtentFlavorType.Inline:
                     return end.IsMany ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline, flavor.depth - 1);
                 default:
