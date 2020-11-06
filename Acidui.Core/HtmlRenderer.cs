@@ -16,7 +16,7 @@ namespace Acidui
 
     public class HtmlRenderer
     {
-        static readonly Object genericHandleDiv = new XElement("div", "O");
+        static readonly Object genericHandleDiv = new XElement("div", "◯");
         static readonly Object nullSpan = new XElement("span", new XAttribute("class", "null-value"));
         static readonly Object emptySpan = new XElement("span", new XAttribute("class", "empty-value"));
         static readonly Object wsSpan = new XElement("span", new XAttribute("class", "ws-value"));
@@ -75,7 +75,7 @@ namespace Acidui
                 group c by cl
                 ;
 
-            var handle = table != null && table.PrimaryNameColumn == null ? RenderAsPrimaryLink(table, entity, genericHandleDiv) : null;
+            var handle = table != null ? RenderAsPrimaryLink(table, entity, new XElement("span", new XAttribute("class", "entity-handle"), table.Abbreviation)) : null;
 
             return new XElement("fieldset",
                 new XAttribute("class", "entity"),
@@ -145,10 +145,20 @@ namespace Acidui
 
         XElement Render(RelatedEntities entities, Entity parentEntity = null)
         {
+            Object labelContent = entities.RelationEnd.IsMany ? entities.TableName : entities.TableName.Singularize();
+
+            // In the singular case, a link is either superfluous (when there's is an entry)
+            // or misleading (when there isn't), so we better not render it as a link at all.
+            if(entities.RelationEnd.IsMany && parentEntity != null)
+            {
+                labelContent = RenderLink(parentEntity, entities);
+            }
+
             return new XElement("div",
                 new XAttribute("class", "relation"),
-                new XElement("label", RenderLink(parentEntity, entities)),
+                new XElement("label", labelContent),
                 new XElement("ol",
+                    entities.List.Length == 0 ? new XAttribute("class", "is-empty") : null,
                     entities.Extent.Flavor.Apply(f => new XAttribute("data-flavor", f.GetCssValue())),
                     entities.List.Select(entity => new XElement("li", Render(entity, entities)))
                 )

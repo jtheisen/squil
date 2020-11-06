@@ -9,7 +9,7 @@ namespace Acidui
     {
         HashSet<CMRelationEnd> path = new HashSet<CMRelationEnd>();
 
-        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type)
+        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, String[] order, String[] values)
         {
             if (table == table.Root.RootTable)
             {
@@ -24,7 +24,7 @@ namespace Acidui
                 return new Extent
                 {
                     Flavor = (type, 2),
-                    Children = new[] { CreateExtent(rootRelation, (type, 2)) }
+                    Children = new[] { CreateExtent(rootRelation, (type, 2), order, values) }
                 };
             }
         }
@@ -47,8 +47,14 @@ namespace Acidui
                 ;
         }
 
-        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor)
+        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, String[] order = null, String[] values = null)
         {
+            if (order != null)
+            {
+                foreach (var column in order) column.Assert(o => end.Table.Columns.ContainsKey(o),
+                    $"Extent order column '{column}' is not in table '{end.Table.Name}'");
+            }
+
             var flavor = ReduceFlavor(parentFlavor, end);
 
             if (flavor.type == ExtentFlavorType.None || flavor.depth < 0) return null;
@@ -62,7 +68,9 @@ namespace Acidui
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
                     Children = CreateSubExtents(end.Table, flavor).ToArray(),
-                    Columns = SelectColumns(flavor, end.Table).Select(c => c.Name).ToArray()
+                    Columns = SelectColumns(flavor, end.Table).Select(c => c.Name).ToArray(),
+                    Order = order,
+                    Values = values
                 };
             }
             finally
@@ -92,7 +100,7 @@ namespace Acidui
                 case ExtentFlavorType.BlockList:
                     return (ExtentFlavorType.Block, 1);
                 case ExtentFlavorType.Page:
-                    return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Block, flavor.depth - 1);
+                    return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Inline, 1);
                 case ExtentFlavorType.Block:
                     return (ExtentFlavorType.Inline, 1);
                 case ExtentFlavorType.Inline:

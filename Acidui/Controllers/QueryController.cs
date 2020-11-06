@@ -32,12 +32,13 @@ namespace Acidui.Controllers
             var extentOrder = cmKey?.Columns.Select(c => c.Name).ToArray();
             var extentValues = cmKey?.Columns.Select(c => (String)Request.Query[c.Name]).TakeWhile(c => c != null).ToArray();
 
-            var isSingletonQuery = cmKey != null && extentValues?.Length == extentOrder?.Length;
+            var isSingletonQuery = cmKey != null && cmKey is CMDomesticKey && extentValues?.Length == extentOrder?.Length;
 
-            var extent = extentFactory.CreateRootExtent(cmTable, isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList);
-
-            extent.Order = extentOrder;
-            extent.Values = extentValues;
+            var extent = extentFactory.CreateRootExtent(
+                cmTable,
+                isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
+                extentOrder, extentValues
+                );
 
             using var connection = context.GetConnection();
 

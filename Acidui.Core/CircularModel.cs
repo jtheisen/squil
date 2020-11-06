@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Humanizer;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -33,9 +34,14 @@ namespace Acidui
             tables = isRoot.Tables.Select(t => new CMTable
             {
                 Root = this,
-                Name = GetNameForTable(t.TABLE_NAME)
+                Name = GetNameForTable(t.TABLE_NAME),
             }
             ).ToDictionary(t => t.Name, t => t);
+
+            foreach (var a in new Abbreviator().Calculate(tables.Values.Select(t => t.Name).ToArray()))
+            {
+                tables[a.Key].Abbreviation = a.Value;
+            }
 
             foreach (var isTable in isRoot.Tables)
             {
@@ -201,6 +207,8 @@ namespace Acidui
         public Dictionary<String, CMRelationEnd> Relations { get; } = new Dictionary<String, CMRelationEnd>();
 
         public String Name { get; set; }
+
+        public String Abbreviation { get; set; } = "◯";
 
         public CMColumn PrimaryNameColumn { get; set; }
 
