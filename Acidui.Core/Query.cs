@@ -85,7 +85,7 @@ namespace Acidui
             }
             else
             {
-                selectables.AddRange(forwardEnd.Table.ColumnsInOrder.Select(c => c.Name));
+                selectables.AddRange(forwardEnd.Table.ColumnsInOrder.Select(c => c.Escaped));
             }
 
             selectables.AddRange(children);

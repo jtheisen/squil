@@ -25,7 +25,7 @@ namespace Acidui
     }
 
     [XmlType("t")]
-    [DebuggerDisplay("{TABLE_NAME}")]
+    [DebuggerDisplay("{Name}")]
     public class ISTable : IISObjectNamable
     {
         static ISColumn[] emptyColumns = new ISColumn[0];
@@ -66,7 +66,7 @@ namespace Acidui
     }
 
     [XmlType("cnstrnt")]
-    [DebuggerDisplay("{CONSTRAINT_NAME}")]
+    [DebuggerDisplay("{Name}")]
     public class ISConstraint : IISObjectNamable
     {
         [XmlAttribute("CONSTRAINT_CATALOG")]

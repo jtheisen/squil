@@ -9,7 +9,14 @@ namespace Acidui
     {
         HashSet<CMRelationEnd> path = new HashSet<CMRelationEnd>();
 
-        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, String[] order, String[] values)
+        private readonly int? totalLimit;
+
+        public ExtentFactory(Int32? totalLimit)
+        {
+            this.totalLimit = totalLimit;
+        }
+
+        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, String[] order = null, String[] values = null)
         {
             if (table == table.Root.RootTable)
             {
@@ -67,6 +74,7 @@ namespace Acidui
                 {
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
+                    Limit = totalLimit,
                     Children = CreateSubExtents(end.Table, flavor).ToArray(),
                     Columns = SelectColumns(flavor, end.Table).Select(c => c.Name).ToArray(),
                     Order = order,

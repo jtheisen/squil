@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Acidui
 {
-    [DebuggerDisplay("{LastPart}")]
+    [DebuggerDisplay("{Simple}")]
     public class ObjectName : IEquatable<ObjectName>
     {
         String[] parts;
@@ -46,7 +46,7 @@ namespace Acidui
 
             this.parts = parts;
 
-            escapedName = String.Join(".", from p in parts select $"[{p.Replace("]", "]]")}]");
+            escapedName = String.Join(".", from p in parts select p.EscapeNamePart());
 
             simpleName = String.Join(".", from p in parts select p.Replace(".", "_.._"));
         }
@@ -88,6 +88,11 @@ namespace Acidui
 
     public static class ObjectNames
     {
+        public static String EscapeNamePart(this String p)
+        {
+            return $"[{p.Replace("]", "]]")}]";
+        }
+
         public static ObjectName GetName(this IISObjectNamable namable)
         {
             return new ObjectName(new[] { namable.Catalog, namable.Schema, namable.Name }.Where(n => n != null).ToArray());

@@ -25,7 +25,7 @@ namespace Acidui.Controllers
         {
             var cmTable = table?.Apply(t => context.CircularModel.GetTable(parser.Parse(t))) ?? context.CircularModel.RootTable;
 
-            var extentFactory = new ExtentFactory();
+            var extentFactory = new ExtentFactory(2);
 
             // We're using keys for the time being.
             var cmKey = index?.Apply(i => cmTable.Keys.Get(i, $"Could not find index '{index}' in table '{table}'"));

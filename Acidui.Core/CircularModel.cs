@@ -185,8 +185,8 @@ namespace Acidui
 
                     yield return new Relation
                     {
-                        Dependent = new RelationEnd { TableName = table.Name, Name = fk.Name, KeyName = fk.Name, ColumnNames = fk.Columns.Select(c => c.Name).ToArray() },
-                        Principal = new RelationEnd { TableName = fk.Principal.Table.Name, Name = fk.Name, KeyName = fk.Principal.Name, ColumnNames = fk.Principal.Columns.Select(c => c.Name).ToArray() }
+                        Dependent = new RelationEnd { TableName = table.Name, Name = "D_" + fk.Name, KeyName = fk.Name, ColumnNames = fk.Columns.Select(c => c.Name).ToArray() },
+                        Principal = new RelationEnd { TableName = fk.Principal.Table.Name, Name = "P_" + fk.Name, KeyName = fk.Principal.Name, ColumnNames = fk.Principal.Columns.Select(c => c.Name).ToArray() }
                     };
                 }
             }
@@ -279,6 +279,8 @@ namespace Acidui
         public Int32 Order { get; set; }
 
         public String Name { get; set; }
+
+        public String Escaped => Name.EscapeNamePart();
 
         public Boolean IsPrimaryName { get; set; }
     }

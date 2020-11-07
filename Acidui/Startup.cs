@@ -25,7 +25,7 @@ namespace Acidui
         {
             services.AddControllersWithViews();
 
-            services.AddSingleton<AciduiContext>(sp => new AciduiContext());
+            services.AddSingleton<AciduiContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

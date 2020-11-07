@@ -1,4 +1,5 @@
 ﻿using Acidui.Core;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Data.SqlClient;
 
@@ -12,11 +13,9 @@ namespace Acidui
 
         public QueryGenerator QueryGenerator { get; set; }
 
-        public AciduiContext(String connectionString = null)
+        public AciduiContext(IConfiguration configuration)
         {
-            connectionString = "Server=.\\;integrated security=true;database=blipboard";
-
-            this.connectionString = connectionString;
+            this.connectionString = configuration["DatabaseConnection"];
 
             using var connection = GetConnection();
 
