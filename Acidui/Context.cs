@@ -12,8 +12,10 @@ namespace Acidui
 
         public QueryGenerator QueryGenerator { get; set; }
 
-        public AciduiContext(String connectionString = "server=.\\;database=blipboard;integrated security=true")
+        public AciduiContext(String connectionString = null)
         {
+            connectionString = "Server=.\\;integrated security=true;database=blipboard";
+
             this.connectionString = connectionString;
 
             using var connection = GetConnection();

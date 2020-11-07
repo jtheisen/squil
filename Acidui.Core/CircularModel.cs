@@ -1,4 +1,5 @@
-﻿using Humanizer;
+﻿using Acidui.Core;
+using Humanizer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,19 +13,18 @@ namespace Acidui
     {
         String name;
         CMTable rootTable;
-        Dictionary<String, CMTable> tables;
-        Dictionary<String, CMDomesticKey> keys;
+        Dictionary<ObjectName, CMTable> tables;
+        Dictionary<ObjectName, CMDomesticKey> keys;
 
-        public CMTable GetTable(String name) => tables[name];
+        public CMTable GetTable(ObjectName name) => tables[name];
 
-        String GetNameForTable(String isTableName)
-            => new String(isTableName);
+
 
         public CMRoot(String name)
         {
             this.name = name;
-            tables = new Dictionary<String, CMTable>();
-            keys = new Dictionary<String, CMDomesticKey>();
+            tables = new Dictionary<ObjectName, CMTable>();
+            keys = new Dictionary<ObjectName, CMDomesticKey>();
         }
 
         public CMTable RootTable => rootTable;
@@ -34,7 +34,7 @@ namespace Acidui
             tables = isRoot.Tables.Select(t => new CMTable
             {
                 Root = this,
-                Name = GetNameForTable(t.TABLE_NAME),
+                Name = t.GetName(),
             }
             ).ToDictionary(t => t.Name, t => t);
 
@@ -45,7 +45,7 @@ namespace Acidui
 
             foreach (var isTable in isRoot.Tables)
             {
-                var table = tables[GetNameForTable(isTable.TABLE_NAME)];
+                var table = tables[isTable.GetName()];
 
                 table.ColumnsInOrder = isTable.Columns.Select((c, i) => new CMColumn
                 {
@@ -65,7 +65,8 @@ namespace Acidui
                     .Where(c => c.CONSTRAINT_TYPE == "PRIMARY KEY" || c.CONSTRAINT_TYPE == "UNIQUE KEY")
                     .Select(c => new CMDomesticKey
                     {
-                        Name = c.CONSTRAINT_NAME,
+                        ObjectName = c.GetName(),
+                        Name = c.Name,
                         IsPrimary = c.CONSTRAINT_TYPE == "PRIMARY KEY",
                         Table = table,
                         Columns = c.Columns.Select(cc => table.Columns[cc.COLUMN_NAME]).ToArray()
@@ -76,20 +77,20 @@ namespace Acidui
                 {
                     if (key.Value.IsPrimary) table.PrimaryKey = key.Value;
 
-                    keys.Add(key.Key, key.Value);
+                    keys.Add(key.Value.ObjectName, key.Value);
                 }
             }
 
             foreach (var isTable in isRoot.Tables)
             {
-                var table = tables[GetNameForTable(isTable.TABLE_NAME)];
+                var table = tables[isTable.GetName()];
 
                 table.ForeignKeys = isTable.Constraints
                     .Where(c => c.CONSTRAINT_TYPE == "FOREIGN KEY")
                     .Select(c => new CMForeignKey
                     {
-                        Name = c.CONSTRAINT_NAME,
-                        Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").UNIQUE_CONSTRAINT_NAME],
+                        Name = c.Name,
+                        Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").GetName()],
                         Table = table,
                         Columns = c.Columns.Select(cc => table.Columns[cc.COLUMN_NAME]).ToArray()
                     })
@@ -102,22 +103,17 @@ namespace Acidui
             }
         }
 
-        //public void PopulatePseudoIndexesFromKeys()
-        //{
-
-        //}
-
         public void PopulateRoot()
         {
             // Any key of the dependent is suited here, because any key has the empty column sequence as a prefix.
             // The one specified is the one the root table will lead to.
             var relations = tables.Values.Select(table => new Relation
             {
-                Principal = new RelationEnd { Name = table.Name, TableName = "", KeyName = "" },
+                Principal = new RelationEnd { Name = table.Name.Simple, TableName = ObjectName.RootName, KeyName = "" },
                 Dependent = new RelationEnd { Name = null, TableName = table.Name, KeyName = "" },
             }).ToArray();
 
-            rootTable = tables[""] = new CMTable { Name = "", Root = this };
+            rootTable = tables[ObjectName.RootName] = new CMTable { Name = ObjectName.RootName, Root = this };
 
             rootTable.DomesticKeys = new Dictionary<String, CMDomesticKey>();
             rootTable.ForeignKeys = new Dictionary<String, CMForeignKey>();
@@ -156,7 +152,7 @@ namespace Acidui
                     Key = key,
                     Columns = end.ColumnNames.Select(n => table.ColumnsInOrder
                         .Where(c => c.Name == n)
-                        .Single($"Could not resolve column '{n}' in table '{table.Name}'")
+                        .Single($"Could not resolve column '{n}' in table '{table.Name.LastPart}'")
                     ).ToArray()
                 };
 
@@ -206,7 +202,7 @@ namespace Acidui
 
         public Dictionary<String, CMRelationEnd> Relations { get; } = new Dictionary<String, CMRelationEnd>();
 
-        public String Name { get; set; }
+        public ObjectName Name { get; set; }
 
         public String Abbreviation { get; set; } = "◯";
 
@@ -228,6 +224,9 @@ namespace Acidui
     [DebuggerDisplay("{Name}")]
     public class CMKey
     {
+        public ObjectName ObjectName { get; set; }
+
+        // The name is not unique accross schemas, but it is within a table (and a schema).
         public String Name { get; set; }
 
         public CMTable Table { get; set; }

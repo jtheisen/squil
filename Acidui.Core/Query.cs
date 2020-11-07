@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Acidui.Core;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -37,7 +38,7 @@ namespace Acidui
 
         public String GetCompleteSql(Extent rootExtent)
         {
-            var rootTable = cmRoot.GetTable("");
+            var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
             var sql = String.Join(",\n", rootExtent.Children.Select(e => GetSql(e, rootTable, CreateSymbolForIdentifier(e.RelationName), 1)));
 
@@ -55,10 +56,10 @@ namespace Acidui
             var ipspace = ispace + "  ";
 
             var forwardEnd = parentTable.Relations.GetValueOrDefault(extent.RelationName) ?? throw new Exception(
-                $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.ToString() ?? "<root>"}"
+                $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
             );
 
-            var alias = extent.Alias ?? (aliasPrefix + CreateSymbolForIdentifier(forwardEnd.Table.Name));
+            var alias = extent.Alias ?? (aliasPrefix + CreateSymbolForIdentifier(forwardEnd.Table.Name.LastPart));
 
             var children = (
                     from e in (extent.Children ?? Enumerable.Empty<Extent>())
@@ -104,7 +105,7 @@ namespace Acidui
 
             var sql = @$"(select{topClause}{comment}
 {selectsClause}
-{ipspace}from {forwardEnd.Table.Name} {alias}
+{ipspace}from {forwardEnd.Table.Name.Escaped} {alias}
 {whereLine}{orderLine}{ispace}for xml auto, type
 {ipspace}) {GetXmlRelationName(extent.RelationName)}";
 
@@ -123,7 +124,7 @@ namespace Acidui
         RelatedEntities MakeEntities(Extent extent, CMTable parentTable, XElement element)
         {
             var forwardEnd = parentTable.Relations.GetValueOrDefault(extent.RelationName) ?? throw new Exception(
-                $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.ToString() ?? "<root>"}"
+                $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
             );
 
             var table = forwardEnd.OtherEnd.Table;
@@ -158,7 +159,7 @@ namespace Acidui
 
             var xml = connection.QueryXml(sql);
 
-            var rootTable = cmRoot.GetTable("");
+            var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
             var entity = MakeEntity(extent, rootTable, xml);
 
@@ -192,9 +193,8 @@ namespace Acidui
 
     public class RelatedEntities
     {
-        // These are for debug serialization
         public String RelationName { get; set; }
-        public String TableName { get; set; }
+        public ObjectName TableName { get; set; }
 
         [JsonIgnore]
         public CMRelationEnd RelationEnd { get; set; }
@@ -274,7 +274,7 @@ namespace Acidui
 
         public String Name { get; set; }
 
-        public String TableName { get; set; }
+        public ObjectName TableName { get; set; }
 
         public String KeyName { get; set; }
 

@@ -43,9 +43,9 @@ namespace Acidui
                 ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={entity.ColumnValues[pc.Name]}"))
                 : "";
 
-            var content = end.IsMany ? tableName : tableName.Singularize();
+            var content = end.IsMany ? tableName.LastPart : tableName.LastPart.Singularize();
 
-            return new XElement("a", new XAttribute("href", $"/query/{tableName}{keyPart.TrimEnd('?')}"), content);
+            return new XElement("a", new XAttribute("href", $"/query/{tableName.Escaped}{keyPart.TrimEnd('?')}"), content);
         }
 
         Object RenderLink(Entity entity, CMKey key, Object content)
@@ -54,7 +54,7 @@ namespace Acidui
                 ? $"/{key.Name}?" + String.Join("&", key.Columns.Select(c => $"{c.Name}={entity.ColumnValues[c.Name]}"))
                 : "";
 
-            return new XElement("a", new XAttribute("href", $"/query/{key.Table.Name}{keyPart.TrimEnd('?')}"), content);
+            return new XElement("a", new XAttribute("href", $"/query/{key.Table.Name.Escaped}{keyPart.TrimEnd('?')}"), content);
         }
 
         XElement Render(Entity entity, RelatedEntities parentCollection = null)
@@ -145,7 +145,7 @@ namespace Acidui
 
         XElement Render(RelatedEntities entities, Entity parentEntity = null)
         {
-            Object labelContent = entities.RelationEnd.IsMany ? entities.TableName : entities.TableName.Singularize();
+            Object labelContent = entities.RelationEnd.IsMany ? entities.TableName.LastPart : entities.TableName.LastPart.Singularize();
 
             // In the singular case, a link is either superfluous (when there's is an entry)
             // or misleading (when there isn't), so we better not render it as a link at all.

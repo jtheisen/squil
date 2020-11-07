@@ -19,7 +19,7 @@ namespace Acidui
             {
                 var root = table.Root.RootTable;
 
-                var rootRelation = root.Relations[table.Name];
+                var rootRelation = root.Relations[table.Name.Simple];
 
                 return new Extent
                 {
@@ -52,7 +52,7 @@ namespace Acidui
             if (order != null)
             {
                 foreach (var column in order) column.Assert(o => end.Table.Columns.ContainsKey(o),
-                    $"Extent order column '{column}' is not in table '{end.Table.Name}'");
+                    $"Extent order column '{column}' is not in table '{end.Table.Name.LastPart}'");
             }
 
             var flavor = ReduceFlavor(parentFlavor, end);

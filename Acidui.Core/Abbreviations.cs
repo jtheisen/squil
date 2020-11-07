@@ -1,4 +1,5 @@
-﻿using Humanizer;
+﻿using Acidui.Core;
+using Humanizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,13 +8,13 @@ namespace Acidui
 {
 	public class Abbreviator
 	{
-		public Dictionary<String, String> Calculate(String[] names)
+		public Dictionary<ObjectName, String> Calculate(ObjectName[] names)
 		{
-			var result = new Dictionary<String, String>();
+			var result = new Dictionary<ObjectName, String>();
 
 			var existingAbbriviation = new HashSet<String>();
 
-			var suggestions = names.Select(Suggest).Select(e => e.GetEnumerator()).ToArray();
+			var suggestions = names.Select(n => n.LastPart).Select(Suggest).Select(e => e.GetEnumerator()).ToArray();
 
 			var namesDone = 0;
 

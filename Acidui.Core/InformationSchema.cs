@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Acidui.Core;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,16 +15,31 @@ namespace Acidui
         public ISTable[] Tables { get; set; }
     }
 
+    public interface IISObjectNamable
+    {
+        public String Catalog { get; set; }
+
+        public String Schema { get; set; }
+
+        public String Name { get; set; }
+    }
+
     [XmlType("t")]
     [DebuggerDisplay("{TABLE_NAME}")]
-    public class ISTable
+    public class ISTable : IISObjectNamable
     {
         static ISColumn[] emptyColumns = new ISColumn[0];
 
         static ISConstraint[] emptyConstraints = new ISConstraint[0];
 
-        [XmlAttribute]
-        public String TABLE_NAME { get; set; }
+        [XmlAttribute("TABLE_CATALOG")]
+        public String Catalog { get; set; }
+
+        [XmlAttribute("TABLE_SCHEMA")]
+        public String Schema { get; set; }
+
+        [XmlAttribute("TABLE_NAME")]
+        public String Name { get; set; }
 
         [XmlArray("columns")]
         public ISColumn[] Columns { get; set; } = emptyColumns;
@@ -51,10 +67,16 @@ namespace Acidui
 
     [XmlType("cnstrnt")]
     [DebuggerDisplay("{CONSTRAINT_NAME}")]
-    public class ISConstraint
+    public class ISConstraint : IISObjectNamable
     {
-        [XmlAttribute]
-        public String CONSTRAINT_NAME { get; set; }
+        [XmlAttribute("CONSTRAINT_CATALOG")]
+        public String Catalog { get; set; }
+
+        [XmlAttribute("CONSTRAINT_SCHEMA")]
+        public String Schema { get; set; }
+
+        [XmlAttribute("CONSTRAINT_NAME")]
+        public String Name { get; set; }
 
         [XmlAttribute]
         public String CONSTRAINT_TYPE { get; set; }
@@ -63,14 +85,20 @@ namespace Acidui
         public ISConstraintColumn[] Columns { get; set; }
 
         [XmlArray("referential")]
-        public ISReferentialConstraint[] Referentials { get; set; }
+        public ISConstraintReferetial[] Referentials { get; set; }
     }
 
     [XmlType("referential")]
-    public class ISReferentialConstraint
+    public class ISConstraintReferetial : IISObjectNamable
     {
-        [XmlAttribute]
-        public String UNIQUE_CONSTRAINT_NAME { get; set; }
+        [XmlAttribute("UNIQUE_CONSTRAINT_CATALOG")]
+        public String Catalog { get; set; }
+
+        [XmlAttribute("UNIQUE_CONSTRAINT_SCHEMA")]
+        public String Schema { get; set; }
+
+        [XmlAttribute("UNIQUE_CONSTRAINT_NAME")]
+        public String Name { get; set; }
     }
 
     [XmlType("cc")]
@@ -114,11 +142,14 @@ namespace Acidui
 
         public static ISTable MakeISTable(String name, IEnumerable<String> columns)
         {
-            return new ISTable
+            var table = new ISTable
             {
-                TABLE_NAME = GetTableName(name),
                 Columns = columns.Select(n => new ISColumn { COLUMN_NAME = n }).ToArray()
             };
+
+            table.SetName(GetTableName(name));
+
+            return table;
         }
 
         public static IEnumerable<Relation> GetRelations()
@@ -154,8 +185,8 @@ namespace Acidui
 
         private static IEnumerable<String> GetKeyColumns(String type) => BaseKeyNames.Select(n => $"{type}_{n}");
 
-        static String GetTableName(String name)
-            => $"INFORMATION_SCHEMA.{name}";
+        static ObjectName GetTableName(String name)
+            => new ObjectName("INFORMATION_SCHEMA", name);
 
         static String[] BaseKeyNames = new[] { "CATALOG", "SCHEMA", "NAME" };
     }

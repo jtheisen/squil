@@ -7,6 +7,7 @@ namespace Acidui.Controllers
     [Route("query")]
     public class QueryController : Controller
     {
+        private readonly ObjectNameParser parser = new ObjectNameParser();
         private readonly AciduiContext context;
 
         public QueryController(AciduiContext context)
@@ -20,9 +21,9 @@ namespace Acidui.Controllers
         }
 
         [HttpGet("{table?}/{index?}")]
-        public IActionResult Index(String table = "", String index = null)
+        public IActionResult Index(String table = null, String index = null)
         {
-            var cmTable = context.CircularModel.GetTable(table);
+            var cmTable = table?.Apply(t => context.CircularModel.GetTable(parser.Parse(t))) ?? context.CircularModel.RootTable;
 
             var extentFactory = new ExtentFactory();
 
