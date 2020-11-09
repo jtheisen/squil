@@ -30,6 +30,7 @@ namespace Acidui
 
                 return new Extent
                 {
+                    Limit = 2,
                     Flavor = (type, 2),
                     Children = new[] { CreateExtent(rootRelation, (type, 2), order, values) }
                 };
@@ -40,6 +41,7 @@ namespace Acidui
         {
             return new Extent
             {
+                Limit = 2,
                 Flavor = (ExtentFlavorType.Page, 1),
                 Children = CreateSubExtents(rootTable, (ExtentFlavorType.Page, 1)).ToArray()
             };
@@ -74,7 +76,7 @@ namespace Acidui
                 {
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
-                    Limit = totalLimit,
+                    Limit = GetLimitInFlavor(flavor.type),
                     Children = CreateSubExtents(end.Table, flavor).ToArray(),
                     Columns = SelectColumns(flavor, end.Table).Select(c => c.Name).ToArray(),
                     Order = order,
@@ -99,6 +101,26 @@ namespace Acidui
             }
         }
 
+        Int32 GetLimitInFlavor(ExtentFlavorType type)
+        {
+            switch (type)
+            {
+                case ExtentFlavorType.Existence:
+                    return 1;
+                case ExtentFlavorType.Inline:
+                    return 2;
+                case ExtentFlavorType.Block:
+                case ExtentFlavorType.Page:
+                    return 4;
+                case ExtentFlavorType.BlockList:
+                    return 10;
+                case ExtentFlavorType.PageList:
+                    return 2;
+                default:
+                    return totalLimit ?? 2;
+            }
+        }
+
         ExtentFlavor ReduceFlavor(ExtentFlavor flavor, CMRelationEnd end)
         {
             switch (flavor.type)
@@ -112,7 +134,7 @@ namespace Acidui
                 case ExtentFlavorType.Block:
                     return (ExtentFlavorType.Inline, 1);
                 case ExtentFlavorType.Inline:
-                    return end.IsMany ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline, flavor.depth - 1);
+                    return end.IsMany || !end.IsUniquelyTyped ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline, flavor.depth - 1);
                 default:
                     return (ExtentFlavorType.None, 0);
             }

@@ -9,8 +9,6 @@
 
     fieldset {
         min-height: 10px;
-        border-left: solid .2em beige;
-        padding-left: .4em;
     }
 
     ol {
@@ -19,13 +17,16 @@
 
         &.is-empty:before {
             font-style: italic;
-            content: "n/a";
+            content: "none";
         }
     }
 
     ol[data-flavor=block],
     ol[data-flavor=page] {
-        > li:not(:first-child),
+        > li:not(:first-child) {
+            margin-top: 2em;
+        }
+
         > li > fieldset > .column-group > .column {
             margin-top: 1em;
         }
@@ -38,6 +39,16 @@
         color: #ccc;
         font-weight: bold;
         margin-bottom: 0;
+    }
+
+    .relation > label {
+        span:not(:first-child) {
+            font-size: .75em;
+
+            &:before {
+                content: " in ";
+            }
+        }
     }
 
     .column label {
@@ -65,8 +76,12 @@
     .entity-handle {
         font-variant: small-caps;
         font-weight: 900;
+
+        &:after {
+            content: " ";
+        }
     }
-    /* data flavors */
+
     ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
         font-size: 2.5em;
         font-weight: 200;
@@ -81,8 +96,43 @@
             display: inline;
         }
 
-        label {
+        li {
+            &:not(:first-child):before {
+                content: ", ";
+            }
+        }
+
+        li.potentially-last {
+            * {
+                display: none !important;
+                /*width: 0;
+            height: 0;
+            overflow: hidden;*/
+            }
+
+            &:after {
+                content: "..."
+            }
+        }
+        /* No labels, and without labels unproper content is meaningless. */
+        label, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
             display: none;
         }
+
+        ol[data-flavor=inline] {
+            font-size: .75em;
+
+            > li:before {
+                content: " in "
+            }
+
+            > li:not(:last-child):after {
+                content: ", "
+            }
+        }
+    }
+
+    .relation.is-empty {
+        display: none;
     }
 }

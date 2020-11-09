@@ -210,6 +210,8 @@ namespace Acidui
     {
         public String RelationName { get; set; }
 
+        public String RelationPrettyName { get; set; }
+
         public ExtentFlavor Flavor { get; set; }
 
         public Int32? Limit { get; set; }

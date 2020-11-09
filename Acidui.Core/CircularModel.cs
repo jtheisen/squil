@@ -55,12 +55,6 @@ namespace Acidui
 
                 table.Columns = table.ColumnsInOrder.ToDictionary(c => c.Name, c => c);
 
-                table.PrimaryNameColumn =
-                    table.ColumnsInOrder.Where(c => c.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
-                    table.ColumnsInOrder.Where(c => c.Name.Contains("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? null;
-
-                table.PrimaryNameColumn?.Apply(c => c.IsPrimaryName = true);
-
                 table.DomesticKeys = isTable.Constraints
                     .Where(c => c.CONSTRAINT_TYPE == "PRIMARY KEY" || c.CONSTRAINT_TYPE == "UNIQUE KEY")
                     .Select(c => new CMDomesticKey
@@ -100,6 +94,20 @@ namespace Acidui
 
                 foreach (var p in table.DomesticKeys) table.Keys[p.Key] = p.Value;
                 foreach (var p in table.ForeignKeys) table.Keys[p.Key] = p.Value;
+
+                foreach (var key in table.Keys.Values)
+                {
+                    var hash = new HashSet<String>(key.Columns.Select(c => c.Name));
+
+                    foreach (var key2 in table.Keys.Values)
+                    {
+                        if (hash.IsSubsetOf(key2.Columns.Select(c => c.Name)))
+                        {
+                            key.SuperKeys.Add(key2.Name);
+                            key2.Subkeys.Add(key.Name);
+                        }
+                    }
+                }
             }
         }
 
@@ -144,11 +152,12 @@ namespace Acidui
                 var principalTable = GetTable(relation.Principal.TableName);
                 var dependentTable = GetTable(relation.Dependent.TableName);
 
-                static CMRelationEnd MakeRelationEnd(Boolean isMany, RelationEnd end, CMTable table, CMKey key) => new CMRelationEnd
+                static CMRelationEnd MakeRelationEnd(Boolean isPrincipalEnd, RelationEnd end, CMTable table, CMKey key) => new CMRelationEnd
                 {
                     Name = end.Name,
                     Table = table,
-                    IsMany = isMany,
+                    IsPrincipalEnd = isPrincipalEnd,
+                    IsMany = !key?.Subkeys.Any(sk => table.DomesticKeys.ContainsKey(sk)) ?? true,
                     Key = key,
                     Columns = end.ColumnNames.Select(n => table.ColumnsInOrder
                         .Where(c => c.Name == n)
@@ -156,8 +165,8 @@ namespace Acidui
                     ).ToArray()
                 };
 
-                var principalEnd = MakeRelationEnd(false, relation.Principal, principalTable, relation.Principal.KeyName?.Apply(n => principalTable.DomesticKeys[n]));
-                var dependentEnd = MakeRelationEnd(true, relation.Dependent, dependentTable, relation.Dependent.KeyName?.Apply(n => dependentTable.ForeignKeys[n]));
+                var principalEnd = MakeRelationEnd(true, relation.Principal, principalTable, relation.Principal.KeyName?.Apply(n => principalTable.DomesticKeys[n]));
+                var dependentEnd = MakeRelationEnd(false, relation.Dependent, dependentTable, relation.Dependent.KeyName?.Apply(n => dependentTable.ForeignKeys[n]));
 
                 principalEnd.OtherEnd = dependentEnd;
                 dependentEnd.OtherEnd = principalEnd;
@@ -191,6 +200,41 @@ namespace Acidui
                 }
             }
         }
+
+        public void Closeup()
+        {
+            CalculateUniquelyTypedRelations();
+            CalculatePrimaryNames();
+        }
+
+        void CalculateUniquelyTypedRelations()
+        {
+            foreach (var t in tables.Values)
+                t.RelationsForTable =
+                    t.Relations.Values.ToLookup(r => r.Table.Name);
+        }
+
+        void CalculatePrimaryNames()
+        {
+            foreach (var table in tables.Values)
+            {
+                var foreignNames = new HashSet<String>(
+                    from r in table.Relations.Values
+                    where r.IsMany
+                    from c in r.Columns
+                    select c.Name
+                );
+
+                var candidateColumns =
+                    table.ColumnsInOrder.Where(c => !foreignNames.Contains(c.Name)).ToArray();
+
+                table.PrimaryNameColumn =
+                    candidateColumns.Where(c => c.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
+                    candidateColumns.Where(c => c.Name.Contains("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? null;
+
+                table.PrimaryNameColumn?.Apply(c => c.IsPrimaryName = true);
+            }
+        }
     }
 
     [DebuggerDisplay("{Name}")]
@@ -201,6 +245,8 @@ namespace Acidui
         public CMRoot Root { get; set; }
 
         public Dictionary<String, CMRelationEnd> Relations { get; } = new Dictionary<String, CMRelationEnd>();
+
+        public ILookup<ObjectName, CMRelationEnd> RelationsForTable { get; set; }
 
         public ObjectName Name { get; set; }
 
@@ -232,6 +278,9 @@ namespace Acidui
         public CMTable Table { get; set; }
 
         public CMColumn[] Columns { get; set; }
+
+        public HashSet<String> SuperKeys { get; set; } = new HashSet<string>();
+        public HashSet<String> Subkeys { get; set; } = new HashSet<string>();
     }
 
     public class CMDomesticKey : CMKey
@@ -263,7 +312,13 @@ namespace Acidui
 
         public CMTable Table { get; set; }
 
+        public Boolean IsPrincipalEnd { get; set; }
+
         public Boolean IsMany { get; set; }
+
+        // When this relation is the only one on this side to connect
+        // the respective table on the other in the singular.
+        public Boolean IsUniquelyTyped => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => !r.IsMany).Count() == 1;
 
         public CMKey Key { get; set; }
 
@@ -283,5 +338,24 @@ namespace Acidui
         public String Escaped => Name.EscapeNamePart();
 
         public Boolean IsPrimaryName { get; set; }
+    }
+
+    public static class CMExtensions
+    {
+        public static CMForeignKey GetForeignKey(this CMRelationEnd end)
+        {
+            if (end.Key is CMForeignKey fk)
+            {
+                return fk;
+            }
+            else if (end.OtherEnd.Key is CMForeignKey ofk)
+            {
+                return ofk;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

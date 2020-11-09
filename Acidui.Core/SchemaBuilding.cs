@@ -63,6 +63,7 @@ namespace Acidui.Core
             cmRootForCs.Populate(cSchema);
             cmRootForCs.PopulateRoot();
             cmRootForCs.PopulateRelationsFromForeignKeys();
+            cmRootForCs.Closeup();
 
             return cmRootForCs;
         }

@@ -18,6 +18,8 @@ namespace Acidui
 
         public String Escaped => escapedName ?? throw new Exception("root object name can't be used in SQL");
 
+        public Boolean IsRootName => escapedName == null;
+
         public String Simple => simpleName;
 
         public String LastPart => parts[parts.Length - 1];
@@ -49,6 +51,24 @@ namespace Acidui
             escapedName = String.Join(".", from p in parts select p.EscapeNamePart());
 
             simpleName = String.Join(".", from p in parts select p.Replace(".", "_.._"));
+        }
+
+        public String[] GetDistinguishedParts(ObjectName baseName)
+        {
+            if (baseName.IsRootName) return parts;
+
+            if (IsRootName) throw new Exception("The root name has no parts");
+
+            if (baseName.parts.Length != parts.Length) throw new Exception("Can't form a relative name from names of different length");
+
+            var distinguishedParts = parts
+                .Zip(baseName.parts)
+                .SkipWhile(pair => pair.First == pair.Second)
+                .Select(pair => pair.First)
+                .ToArray()
+                ;
+
+            return distinguishedParts.Length == 0 ? new[] { LastPart } : distinguishedParts;
         }
 
         static readonly Char[] dangerousCharacters = "[]\"".ToArray();
