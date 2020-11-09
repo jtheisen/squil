@@ -48,6 +48,10 @@
             &:before {
                 content: " in ";
             }
+
+            &.relation-name-fk:before {
+                content: " through ";
+            }
         }
     }
 

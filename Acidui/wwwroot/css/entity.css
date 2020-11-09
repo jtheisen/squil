@@ -32,6 +32,8 @@
   font-size: .75em; }
   .entity-context .relation > label span:not(:first-child):before {
     content: " in "; }
+  .entity-context .relation > label span:not(:first-child).relation-name-fk:before {
+    content: " through "; }
 
 .entity-context .column label {
   height: 0;

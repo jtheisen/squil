@@ -58,7 +58,16 @@ namespace Acidui
 
             if (parts.Length == 0) throw new Exception("Unexpectedly no parts for relation name");
 
-            return parts.Reverse().Select((p, i) => new XElement("span", i == 0 && !end.IsMany ? p.Singularize() : p)).ToArray();
+            var result = parts.Reverse().Select((p, i) => new XElement("span", i == 0 && !end.IsMany ? p.Singularize() : p)).ToList();
+
+            var fk = end.GetForeignKey()?.Name;
+
+            if (!end.IsUniquelyTyped && !String.IsNullOrWhiteSpace(fk))
+            {
+                result.Add(new XElement("span", new XAttribute("class", "relation-name-fk"), fk));
+            }
+
+            return result;
         }
 
         Object RenderLink(Entity entity, CMKey key, Object content)
