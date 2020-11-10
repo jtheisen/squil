@@ -107,6 +107,7 @@ namespace Acidui
                     new XAttribute("data-group", g.Key.ToString().ToLower()),
                     g.Select(c => RenderColumn(entity, table, c, g.Key)))),
                 new XElement("div",
+                    new XAttribute("class", "column-group"),
                     entity.Related.Select(r => Render(r, entity))
                 )
             );
@@ -116,6 +117,7 @@ namespace Acidui
         {
             switch (flavorType)
             {
+                case ExtentFlavorType.Inline2:
                 case ExtentFlavorType.Inline:
                 case ExtentFlavorType.Block:
                     return column.IsPrimaryName;

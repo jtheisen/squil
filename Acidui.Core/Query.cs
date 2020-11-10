@@ -257,6 +257,7 @@ namespace Acidui
     {
         None,
         Existence,
+        Inline2,
         Inline,
         Block,
         Page,

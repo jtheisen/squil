@@ -27,7 +27,7 @@
             margin-top: 2em;
         }
 
-        > li > fieldset > .column-group > .column {
+        > li > fieldset > .column-group > * {
             margin-top: 1em;
         }
     }
@@ -101,8 +101,9 @@
         }
 
         li {
-            &:not(:first-child):before {
+            &:not(:last-child):after {
                 content: ", ";
+                margin-right: 4px;
             }
         }
 
@@ -123,7 +124,7 @@
             display: none;
         }
 
-        ol[data-flavor=inline] {
+        ol[data-flavor=inline2] {
             font-size: .75em;
 
             > li:before {

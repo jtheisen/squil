@@ -15,8 +15,8 @@
 .entity-context ol[data-flavor=page] > li:not(:first-child) {
   margin-top: 2em; }
 
-.entity-context ol[data-flavor=block] > li > fieldset > .column-group > .column,
-.entity-context ol[data-flavor=page] > li > fieldset > .column-group > .column {
+.entity-context ol[data-flavor=block] > li > fieldset > .column-group > *,
+.entity-context ol[data-flavor=page] > li > fieldset > .column-group > * {
   margin-top: 1em; }
 
 .entity-context label {
@@ -69,8 +69,9 @@
     display: inline-block; }
   .entity-context ol[data-flavor=inline] > li * {
     display: inline; }
-  .entity-context ol[data-flavor=inline] li:not(:first-child):before {
-    content: ", "; }
+  .entity-context ol[data-flavor=inline] li:not(:last-child):after {
+    content: ", ";
+    margin-right: 4px; }
   .entity-context ol[data-flavor=inline] li.potentially-last * {
     display: none !important;
     /*width: 0;
@@ -80,11 +81,11 @@
     content: "..."; }
   .entity-context ol[data-flavor=inline] label, .entity-context ol[data-flavor=inline] .relation.is-empty > ul, .entity-context ol[data-flavor=inline] .relation.is-empty > ol, .entity-context ol[data-flavor=inline] .null-value, .entity-context ol[data-flavor=inline] .empty-value, .entity-context ol[data-flavor=inline] .ws-value {
     display: none; }
-  .entity-context ol[data-flavor=inline] ol[data-flavor=inline] {
+  .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] {
     font-size: .75em; }
-    .entity-context ol[data-flavor=inline] ol[data-flavor=inline] > li:before {
+    .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li:before {
       content: " in "; }
-    .entity-context ol[data-flavor=inline] ol[data-flavor=inline] > li:not(:last-child):after {
+    .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li:not(:last-child):after {
       content: ", "; }
 
 .entity-context .relation.is-empty {

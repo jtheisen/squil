@@ -107,8 +107,10 @@ namespace Acidui
             {
                 case ExtentFlavorType.Existence:
                     return 1;
-                case ExtentFlavorType.Inline:
+                case ExtentFlavorType.Inline2:
                     return 2;
+                case ExtentFlavorType.Inline:
+                    return 4;
                 case ExtentFlavorType.Block:
                 case ExtentFlavorType.Page:
                     return 4;
@@ -134,7 +136,8 @@ namespace Acidui
                 case ExtentFlavorType.Block:
                     return (ExtentFlavorType.Inline, 1);
                 case ExtentFlavorType.Inline:
-                    return end.IsMany || !end.IsUniquelyTyped ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline, flavor.depth - 1);
+                    return end.IsMany || !end.IsUniquelyTyped ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline2, 1);
+                case ExtentFlavorType.Inline2:
                 default:
                     return (ExtentFlavorType.None, 0);
             }
