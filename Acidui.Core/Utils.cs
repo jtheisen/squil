@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
@@ -40,6 +42,11 @@ public static class Extensions
             return stringWriter.GetStringBuilder().ToString();
         }
     }
+
+    static Regex sqlServerNameEscapePattern = new Regex("_x([0-9A-Fa-f]{4})_");
+
+    public static String UnescapeSqlServerXmlName(this String name)
+        => sqlServerNameEscapePattern.Replace(name, m => Char.ConvertFromUtf32(Int32.Parse(m.Groups[1].Value, NumberStyles.HexNumber)));
 
     public static IEnumerable<T> ToSingleton<T>(this T value)
     {

@@ -16,13 +16,22 @@ namespace Acidui
         Data
     }
 
+    public delegate String LinkRenderer(String rest);
+
     public class HtmlRenderer
     {
         static readonly Object nullSpan = new XElement("span", new XAttribute("class", "null-value"));
         static readonly Object emptySpan = new XElement("span", new XAttribute("class", "empty-value"));
         static readonly Object wsSpan = new XElement("span", new XAttribute("class", "ws-value"));
 
+        private readonly LinkRenderer urlRenderer;
+
         Int32 debugId = 0;
+
+        public HtmlRenderer(LinkRenderer urlRenderer)
+        {
+            this.urlRenderer = urlRenderer;
+        }
 
         public String RenderToHtml(Entity entity)
         {
@@ -43,7 +52,9 @@ namespace Acidui
                 ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={entity.ColumnValues[pc.Name]}"))
                 : "";
 
-            return new XElement("a", new XAttribute("href", $"/query/{tableName.Escaped}{keyPart.TrimEnd('?')}"), content);
+            var url = urlRenderer($"{tableName.Escaped}{keyPart.TrimEnd('?')}");
+
+            return new XElement("a", new XAttribute("href", url), content);
         }
 
         Object RenderRelationName(RelatedEntities relatedEntities)
@@ -74,7 +85,9 @@ namespace Acidui
                 ? $"/{key.Name}?" + String.Join("&", key.Columns.Select(c => $"{c.Name}={entity.ColumnValues[c.Name]}"))
                 : "";
 
-            return new XElement("a", new XAttribute("href", $"/query/{key.Table.Name.Escaped}{keyPart.TrimEnd('?')}"), content);
+            var url = urlRenderer($"{key.Table.Name.Escaped}{keyPart.TrimEnd('?')}");
+
+            return new XElement("a", new XAttribute("href", url), content);
         }
 
         Object RenderEntityContent(Entity entity, RelatedEntities parentCollection = null)

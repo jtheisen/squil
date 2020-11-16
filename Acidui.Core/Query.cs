@@ -40,7 +40,7 @@ namespace Acidui
         {
             var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
-            var sql = String.Join(",\n", rootExtent.Children.Select(e => GetSql(e, rootTable, CreateSymbolForIdentifier(e.RelationName), 1)));
+            var sql = String.Join(",\n", rootExtent.Children.Select(e => GetSql(e, rootTable, "_" + CreateSymbolForIdentifier(e.RelationName), 1)));
 
             return $"select\n{sql}\n for xml path ('root')";
         }
@@ -114,9 +114,11 @@ namespace Acidui
 
         Entity MakeEntity(Extent extent, CMTable table, XElement element)
         {
+            var data = element.Attributes().ToDictionary(a => a.Name.LocalName.UnescapeSqlServerXmlName(), a => a.Value);
+
             return new Entity
             {
-                ColumnValues = extent.Columns?.ToDictionary(c => c, c => element.Attribute(c)?.Value),
+                ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)),
                 Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(GetXmlRelationName(c.RelationName))))).ToArray()
             };
         }
