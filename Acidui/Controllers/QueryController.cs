@@ -8,11 +8,11 @@ namespace Acidui.Controllers
     public class QueryController : Controller
     {
         private readonly ObjectNameParser parser = new ObjectNameParser();
-        private readonly AciduiContext context;
+        private readonly ConnectionManager connections;
 
-        public QueryController(AciduiContext context)
+        public QueryController(ConnectionManager connections)
         {
-            this.context = context;
+            this.connections = connections;
         }
 
         public class IndexVm
@@ -20,9 +20,11 @@ namespace Acidui.Controllers
             public String Html { get; set; }
         }
 
-        [HttpGet("{table?}/{index?}")]
-        public IActionResult Index(String table = null, String index = null)
+        [HttpGet("{connectionName}/{table?}/{index?}")]
+        public IActionResult Index(String connectionName, String table = null, String index = null)
         {
+            var context = connections.GetContext(connectionName);
+
             var cmTable = table?.Apply(t => context.CircularModel.GetTable(parser.Parse(t))) ?? context.CircularModel.RootTable;
 
             var extentFactory = new ExtentFactory(2);

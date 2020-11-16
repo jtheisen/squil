@@ -2,7 +2,27 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@inject ConnectionManager connections
+
+<div>
+    <h1 class="display-4">Welcome,</h1>
+
+    <p>Please select one of the connected data sources.</p>
+    
+    <div class="row mt-5">
+        @foreach (var c in connections.GetConnnections())
+        {
+        <div class="col-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5><a class="stretched-link" href="/query/@c.config.Name">@c.config.Name</a></h5>
+                    <p>
+                        @c.config.Description
+                    </p>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+
 </div>

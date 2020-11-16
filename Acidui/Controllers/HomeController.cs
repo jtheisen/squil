@@ -16,8 +16,8 @@ namespace Acidui.Controllers
 
         public IActionResult Index()
         {
-            return Redirect("/query");
-            //return View();
+            //return Redirect("/query/wvrly");
+            return View();
         }
 
         public IActionResult Privacy()

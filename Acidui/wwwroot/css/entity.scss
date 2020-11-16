@@ -1,24 +1,82 @@
 ﻿body {
 }
 
+
+
+/* unused, height issue */
+@mixin ellipsis
+{
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stretched-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: auto;
+    content: "";
+    background-color: rgba(0,0,0,0);
+}
+
 .entity-context {
+
+    label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &:hover {
+            overflow: visible;
+            color: black;
+            position: relative;
+            z-index: 1;
+
+            > * {
+                background: white;
+                outline: 2px solid white;
+                isolation: isolate;
+
+                :after {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+                    left: 0;
+                    z-index: 1;
+                    pointer-events: auto;
+                    content: "";
+                    background-color: rgba(0,0,0,0);
+                }
+            }
+        }
+    }
 
     a {
         color: inherit;
     }
 
-    fieldset {
-        min-height: 10px;
+    legend {
+        display: none;
     }
 
-    ol {
+    fieldset {
+        display: block;
+        position: relative;
+
+        > legend {
+            font-size: inherit;
+        }
+    }
+
+    .entity-relation > ol {
         padding: 0;
         list-style: none;
-
-        &.is-empty:before {
-            font-style: italic;
-            content: "none";
-        }
     }
 
     ol[data-flavor=block],
@@ -26,10 +84,38 @@
         > li:not(:first-child) {
             margin-top: 2em;
         }
+    }
 
-        > li > fieldset > .column-group > * {
+    ol[data-flavor=page] {
+        > li > fieldset {
             margin-top: 1em;
+
+            > legend {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: -10px;
+                text-align: right;
+                width: 5em;
+                margin-left: -5em;
+            }
+
+            &[data-layout=grid3] {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                column-gap: 10px;
+            }
         }
+
+        > li > fieldset > .entity-relation.is-empty > ol:before {
+            font-style: italic;
+            content: "none";
+        }
+    }
+
+    .entity-relation.is-empty > ol[data-flavor=page]:before {
+        font-style: italic;
+        content: "no results";
     }
 
     label {
@@ -41,7 +127,7 @@
         margin-bottom: 0;
     }
 
-    .relation > label {
+    .entity-relation > label {
         span:not(:first-child) {
             font-size: .75em;
 
@@ -49,17 +135,15 @@
                 content: " in ";
             }
 
-            &.relation-name-fk:before {
+            &.entity-relation-name-fk:before {
                 content: " through ";
             }
         }
     }
 
-    .column label {
-        height: 0;
-        position: relative;
-        top: -1em;
+    .entity-column > label {
         font-size: .8em;
+        margin-bottom: -.5em;
     }
 
     .null-value:before {
@@ -77,7 +161,7 @@
         content: "whitespace";
     }
 
-    .entity-handle {
+    .entity-thumb {
         font-variant: small-caps;
         font-weight: 900;
 
@@ -89,6 +173,17 @@
     ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
         font-size: 2.5em;
         font-weight: 200;
+    }
+
+    ol[data-flavor=page] {
+        > li.potentially-last:after {
+            display: block;
+            margin-top: .4em;
+            margin-left: -.12em;
+            font-size: 5em;
+            color: #ccc;
+            content: "⋮"
+        }
     }
 
     ol[data-flavor=inline] {
@@ -119,8 +214,8 @@
                 content: "..."
             }
         }
-        /* No labels, and without labels unproper content is meaningless. */
-        label, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
+        /* No labels and legends, and without labels unproper content is meaningless. */
+        label, legend, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
             display: none;
         }
 

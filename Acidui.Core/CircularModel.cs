@@ -318,7 +318,9 @@ namespace Acidui
 
         // When this relation is the only one on this side to connect
         // the respective table on the other in the singular.
-        public Boolean IsUniquelyTyped => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => !r.IsMany).Count() == 1;
+        public Boolean IsUniquelyTyped => AmbiguouslyTypedWitness == null;
+
+        public CMRelationEnd AmbiguouslyTypedWitness => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => !r.IsMany && r != this).FirstOrDefault();
 
         public CMKey Key { get; set; }
 

@@ -11,6 +11,13 @@ using Microsoft.Extensions.Hosting;
 
 namespace Acidui
 {
+    public class ConnectionConfiguration
+    {
+        public String Name { get; set; }
+        public String ConnectionString { get; set; }
+        public String Description { get; set; }
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -25,7 +32,9 @@ namespace Acidui
         {
             services.AddControllersWithViews();
 
-            services.AddSingleton<AciduiContext>();
+            services.Configure<List<ConnectionConfiguration>>(Configuration.GetSection("Connections"));
+
+            services.AddSingleton<ConnectionManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

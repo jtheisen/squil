@@ -13,9 +13,9 @@ namespace Acidui
 
         public QueryGenerator QueryGenerator { get; set; }
 
-        public AciduiContext(IConfiguration configuration)
+        public AciduiContext(String connectionString)
         {
-            this.connectionString = configuration["DatabaseConnection"];
+            this.connectionString = connectionString;
 
             using var connection = GetConnection();
 

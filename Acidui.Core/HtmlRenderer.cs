@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Text;
 using System.Xml.Linq;
+using System.Xml.Xsl;
 using Humanizer;
 
 namespace Acidui
@@ -11,8 +12,8 @@ namespace Acidui
     public enum ColumnRenderClass
     {
         None,
-        Name,
-        String
+        PrimaryName,
+        Data
     }
 
     public class HtmlRenderer
@@ -25,12 +26,9 @@ namespace Acidui
 
         public String RenderToHtml(Entity entity)
         {
-            return Render(entity).ToString(SaveOptions.DisableFormatting);
-        }
-
-        public String RenderToHtml(RelatedEntities entities)
-        {
-            return Render(entities).ToString();
+            return new XElement("div",
+                RenderEntityContent(entity)
+            ).ToString(SaveOptions.DisableFormatting);
         }
 
         XElement RenderLink(Entity entity, RelatedEntities relatedEntities, Object content)
@@ -64,7 +62,7 @@ namespace Acidui
 
             if (!end.IsUniquelyTyped && !String.IsNullOrWhiteSpace(fk))
             {
-                result.Add(new XElement("span", new XAttribute("class", "relation-name-fk"), fk));
+                result.Add(new XElement("span", new XAttribute("class", "entity-relation-name-fk"), fk));
             }
 
             return result;
@@ -79,7 +77,23 @@ namespace Acidui
             return new XElement("a", new XAttribute("href", $"/query/{key.Table.Name.Escaped}{keyPart.TrimEnd('?')}"), content);
         }
 
-        XElement Render(Entity entity, RelatedEntities parentCollection = null)
+        Object RenderEntityContent(Entity entity, RelatedEntities parentCollection = null)
+        {
+            var fieldsets = ProduceFieldsets(entity, parentCollection);
+
+            return new[] {
+                parentCollection?.RelationEnd.Table.Apply(t => RenderEntityHeader(t, entity)),
+                fieldsets.Select(fs => new XElement("fieldset",
+                    new XAttribute("data-name", fs.legend.ToString()),
+                    fs.layout?.Apply(l => new XAttribute("data-layout", l)),
+                    fs.items.FirstOrDefault() == null ? new XAttribute("class", "fieldset-empty") : null,
+                    new XElement("legend", fs.legend),
+                    fs.items.ToArray()
+                ))
+            };
+        }
+
+        IEnumerable<Fieldset> ProduceFieldsets(Entity entity, RelatedEntities parentCollection = null)
         {
             var table = parentCollection?.RelationEnd.Table;
 
@@ -94,35 +108,57 @@ namespace Acidui
                 from cl in columnClasses
                 from c in columns[cl]
                 where IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page)
-                group c by cl
+                group c by cl into g
+                select new Fieldset { legend = g.Key.ToString().ToLower(), layout = "grid3", items = g.Select(c => RenderColumn(entity, table, c, g.Key)) }
                 ;
 
-            var handle = table != null ? RenderAsPrimaryLink(table, entity, new XElement("span", new XAttribute("class", "entity-handle"), table.Abbreviation)) : null;
+            var relations = (from r in entity.Related group r by r.RelationEnd.IsMany).ToArray();
 
-            return new XElement("fieldset",
-                new XAttribute("class", "entity"),
-                handle,
-                groups.Select(g => new XElement("div",
-                    new XAttribute("class", "column-group"),
-                    new XAttribute("data-group", g.Key.ToString().ToLower()),
-                    g.Select(c => RenderColumn(entity, table, c, g.Key)))),
-                new XElement("div",
-                    new XAttribute("class", "column-group"),
-                    entity.Related.Select(r => Render(r, entity))
-                )
-            );
+            var singulars = relations.FirstOrDefault(r => !r.Key)?.ToArray();
+            var plurals = relations.FirstOrDefault(r => r.Key)?.ToArray();
+
+            var groupsList = groups.ToList();
+
+            if (singulars != null)
+            {
+                groupsList.Add(new Fieldset { legend = "singulars", items = singulars.Select(r => RenderRelation(r, entity)) });
+            }
+
+            if (plurals != null)
+            {
+                groupsList.Add(new Fieldset { legend = "plurals", items = plurals.Select(r => RenderRelation(r, entity)) });
+            }
+
+            return groupsList;
+        }
+
+        struct Fieldset
+        {
+            public Object legend;
+            public String layout;
+            public IEnumerable<Object> items;
+        }
+
+
+        Object RenderEntityHeader(CMTable table, Entity entity)
+        {
+            var name = table.PrimaryNameColumn?.Apply(nc => entity.ColumnValues[nc.Name]);
+
+            var content = RenderAsPrimaryLink(table, entity, new object[]
+            {
+                new XElement("span", new XAttribute("class", "entity-thumb"), table.Abbreviation),
+                name?.Apply(n => new XElement("span", new XAttribute("class", "entity-name"), n))
+            });
+
+            return new XElement("header", content);
         }
 
         Boolean IsColumnRenderedInFlavor(CMColumn column, ExtentFlavorType flavorType)
         {
             switch (flavorType)
             {
-                case ExtentFlavorType.Inline2:
-                case ExtentFlavorType.Inline:
-                case ExtentFlavorType.Block:
-                    return column.IsPrimaryName;
                 case ExtentFlavorType.Page:
-                    return true;
+                    return !column.IsPrimaryName;
                 default:
                     return false;
             }
@@ -148,13 +184,14 @@ namespace Acidui
         {
             var content = RenderText(entity.ColumnValues[column.Name]);
 
-            if (cls == ColumnRenderClass.Name)
+            if (cls == ColumnRenderClass.PrimaryName)
             {
                 content = RenderAsPrimaryLink(table, entity, content);
             }
 
             return new XElement("div",
-                new XAttribute("class", "column"),
+                new XAttribute("class", "entity-column"),
+                new XAttribute("data-x-name", column.Name),
                 new XElement("label", column.Name),
                 new XElement("div", content)
             );
@@ -162,12 +199,12 @@ namespace Acidui
 
         ColumnRenderClass GetRenderClass(CMTable table, CMColumn column)
         {
-            if (table.PrimaryNameColumn == column) return ColumnRenderClass.Name;
+            if (table.PrimaryNameColumn == column) return ColumnRenderClass.PrimaryName;
 
-            return ColumnRenderClass.String;
+            return ColumnRenderClass.Data;
         }
 
-        XElement Render(RelatedEntities entities, Entity parentEntity = null)
+        XElement RenderRelation(RelatedEntities entities, Entity parentEntity = null)
         {
             var labelContent = RenderRelationName(entities);
 
@@ -182,8 +219,8 @@ namespace Acidui
 
             var classes = new List<String>();
 
-            classes.Add("relation");
-            classes.Add(entities.RelationEnd.IsMany ? "relation-plural" : "relation-singular");
+            classes.Add("entity-relation");
+            classes.Add(entities.RelationEnd.IsMany ? "entity-relation-plural" : "entity-relation-singular");
             if (entities.List.Length == 0) classes.Add("is-empty");
 
 
@@ -193,7 +230,7 @@ namespace Acidui
                 //new XAttribute("data-debug-id", ++debugId),
                 //new XAttribute("data-debug-target-table", entities.RelationEnd.Table.Name.Escaped),
                 //entities.RelationEnd.GetForeignKey()?.Apply(k => new XAttribute("data-debug-fk", k.Name)),
-                //new XAttribute("data-debug-is-uniquely-typed", entities.RelationEnd.IsUniquelyTyped),
+                new XAttribute("data-debug-not-uniquely-typed-witness", entities.RelationEnd.AmbiguouslyTypedWitness?.Name ?? "-"),
                 //new XAttribute("data-debug-shared-target", entities.RelationEnd.OtherEnd.Table.RelationsForTable[entities.RelationEnd.Table.Name].Count()),
 
                 new XElement("label", labelContent),
@@ -201,7 +238,7 @@ namespace Acidui
                     entities.Extent.Flavor.Apply(f => new XAttribute("data-flavor", f.GetCssValue())),
                     entities.List.Select((entity, i) => new XElement("li",
                         i == lastIndex ? new XAttribute("class", "potentially-last") : null,
-                        Render(entity, entities))
+                        RenderEntityContent(entity, entities))
                     )
                 )
             );
