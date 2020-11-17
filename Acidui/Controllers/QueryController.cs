@@ -47,7 +47,7 @@ namespace Acidui.Controllers
 
             var result = context.QueryGenerator.Query(connection, extent);
 
-            var renderer = new HtmlRenderer(rest => $"{connectionName}/{rest}");
+            var renderer = new HtmlRenderer(rest => $"/query/{connectionName}/{rest}");
 
             var html = renderer.RenderToHtml(result);
 
