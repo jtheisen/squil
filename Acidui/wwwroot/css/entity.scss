@@ -165,9 +165,8 @@
         font-variant: small-caps;
         font-weight: 900;
 
-        &:after {
-            content: " ";
-        }
+        /* a whole space is way too much, so we go with a tiny margin */
+        margin-right: .12em;
     }
 
     ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
@@ -221,9 +220,23 @@
 
         ol[data-flavor=inline2] {
             font-size: .75em;
+            /* limiting headers works, but we either need to do it for all headers
+                or go back to the name-is-just-a-column approach
+            */
+            > li > header {
+                display: inline-flex;
+                max-width: 8em;
+
+                > a, span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            }
 
             > li:before {
-                content: " in "
+                margin-left: .2em;
+                content: "in "
             }
 
             > li:not(:last-child):after {

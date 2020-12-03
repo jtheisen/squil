@@ -317,8 +317,6 @@ namespace Acidui
 
             using var reader = command.ExecuteXmlReader();
 
-            var xmlDocument = new XmlDocument();
-
             var rootRow = XElement.Load(reader);
 
             return rootRow;

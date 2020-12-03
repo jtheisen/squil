@@ -144,7 +144,7 @@ namespace Acidui
         {
             var table = new ISTable
             {
-                Columns = columns.Select(n => new ISColumn { COLUMN_NAME = n }).ToArray()
+                Columns = columns.Select(n => new ISColumn { COLUMN_NAME = n, DATA_TYPE = "varchar" }).ToArray()
             };
 
             table.SetName(GetTableName(name));

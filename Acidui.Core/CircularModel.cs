@@ -50,7 +50,8 @@ namespace Acidui
                 table.ColumnsInOrder = isTable.Columns.Select((c, i) => new CMColumn
                 {
                     Order = i,
-                    Name = c.COLUMN_NAME
+                    Name = c.COLUMN_NAME,
+                    IsString = c.DATA_TYPE.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
                 }).ToArray();
 
                 table.Columns = table.ColumnsInOrder.ToDictionary(c => c.Name, c => c);
@@ -226,11 +227,12 @@ namespace Acidui
                 );
 
                 var candidateColumns =
-                    table.ColumnsInOrder.Where(c => !foreignNames.Contains(c.Name)).ToArray();
+                    table.ColumnsInOrder.Where(c => c.IsString && !foreignNames.Contains(c.Name)).ToArray();
 
                 table.PrimaryNameColumn =
                     candidateColumns.Where(c => c.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
-                    candidateColumns.Where(c => c.Name.Contains("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? null;
+                    candidateColumns.Where(c => c.Name.Contains("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
+                    candidateColumns.FirstOrDefault();
 
                 table.PrimaryNameColumn?.Apply(c => c.IsPrimaryName = true);
             }
@@ -338,6 +340,8 @@ namespace Acidui
         public String Name { get; set; }
 
         public String Escaped => Name.EscapeNamePart();
+
+        public Boolean IsString { get; set; }
 
         public Boolean IsPrimaryName { get; set; }
     }

@@ -112,9 +112,9 @@
 
 .entity-context .entity-thumb {
   font-variant: small-caps;
-  font-weight: 900; }
-  .entity-context .entity-thumb:after {
-    content: " "; }
+  font-weight: 900;
+  /* a whole space is way too much, so we go with a tiny margin */
+  margin-right: .12em; }
 
 .entity-context ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
   font-size: 2.5em;
@@ -147,9 +147,20 @@
   .entity-context ol[data-flavor=inline] label, .entity-context ol[data-flavor=inline] legend, .entity-context ol[data-flavor=inline] .relation.is-empty > ul, .entity-context ol[data-flavor=inline] .relation.is-empty > ol, .entity-context ol[data-flavor=inline] .null-value, .entity-context ol[data-flavor=inline] .empty-value, .entity-context ol[data-flavor=inline] .ws-value {
     display: none; }
   .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] {
-    font-size: .75em; }
+    font-size: .75em;
+    /* limiting headers works, but we either need to do it for all headers
+                or go back to the name-is-just-a-column approach
+            */ }
+    .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li > header {
+      display: inline-flex;
+      max-width: 8em; }
+      .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li > header > a, .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li > header span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap; }
     .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li:before {
-      content: " in "; }
+      margin-left: .2em;
+      content: "in "; }
     .entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li:not(:last-child):after {
       content: ", "; }
 
