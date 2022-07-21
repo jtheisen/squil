@@ -61,6 +61,16 @@
         color: inherit;
     }
 
+    header {
+        display: flex;
+
+        > a, span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
     legend {
         display: none;
     }
@@ -79,10 +89,25 @@
         list-style: none;
     }
 
+    ol:empty:before {
+        content: "-"
+    }
+
     ol[data-flavor=block],
     ol[data-flavor=page] {
         > li:not(:first-child) {
             margin-top: 2em;
+        }
+
+        > li:first-child {
+            margin-top: .5em;
+        }
+
+        > li {
+            margin: -5px -10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: rgb(152, 152, 152, 0.10);
         }
     }
 
@@ -164,7 +189,6 @@
     .entity-thumb {
         font-variant: small-caps;
         font-weight: 900;
-
         /* a whole space is way too much, so we go with a tiny margin */
         margin-right: .12em;
     }
@@ -188,10 +212,20 @@
     ol[data-flavor=inline] {
         > li {
             display: inline-block;
+
+            header {
+                max-width: 8em;
+            }
         }
 
-        > li * {
-            display: inline;
+        > li {
+            * {
+                display: inline;
+            }
+
+            header {
+                display: inline-flex;
+            }
         }
 
         li {
@@ -220,19 +254,6 @@
 
         ol[data-flavor=inline2] {
             font-size: .75em;
-            /* limiting headers works, but we either need to do it for all headers
-                or go back to the name-is-just-a-column approach
-            */
-            > li > header {
-                display: inline-flex;
-                max-width: 8em;
-
-                > a, span {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-            }
 
             > li:before {
                 margin-left: .2em;
