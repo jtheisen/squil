@@ -1,0 +1,17 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
+    publishWebProjects: true
+
+- task: PublishBuildArtifacts@1    
+  displayName: 'Publish Artifact: web'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
