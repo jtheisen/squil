@@ -41,6 +41,9 @@ namespace Acidui
         [XmlAttribute("TABLE_NAME")]
         public String Name { get; set; }
 
+        [XmlAttribute("TABLE_TYPE")]
+        public String Type { get; set; }
+
         [XmlArray("columns")]
         public ISColumn[] Columns { get; set; } = emptyColumns;
 

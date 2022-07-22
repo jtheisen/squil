@@ -29,9 +29,16 @@ namespace Acidui
 
         public CMTable RootTable => rootTable;
 
-        public void Populate(ISRoot isRoot)
+        public void Populate(ISRoot isRoot, Boolean includeViews = false)
         {
-            tables = isRoot.Tables.Select(t => new CMTable
+            var isTables = isRoot.Tables.ToArray();
+
+            if (!includeViews)
+            {
+                isTables = isTables.Where(t => t.Type != "VIEW").ToArray();
+            }
+
+            tables = isTables.Select(t => new CMTable
             {
                 Root = this,
                 Name = t.GetName(),
@@ -43,7 +50,7 @@ namespace Acidui
                 tables[a.Key].Abbreviation = a.Value;
             }
 
-            foreach (var isTable in isRoot.Tables)
+            foreach (var isTable in isTables)
             {
                 var table = tables[isTable.GetName()];
 
@@ -76,7 +83,7 @@ namespace Acidui
                 }
             }
 
-            foreach (var isTable in isRoot.Tables)
+            foreach (var isTable in isTables)
             {
                 var table = tables[isTable.GetName()];
 
