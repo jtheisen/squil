@@ -32,6 +32,7 @@ namespace Acidui
         {
             services.AddControllersWithViews();
 
+            services.Configure<AppSettings>(Configuration);
             services.Configure<List<ConnectionConfiguration>>(Configuration.GetSection("Connections"));
 
             services.AddSingleton<ConnectionManager>();
