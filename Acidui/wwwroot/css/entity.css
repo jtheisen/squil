@@ -1,17 +1,8 @@
 ﻿@charset "UTF-8";
 /* unused, height issue */
-.stretched-link::after {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  pointer-events: auto;
-  content: "";
-  background-color: rgba(0, 0, 0, 0);
+.entity-context {
+  /* old inline */
 }
-
 .entity-context label {
   white-space: nowrap;
   overflow: hidden;
@@ -79,10 +70,10 @@
 }
 .entity-context ol[data-flavor=block] > li,
 .entity-context ol[data-flavor=page] > li {
-  margin: -5px -10px;
-  padding: 5px 10px;
+  margin: -10px;
+  padding: 10px;
   border-radius: 5px;
-  background-color: rgba(152, 152, 152, 0.1);
+  background-color: #f5f5f4;
 }
 .entity-context ol[data-flavor=page] > li > fieldset {
   margin-top: 1em;
@@ -98,8 +89,9 @@
 }
 .entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid3] {
   display: grid;
+  column-gap: 0.25em;
+  row-gap: 0.25em;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 10px;
 }
 .entity-context ol[data-flavor=page] > li > fieldset > .entity-relation.is-empty > ol:before {
   font-style: italic;
@@ -167,44 +159,84 @@
   content: "⋮";
 }
 .entity-context ol[data-flavor=inline] {
-  /* No labels and legends, and without labels unproper content is meaningless. */
+  display: grid;
+  column-gap: 0.25em;
+  row-gap: 0.25em;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+.entity-context ol[data-flavor=inline] label, .entity-context ol[data-flavor=inline] legend, .entity-context ol[data-flavor=inline] .relation.is-empty > ul, .entity-context ol[data-flavor=inline] .relation.is-empty > ol, .entity-context ol[data-flavor=inline] .null-value, .entity-context ol[data-flavor=inline] .empty-value, .entity-context ol[data-flavor=inline] .ws-value {
+  display: none;
 }
 .entity-context ol[data-flavor=inline] > li {
-  display: inline-block;
+  background-color: #e7e5e4;
+  padding: 0.125em 0.5em;
+  border-radius: 5px;
+  position: relative;
 }
-.entity-context ol[data-flavor=inline] > li header {
-  max-width: 8em;
+.entity-context ol[data-flavor=inline] > li > header > a::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: auto;
+  content: "";
+  background-color: rgba(0, 0, 0, 0);
 }
-.entity-context ol[data-flavor=inline] > li * {
+.entity-context ol[data-flavor=inline] > li ol[data-flavor=inline2] {
+  font-size: 0.75em;
+}
+.entity-context ol[data-flavor=inline] > li ol[data-flavor=inline2] > li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entity-context ol[data-flavor=inline] > li ol[data-flavor=inline2] > li:before {
+  content: "in ";
+}
+.entity-context ol[data-flavor=inline] > li ol[data-flavor=inline2] > li * {
   display: inline;
 }
-.entity-context ol[data-flavor=inline] > li header {
+.entity-context ol[data-flavor=inline-old] {
+  /* No labels and legends, and without labels unproper content is meaningless. */
+}
+.entity-context ol[data-flavor=inline-old] > li {
+  display: inline-block;
+}
+.entity-context ol[data-flavor=inline-old] > li header {
+  max-width: 8em;
+}
+.entity-context ol[data-flavor=inline-old] > li * {
+  display: inline;
+}
+.entity-context ol[data-flavor=inline-old] > li header {
   display: inline-flex;
 }
-.entity-context ol[data-flavor=inline] li:not(:last-child):after {
+.entity-context ol[data-flavor=inline-old] li:not(:last-child):after {
   content: ", ";
   margin-right: 4px;
 }
-.entity-context ol[data-flavor=inline] li.potentially-last * {
+.entity-context ol[data-flavor=inline-old] li.potentially-last * {
   display: none !important;
   /*width: 0;
   height: 0;
   overflow: hidden;*/
 }
-.entity-context ol[data-flavor=inline] li.potentially-last:after {
+.entity-context ol[data-flavor=inline-old] li.potentially-last:after {
   content: "...";
 }
-.entity-context ol[data-flavor=inline] label, .entity-context ol[data-flavor=inline] legend, .entity-context ol[data-flavor=inline] .relation.is-empty > ul, .entity-context ol[data-flavor=inline] .relation.is-empty > ol, .entity-context ol[data-flavor=inline] .null-value, .entity-context ol[data-flavor=inline] .empty-value, .entity-context ol[data-flavor=inline] .ws-value {
+.entity-context ol[data-flavor=inline-old] label, .entity-context ol[data-flavor=inline-old] legend, .entity-context ol[data-flavor=inline-old] .relation.is-empty > ul, .entity-context ol[data-flavor=inline-old] .relation.is-empty > ol, .entity-context ol[data-flavor=inline-old] .null-value, .entity-context ol[data-flavor=inline-old] .empty-value, .entity-context ol[data-flavor=inline-old] .ws-value {
   display: none;
 }
-.entity-context ol[data-flavor=inline] ol[data-flavor=inline2] {
+.entity-context ol[data-flavor=inline-old] ol[data-flavor=inline2] {
   font-size: 0.75em;
 }
-.entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li:before {
+.entity-context ol[data-flavor=inline-old] ol[data-flavor=inline2] > li:before {
   margin-left: 0.2em;
   content: "in ";
 }
-.entity-context ol[data-flavor=inline] ol[data-flavor=inline2] > li:not(:last-child):after {
+.entity-context ol[data-flavor=inline-old] ol[data-flavor=inline2] > li:not(:last-child):after {
   content: ", ";
 }
 .entity-context .relation.is-empty {

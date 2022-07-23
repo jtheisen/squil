@@ -1,7 +1,6 @@
-﻿body {
-}
-
-
+﻿
+$bg-light-1: #f5f5f4;
+$bg-light-2: #e7e5e4;
 
 /* unused, height issue */
 @mixin ellipsis
@@ -18,16 +17,50 @@
     text-overflow: ellipsis;
 }
 
-.stretched-link::after {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1;
-    pointer-events: auto;
-    content: "";
-    background-color: rgba(0,0,0,0);
+@function sz($n) {
+    @return $n * 0.125em;
+}
+
+@mixin grid-base {
+    display: grid;
+    column-gap: sz(2);
+    row-gap: sz(2);
+}
+
+@mixin grid-3 {
+    @include grid-base;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@mixin grid-2 {
+    @include grid-base;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@mixin hide-labels-and-legends {
+    label, legend, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
+        display: none;
+    }
+}
+
+@mixin border($radius) {
+    border-radius: $radius;
+}
+
+@mixin stretched-link {
+    position: relative;
+
+    > header > a::after {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
+        pointer-events: auto;
+        content: "";
+        background-color: rgba(0,0,0,0);
+    }
 }
 
 .entity-context {
@@ -42,7 +75,7 @@
             z-index: 1;
 
             > * {
-/*          Taking this out so long as we don't have an example where it's needed.  
+                /*          Taking this out so long as we don't have an example where it's needed.  
                 background: white;
                 outline: 2px solid white;
                 isolation: isolate;
@@ -107,10 +140,10 @@
         }
 
         > li {
-            margin: -5px -10px;
-            padding: 5px 10px;
+            margin: -10px;
+            padding: 10px;
             border-radius: 5px;
-            background-color: rgb(152, 152, 152, 0.10);
+            background-color: $bg-light-1;
         }
     }
 
@@ -129,9 +162,7 @@
             }
 
             &[data-layout=grid3] {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-                column-gap: 10px;
+                @include grid-3;
             }
         }
 
@@ -218,7 +249,36 @@
         }
     }
 
+
     ol[data-flavor=inline] {
+        @include grid-3;
+        @include hide-labels-and-legends;
+
+        > li {
+            background-color: $bg-light-2;
+            padding: .125em .5em;
+            @include border(5px);
+            @include stretched-link;
+
+            ol[data-flavor=inline2] {
+                font-size: .75em;
+
+                > li {
+                    &:before {
+                        content: "in ";
+                    }
+
+                    * {
+                        display: inline;
+                    }
+
+                    @include text-ellipsis;
+                }
+            }
+        }
+    }
+    /* old inline */
+    ol[data-flavor=inline-old] {
         > li {
             display: inline-block;
 

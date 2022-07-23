@@ -236,6 +236,7 @@ namespace Acidui
             classes.Add(entities.RelationEnd.IsMany ? "entity-relation-plural" : "entity-relation-singular");
             if (entities.List.Length == 0) classes.Add("is-empty");
 
+            var isLeaf = !entities.Extent.Children.Any();
 
             return new XElement("div",
                 new XAttribute("class", String.Join(" ", classes)),
@@ -248,7 +249,7 @@ namespace Acidui
 
                 new XElement("label", labelContent),
                 new XElement("ol",
-                    entities.Extent.Flavor.Apply(f => new XAttribute("data-flavor", f.GetCssValue())),
+                    entities.Extent.Flavor.Apply(f => new XAttribute("data-flavor", f.GetCssValue(isLeaf))),
                     entities.List.Select((entity, i) => new XElement("li",
                         i == lastIndex ? new XAttribute("class", "potentially-last") : null,
                         RenderEntityContent(entity, entities))

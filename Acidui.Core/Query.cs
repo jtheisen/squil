@@ -1,4 +1,5 @@
 ﻿using Acidui.Core;
+using Humanizer;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -242,7 +243,10 @@ namespace Acidui
 
         public Int32 depth;
 
-        public String GetCssValue() => type.ToString().ToLower();
+        public String GetCssValue(Boolean isLeaf)
+        {
+            return type.ToString().Kebaberize();
+        }
 
         public override string ToString()
         {
