@@ -12,6 +12,12 @@
     white-space: nowrap;
 }
 
+@mixin text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .stretched-link::after {
     position: absolute;
     top: 0;
@@ -27,9 +33,7 @@
 .entity-context {
 
     label {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        @include text-ellipsis;
 
         &:hover {
             overflow: visible;
@@ -38,10 +42,11 @@
             z-index: 1;
 
             > * {
+/*          Taking this out so long as we don't have an example where it's needed.  
                 background: white;
                 outline: 2px solid white;
                 isolation: isolate;
-
+*/
                 :after {
                     position: absolute;
                     top: 0;
@@ -65,9 +70,7 @@
         display: flex;
 
         > a, span {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            @include text-ellipsis;
         }
     }
 
@@ -127,7 +130,7 @@
 
             &[data-layout=grid3] {
                 display: grid;
-                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
                 column-gap: 10px;
             }
         }
@@ -166,9 +169,15 @@
         }
     }
 
-    .entity-column > label {
-        font-size: .8em;
-        margin-bottom: -.5em;
+    .entity-column {
+        > label {
+            font-size: .8em;
+            margin-bottom: -.5em;
+        }
+
+        > div {
+            @include text-ellipsis;
+        }
     }
 
     .null-value:before {

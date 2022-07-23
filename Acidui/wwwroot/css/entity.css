@@ -24,9 +24,11 @@
   z-index: 1;
 }
 .entity-context label:hover > * {
-  background: white;
-  outline: 2px solid white;
-  isolation: isolate;
+  /*          Taking this out so long as we don't have an example where it's needed.  
+                  background: white;
+                  outline: 2px solid white;
+                  isolation: isolate;
+  */
 }
 .entity-context label:hover > * :after {
   position: absolute;
@@ -46,9 +48,9 @@
   display: flex;
 }
 .entity-context header > a, .entity-context header span {
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .entity-context legend {
   display: none;
@@ -96,7 +98,7 @@
 }
 .entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid3] {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   column-gap: 10px;
 }
 .entity-context ol[data-flavor=page] > li > fieldset > .entity-relation.is-empty > ol:before {
@@ -128,6 +130,11 @@
 .entity-context .entity-column > label {
   font-size: 0.8em;
   margin-bottom: -0.5em;
+}
+.entity-context .entity-column > div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .entity-context .null-value:before {
   font-style: italic;
