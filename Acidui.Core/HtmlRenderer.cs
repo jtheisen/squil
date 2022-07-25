@@ -5,6 +5,7 @@ using System.Net.Mime;
 using System.Text;
 using System.Xml.Linq;
 using System.Xml.Xsl;
+using ColorHelper;
 using Humanizer;
 
 namespace Acidui
@@ -217,6 +218,23 @@ namespace Acidui
             return ColumnRenderClass.Data;
         }
 
+        String GetColorForHue(Double hue, Int32 s, Int32 l)
+        {
+            var hsl = new HSL((int)hue, (byte)s, (byte)l);
+
+            return ColorConverter.HslToHex(hsl).Value;
+        }
+
+        String GetStyleForHue(Double hue)
+        {
+            String style = "";
+
+            style += $"--entity-bg-1: #{GetColorForHue(hue, 15, 90)};";
+            style += $"--entity-bg-0: #{GetColorForHue(hue, 15, 95)};";
+
+            return style;
+        }
+
         XElement RenderRelation(RelatedEntities entities, Entity parentEntity = null)
         {
             var labelContent = RenderRelationName(entities);
@@ -240,6 +258,8 @@ namespace Acidui
 
             return new XElement("div",
                 new XAttribute("class", String.Join(" ", classes)),
+
+                new XAttribute("style", GetStyleForHue(entities.RelationEnd.Table.Hue)),
 
                 //new XAttribute("data-debug-id", ++debugId),
                 //new XAttribute("data-debug-target-table", entities.RelationEnd.Table.Name.Escaped),

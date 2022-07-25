@@ -1,4 +1,6 @@
 ﻿
+
+
 $bg-light-1: #f5f5f4;
 $bg-light-2: #e7e5e4;
 
@@ -143,7 +145,7 @@ $bg-light-2: #e7e5e4;
             margin: -10px;
             padding: 10px;
             border-radius: 5px;
-            background-color: $bg-light-1;
+            background-color: var(--entity-bg-0);
         }
     }
 
@@ -255,7 +257,7 @@ $bg-light-2: #e7e5e4;
         @include hide-labels-and-legends;
 
         > li {
-            background-color: $bg-light-2;
+            background-color: var(--entity-bg-1);
             padding: .125em .5em;
             @include border(5px);
             @include stretched-link;

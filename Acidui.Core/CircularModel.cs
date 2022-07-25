@@ -1,9 +1,11 @@
 ﻿using Acidui.Core;
+using ColorHelper;
 using Humanizer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Acidui
@@ -29,6 +31,13 @@ namespace Acidui
 
         public CMTable RootTable => rootTable;
 
+        SHA1 sha1 = SHA1.Create();
+
+        Double GetHueForName(string name)
+        {
+            return sha1.ComputeHash(Encoding.UTF8.GetBytes(name))[0] * 360.0 / 255.0;
+        }
+
         public void Populate(ISRoot isRoot, Boolean includeViews = false)
         {
             var isTables = isRoot.Tables.ToArray();
@@ -47,7 +56,9 @@ namespace Acidui
 
             foreach (var a in new Abbreviator().Calculate(tables.Values.Select(t => t.Name).ToArray()))
             {
-                tables[a.Key].Abbreviation = a.Value;
+                var table = tables[a.Key];
+                table.Abbreviation = a.Value;
+                table.Hue = GetHueForName(a.Value);
             }
 
             foreach (var isTable in isTables)
@@ -260,6 +271,8 @@ namespace Acidui
         public ObjectName Name { get; set; }
 
         public String Abbreviation { get; set; } = "◯";
+
+        public Double Hue { get; set; } = 0;
 
         public CMColumn PrimaryNameColumn { get; set; }
 
