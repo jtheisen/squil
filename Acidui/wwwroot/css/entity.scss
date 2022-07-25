@@ -146,6 +146,12 @@ $bg-light-2: #e7e5e4;
             padding: 10px;
             border-radius: 5px;
             background-color: var(--entity-bg-0);
+
+
+            > header {
+                font-size: 2em;
+                font-weight: 200;
+            }
         }
     }
 
@@ -233,11 +239,6 @@ $bg-light-2: #e7e5e4;
         font-weight: 900;
         /* a whole space is way too much, so we go with a tiny margin */
         margin-right: .12em;
-    }
-
-    ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
-        font-size: 2.5em;
-        font-weight: 200;
     }
 
     ol[data-flavor=page] {

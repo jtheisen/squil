@@ -75,6 +75,11 @@
   border-radius: 5px;
   background-color: var(--entity-bg-0);
 }
+.entity-context ol[data-flavor=block] > li > header,
+.entity-context ol[data-flavor=page] > li > header {
+  font-size: 2em;
+  font-weight: 200;
+}
 .entity-context ol[data-flavor=page] > li > fieldset {
   margin-top: 1em;
 }
@@ -145,10 +150,6 @@
   font-weight: 900;
   /* a whole space is way too much, so we go with a tiny margin */
   margin-right: 0.12em;
-}
-.entity-context ol[data-flavor=page] > li > fieldset > div[data-group=name] > .column > div {
-  font-size: 2.5em;
-  font-weight: 200;
 }
 .entity-context ol[data-flavor=page] > li.potentially-last:after {
   display: block;

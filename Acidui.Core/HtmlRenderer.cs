@@ -229,8 +229,8 @@ namespace Acidui
         {
             String style = "";
 
-            style += $"--entity-bg-1: #{GetColorForHue(hue, 15, 90)};";
-            style += $"--entity-bg-0: #{GetColorForHue(hue, 15, 95)};";
+            style += $"--entity-bg-1: #{GetColorForHue(hue, 20, 90)};";
+            style += $"--entity-bg-0: #{GetColorForHue(hue, 20, 95)};";
 
             return style;
         }
