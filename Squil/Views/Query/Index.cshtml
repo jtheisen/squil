@@ -1,0 +1,14 @@
+﻿@model Squil.Controllers.QueryController.IndexVm
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="entity-context">
+    @Html.Raw(Model.Html)
+
+    @*<pre class="debug-xml-original">
+        @Model.Html
+    </pre>*@
+
+</div>
