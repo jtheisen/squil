@@ -9,9 +9,18 @@
     <link rel="stylesheet" href="~/css/font-classes.css" />
     <link rel="stylesheet" href="~/css/entity.css" />
 
+    <link href="/fontawesome/css/fontawesome.css" rel="stylesheet">
+    <link href="/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="/fontawesome/css/solid.min.css" rel="stylesheet">
+
+    <style>.github-fork-ribbon:before { background-color: gray !important; }</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css" />
+
     <partial name="_GoogleAnalytics" />
 </head>
 <body>
+    <a class="github-fork-ribbon" href="https://github.com/jtheisen/squil" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
+
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
@@ -38,7 +47,16 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2020 - Jens Theisen
+            <ul class="nav">
+                <li class="nav-item">
+                    <span class="navbar-text">&copy; @DateTime.Now.Year - Jens Theisen</span>
+                </li>
+                <li class="flex-grow-1"></li>
+                <li class="nav-item"><a class="nav-link text-muted" href="https://squil.net">About</a></li>
+                <li class="nav-item"><a class="nav-link text-muted" href="https://github.com/jtheisen/squil">Github</a></li>
+            </ul>
+            
+            
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

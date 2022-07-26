@@ -1,18 +1,33 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+
+    var showDemoText = true;
 }
 
 @inject ConnectionManager connections
 
 <div>
-    <h1 class="display-4">Welcome,</h1>
+    <h1 class="display-4 mb-4">Welcome,</h1>
 
-    <p>Please select one of the connected data sources.</p>
+    @if (showDemoText)
+    {
+        <p>this is the demo hosting of the SQuiL prototype: a generic UI for relational databases.</p>
+
+        <p>
+            If you click on a choice of datasource below, you will be able to browse that database with something that
+            looks like a custom user interface - but there's nothing custom about it: Everything is derived
+            from the database schema itself by using foreign key information and sensible heuristics.
+        </p>
+    }
+    else
+    {
+        <p>Please select one of the connected data sources.</p>
+    }
     
     <div class="row mt-5">
         @foreach (var c in connections.GetConnnections())
         {
-        <div class="col-4">
+        <div class="col-12 mb-2">
             <div class="card">
                 <div class="card-body">
                     <h5><a class="stretched-link" href="/query/@c.config.Name">@c.config.Name</a></h5>
