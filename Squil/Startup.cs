@@ -14,6 +14,7 @@ namespace Squil
     public class ConnectionConfiguration
     {
         public String Name { get; set; }
+        public String LongName { get; set; }
         public String ConnectionString { get; set; }
         public String Description { get; set; }
     }

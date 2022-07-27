@@ -25,18 +25,24 @@
     }
     
     <div class="row mt-5">
-        @foreach (var c in connections.GetConnnections())
+        @foreach (var e in connections.GetConnnections())
         {
-        <div class="col-12 mb-2">
-            <div class="card">
-                <div class="card-body">
-                    <h5><a class="stretched-link" href="/query/@c.config.Name">@c.config.Name</a></h5>
-                    <p>
-                        @c.config.Description
-                    </p>
+            var c = e.config;
+
+            <div class="col-12 col-lg-6 py-3">
+                <div class="card bg-light">
+                    <div class="card-header">
+                        @c.Name
+                    </div>
+                    <div class="card-body">
+                        <h5>@(c.LongName ?? c.Name)</h5>
+                        <p>
+                            @c.Description
+                        </p>
+                        <a href="/query/@c.Name" class="btn btn-outline-dark float-right stretched-link">🞂 enter</a>
+                    </div>
                 </div>
             </div>
-        </div>
         }
     </div>
 
