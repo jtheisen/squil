@@ -4,6 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Squil.Controllers
 {
+    public enum QueryControllerQueryType
+    {
+        Root,
+        Single,
+        Table,
+        Sublist
+    }
+
     [Route("query")]
     public class QueryController : Controller
     {
@@ -17,6 +25,7 @@ namespace Squil.Controllers
 
         public class IndexVm
         {
+            public QueryControllerQueryType QueryType { get; set; }
             public String RootUrl { get; set; }
             public String RootName { get; set; }
             public String Html { get; set; }
@@ -55,6 +64,7 @@ namespace Squil.Controllers
 
             return View(new IndexVm
             {
+                QueryType = table == null ? QueryControllerQueryType.Root : isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist,
                 RootName = connectionName,
                 RootUrl = $"/query/{connectionName}",
                 Html = html
