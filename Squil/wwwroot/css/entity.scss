@@ -67,6 +67,8 @@ $bg-light-2: #e7e5e4;
 
 .entity-context {
 
+    --entity-bg-prev: white;
+
     li.ellipsis {
         display: none;
     }
@@ -154,6 +156,7 @@ $bg-light-2: #e7e5e4;
             padding: 10px;
             border-radius: 5px;
             background-color: var(--entity-bg-0);
+            --entity-bg-prev: var(--entity-bg-0);
 
 
             > header {
@@ -287,21 +290,16 @@ $bg-light-2: #e7e5e4;
                 }
             }
 
-            &.potentially-last {
-                
-            }
-
             &.ellipsis {
-                background-color: white;
-                height: 1em;
-                width: 2em;
+                background-color: var(--entity-bg-prev);
+                height: 32px;
+                width: 32px;
                 border-radius: 0;
                 display: block;
                 position: absolute;
                 right: 0;
                 bottom: 0;
-
-                clip-path: polygon(110% 110%, 0% 110%, 110% 0%);
+                clip-path: path('M 24 27.999 C 24 29.325 22.925 30.4 21.599 30.4 C 20.273 30.4 19.198 29.325 19.198 27.999 C 19.198 26.673 20.273 25.598 21.599 25.598 C 22.925 25.598 24 26.673 24 27.999 Z M 30.402 27.999 C 30.402 29.325 29.327 30.4 28.001 30.4 C 26.675 30.4 25.6 29.325 25.6 27.999 C 25.6 26.673 26.675 25.598 28.001 25.598 C 29.327 25.598 30.402 26.673 30.402 27.999 Z M 17.6 28 C 17.6 29.325 16.525 30.4 15.2 30.4 C 13.875 30.4 12.8 29.325 12.8 28 C 12.8 26.675 13.875 25.6 15.2 25.6 C 16.525 25.6 17.6 26.675 17.6 28 Z M 33.6 33.6 L 33.6 0 L 32 0 L 0 32 L 0 33.6 L 32 33.6 L 33.6 33.6 Z');
             }
         }
     }
