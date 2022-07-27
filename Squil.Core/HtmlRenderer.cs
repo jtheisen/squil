@@ -273,7 +273,8 @@ namespace Squil
                     entities.List.Select((entity, i) => new XElement("li",
                         i == lastIndex ? new XAttribute("class", "potentially-last") : null,
                         RenderEntityContent(entity, entities))
-                    )
+                    ),
+                    entities.List.Length == entities.Extent.Limit ? new XElement("li", new XAttribute("class", "ellipsis")) : null
                 )
             );
         }

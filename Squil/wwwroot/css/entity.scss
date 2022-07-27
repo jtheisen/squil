@@ -67,6 +67,10 @@ $bg-light-2: #e7e5e4;
 
 .entity-context {
 
+    li.ellipsis {
+        display: none;
+    }
+
     label {
         @include text-ellipsis;
 
@@ -129,6 +133,10 @@ $bg-light-2: #e7e5e4;
 
     ol:empty:before {
         content: "-"
+    }
+
+    ol {
+        position: relative;
     }
 
     ol[data-flavor=block],
@@ -277,6 +285,23 @@ $bg-light-2: #e7e5e4;
 
                     @include text-ellipsis;
                 }
+            }
+
+            &.potentially-last {
+                
+            }
+
+            &.ellipsis {
+                background-color: white;
+                height: 1em;
+                width: 2em;
+                border-radius: 0;
+                display: block;
+                position: absolute;
+                right: 0;
+                bottom: 0;
+
+                clip-path: polygon(110% 110%, 0% 110%, 110% 0%);
             }
         }
     }

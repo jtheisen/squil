@@ -3,6 +3,9 @@
 .entity-context {
   /* old inline */
 }
+.entity-context li.ellipsis {
+  display: none;
+}
 .entity-context label {
   white-space: nowrap;
   overflow: hidden;
@@ -59,6 +62,9 @@
 }
 .entity-context ol:empty:before {
   content: "-";
+}
+.entity-context ol {
+  position: relative;
 }
 .entity-context ol[data-flavor=block] > li:not(:first-child),
 .entity-context ol[data-flavor=page] > li:not(:first-child) {
@@ -198,6 +204,17 @@
 }
 .entity-context ol[data-flavor=inline] > li ol[data-flavor=inline2] > li * {
   display: inline;
+}
+.entity-context ol[data-flavor=inline] > li.ellipsis {
+  background-color: white;
+  height: 1em;
+  width: 2em;
+  border-radius: 0;
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  clip-path: polygon(110% 110%, 0% 110%, 110% 0%);
 }
 .entity-context ol[data-flavor=inline-old] {
   /* No labels and legends, and without labels unproper content is meaningless. */
