@@ -1,5 +1,4 @@
-﻿@charset "UTF-8";
-/* unused, height issue */
+﻿/* unused, height issue */
 .entity-context {
   --entity-bg-prev: white;
   /* old inline */
@@ -92,13 +91,18 @@
   margin-top: 1em;
 }
 .entity-context ol[data-flavor=page] > li > fieldset > legend {
-  display: block;
   position: absolute;
+  font-variant: small-caps;
   top: 0;
   left: -20px;
   text-align: right;
   width: 5em;
   margin-left: -5em;
+}
+@media (min-width: 1200px) {
+  .entity-context ol[data-flavor=page] > li > fieldset > legend {
+    display: block;
+  }
 }
 .entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid3] {
   display: grid;
@@ -159,13 +163,16 @@
   /* a whole space is way too much, so we go with a tiny margin */
   margin-right: 0.12em;
 }
-.entity-context ol[data-flavor=page] > li.potentially-last:after {
+.entity-context ol[data-flavor=block] > li.potentially-last {
+  display: none;
+}
+.entity-context ol[data-flavor=block] > li.ellipsis {
   display: block;
-  margin-top: 0.4em;
-  margin-left: -0.12em;
-  font-size: 5em;
-  color: #ccc;
-  content: "⋮";
+  background: none;
+}
+.entity-context ol[data-flavor=block] > li.ellipsis:after {
+  font-style: italic;
+  content: "...and more (load more not implemented yet)";
 }
 .entity-context ol[data-flavor=inline] {
   display: grid;

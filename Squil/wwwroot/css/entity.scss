@@ -66,7 +66,6 @@ $bg-light-2: #e7e5e4;
 }
 
 .entity-context {
-
     --entity-bg-prev: white;
 
     li.ellipsis {
@@ -171,8 +170,13 @@ $bg-light-2: #e7e5e4;
             margin-top: 1em;
 
             > legend {
-                display: block;
+
+                @media (min-width: 1200px) {
+                    display: block;
+                }
+
                 position: absolute;
+                font-variant: small-caps;
                 top: 0;
                 left: -20px;
                 text-align: right;
@@ -252,14 +256,21 @@ $bg-light-2: #e7e5e4;
         margin-right: .12em;
     }
 
-    ol[data-flavor=page] {
-        > li.potentially-last:after {
-            display: block;
-            margin-top: .4em;
-            margin-left: -.12em;
-            font-size: 5em;
-            color: #ccc;
-            content: "⋮"
+    ol[data-flavor=block] {
+        > li {
+            &.potentially-last {
+                display: none;
+            }
+
+            &.ellipsis {
+                display: block;
+                background: none;
+
+                &:after {
+                    font-style: italic;
+                    content: "...and more (load more not implemented yet)";
+                }
+            }
         }
     }
 

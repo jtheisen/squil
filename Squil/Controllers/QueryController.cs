@@ -17,6 +17,8 @@ namespace Squil.Controllers
 
         public class IndexVm
         {
+            public String RootUrl { get; set; }
+            public String RootName { get; set; }
             public String Html { get; set; }
         }
 
@@ -51,7 +53,12 @@ namespace Squil.Controllers
 
             var html = renderer.RenderToHtml(result);
 
-            return View(new IndexVm { Html = html });
+            return View(new IndexVm
+            {
+                RootName = connectionName,
+                RootUrl = $"/query/{connectionName}",
+                Html = html
+            });
         }
     }
 }

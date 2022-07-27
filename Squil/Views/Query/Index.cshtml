@@ -1,10 +1,15 @@
 ﻿@model Squil.Controllers.QueryController.IndexVm
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = Model.RootName;
 }
 
-<div class="entity-context">
+@section NavItems
+{
+    <li class="nav-item"><a class="nav-link text-muted" href="@Model.RootUrl">@Model.RootName</a></li>
+}
+
+<div class="entity-context col-12 col-xl-10 offset-xl-1">
     @Html.Raw(Model.Html)
 
     @*<pre class="debug-xml-original">
