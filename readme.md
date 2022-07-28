@@ -1,8 +1,8 @@
 # SQuiL
 
-This is the source repo for SQuiL prototype: A proof-of-concept for a generic SQL UI.
+This is the source repo for the SQuiL prototype - a proof-of-concept for a generic SQL UI.
 
-Use the following two links for more information.
+Use the following two links for more information:
 
 [Introduction and rational texts](https://squil.net)
 
