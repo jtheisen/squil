@@ -363,5 +363,9 @@ FodyWeavers.xsd
 
 .vscode
 
-Properties
+# squil-specific
+
+# All *folders* in all Properties folders
+**/Properties/**/
+
 docker-tests
