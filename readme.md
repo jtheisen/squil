@@ -22,7 +22,7 @@ that and myself on a dedicated site:
 First, you need Docker installed. When you're unfamiliar with it, just go to
 [Docker](https://www.docker.com/get-started) and install Docker Desktop for your
 operating system. It comes with a user interface to start and stop installed
-containers, but the installation itself should be done in a terminal.
+containers, but the SQuiL installation itself should be done in a terminal.
 
 Install or update the SQuiL image with
 
@@ -46,7 +46,7 @@ Then, you can "install" and run the container:
      docker run -d -p 8080:80 --env-file <environment-file> --name squil squiltech/squil
 
 This will create and run a container named *squil* that can be started and stopped and uses
-the connections defined in the environment file (which won't be used any more after than).
+the connections defined in the environment file (which won't be used any more after that).
 When running, it listens to port 8080, so the app will be at http://localhost:8080.
 
 ## Connect to a server on your local machine
@@ -56,15 +56,17 @@ Docker containers run technically on a different machine (from the OS perspectiv
 For SQuiL running in docker to connect to your local SQL Server instance, you
 
 - need to enable TCP in your SQL Server,
-- can refer to host.docker.internal as the server hostname in your connection strings and
-- must use SQL Server authentication (rather than Windows authentication) and thus create a *login*.
+- must refer to *host.docker.internal* (rather than *localhost*) as the server hostname in your connection strings and
+- must use SQL Server authentication (rather than Windows authentication) and thus likely also create a SQL Server *login*.
 
 The setting to enable TCP is in the SQL Server Connection Manager, which is a bit hidden. See
 [this blog post](https://www.mytecbits.com/microsoft/sql-server/where-is-sql-server-configuration-manager)
 to find it and
 [this Stack Overflow answer](<https://stackoverflow.com/a/50170217/870815>)
-to locate the setting is once you found the manager.
+to locate the setting once you found the manager.
 
 Since Windows authentication can't be used here either, you need to create a login that uses
-SQL Server authentication with username and password. Give that login a user assignments to
-the relevant databases with the `db_datareader` role,
+SQL Server authentication with username and password. This can be done with SQL Server Management Studio
+by right-clicking on the *connection*/Security/Logins node in the object tree and selecting *New Login*. The relevant tabs here are *General* and *User Mapping*
+
+Give that login a name, check *SQL Server authentication* and a passwrod. Then, under *User Mapping*, give the login a user mapping to the relevant databases with the `db_datareader` role checked for each such database in the list of roles below. You can then use that user/password combination with the servername *host.docker.internal* in your connection strings.
