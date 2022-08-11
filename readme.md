@@ -19,26 +19,33 @@ that and myself on a dedicated site:
 
 ## Install and use the docker image
 
-First, you need Docker installed. When you're unfamiliar with it, just go to
+First, you need Docker installed. If you're unfamiliar with that, just go to
 [Docker](https://www.docker.com/get-started) and install Docker Desktop for your
-operating system. It comes with a user interface to start and stop installed
-containers, but the SQuiL installation itself should be done in a terminal.
+operating system. It comes with a user interface to start and stop created
+containers, but the container creation itself should be done in a terminal.
 
-Install or update the SQuiL image with
+(If you don't use Docker for anything else you may want to go to its settings and
+disable the automatic startup on login. Docker obviously consumes significant resources.)
+
+Now install or update the SQuiL image with
 
     docker pull squiltech/squil
 
-Before you create a container instance with a run command, create an environment variables
-file defining your connections. The name doesn't matter and it should look like this:
+This pulls the image into a user-wide storage that you can also browse in
+the the Docker UI.
+
+Before you then create a container instance from this image, first create an
+environment variables file defining your database connections. The file's name
+and location doesn't matter and the contents should look like this:
 
     Connections__0__Name=AdventureWorksLT2017
     Connections__0__LongName=AdventureWorks 2017 Light
     Connections__0__ConnectionString=Server=host.docker.internal;Initial Catalog=AdventureWorksLT2017;User ID=squil;Password=qwerty;TrustServerCertificate=False;Connection Timeout=30;
     Connections__0__Description=Microsoft's AdventureWorks database is the official example database for Microsoft SQL Server.
 
-Replace the values accordingly
+Replace the values accordingly.
 
-The format comes from the way ASP.NET expects lists in environment variables by default.
+The format comes from the way ASP.NET expects list settings in environment variables by default.
 You can add multiple connections by replacing the zero with increasing integers.
 
 Then, you can "install" and run the container:
