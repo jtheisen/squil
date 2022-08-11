@@ -362,3 +362,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 .vscode
+
+Properties
+docker-tests

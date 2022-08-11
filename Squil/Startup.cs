@@ -36,6 +36,7 @@ namespace Squil
             services.Configure<AppSettings>(Configuration);
             services.Configure<List<ConnectionConfiguration>>(Configuration.GetSection("Connections"));
 
+            services.AddHttpClient();
             services.AddSingleton<ConnectionManager>();
         }
 
