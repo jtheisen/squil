@@ -6,7 +6,7 @@ For a quick look at the thing, use the public demo hosting:
 
 [Live demo of this prototype](https://squil.azurewebsites.net)
 
-If you have a database with proper foreign key contraints between the tables, you may want
+If you have a database with proper foreign key constraints between the tables, you may want
 to check out how it looks in SQuiL. It's easy to install with the docker image, see the
 section below.
 
@@ -32,11 +32,11 @@ Now install or update the SQuiL image with
     docker pull squiltech/squil
 
 This pulls the image into a user-wide storage that you can also browse in
-the the Docker UI.
+the Docker UI.
 
 Before you then create a container instance from this image, first create an
 environment variables file defining your database connections. The file's name
-and location doesn't matter and the contents should look like this:
+and location doesn't matter, and the contents should look like this:
 
     Connections__0__Name=AdventureWorksLT2017
     Connections__0__LongName=AdventureWorks 2017 Light
@@ -48,7 +48,7 @@ Replace the values accordingly.
 The format comes from the way ASP.NET expects list settings in environment variables by default.
 You can add multiple connections by replacing the zero with increasing integers.
 
-Then, you can "install" and run the container:
+Then, you can create and run a container:
 
      docker run -d -p 8080:80 --env-file <environment-file> --name squil squiltech/squil
 
@@ -76,4 +76,4 @@ Since Windows authentication can't be used here either, you need to create a log
 SQL Server authentication with username and password. This can be done with SQL Server Management Studio
 by right-clicking on the *connection*/Security/Logins node in the object tree and selecting *New Login*. The relevant tabs here are *General* and *User Mapping*
 
-Give that login a name, check *SQL Server authentication* and a passwrod. Then, under *User Mapping*, give the login a user mapping to the relevant databases with the `db_datareader` role checked for each such database in the list of roles below. You can then use that user/password combination with the servername *host.docker.internal* in your connection strings.
+Give that login a name, check *SQL Server authentication* and a password. Then, under *User Mapping*, give the login a user mapping to the relevant databases with the `db_datareader` role checked for each such database in the list of roles below. You can then use that user/password combination with the server name *host.docker.internal* in your connection strings.
