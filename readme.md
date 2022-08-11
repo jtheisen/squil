@@ -76,4 +76,4 @@ Since Windows authentication can't be used here either, you need to create a log
 SQL Server authentication with username and password. This can be done with SQL Server Management Studio
 by right-clicking on the *connection*/Security/Logins node in the object tree and selecting *New Login*. The relevant tabs here are *General* and *User Mapping*
 
-Give that login a name, check *SQL Server authentication* and a password. Then, under *User Mapping*, give the login a user mapping to the relevant databases with the `db_datareader` role checked for each such database in the list of roles below. You can then use that user/password combination with the server name *host.docker.internal* in your connection strings.
+Give that login a name, check *SQL Server authentication* and set a password. Then, under *User Mapping*, give the login a user mapping to the relevant databases with the `db_datareader` role checked for each such database in the list of roles below. You can then use that user/password combination with the server name *host.docker.internal* in your connection strings.
