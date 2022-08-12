@@ -73,12 +73,14 @@ namespace Squil
 
                 var sysTable = sysTables?[(isTable.Schema, isTable.Name)].Single($"Can't find sys table for table {isTable.Schema}.{isTable.Name}");
 
-                table.ColumnsInOrder = isTable.Columns.Select((c, i) => new CMColumn
-                {
-                    Order = i,
-                    Name = c.COLUMN_NAME,
-                    IsString = c.DATA_TYPE.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
-                }).ToArray();
+                table.ColumnsInOrder = isTable.Columns
+                    .Where(c => c.DATA_TYPE != "varbinary" && c.DATA_TYPE != "geography")
+                    .Select((c, i) => new CMColumn
+                    {
+                        Order = i,
+                        Name = c.COLUMN_NAME,
+                        IsString = c.DATA_TYPE.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
+                    }).ToArray();
 
                 table.Columns = table.ColumnsInOrder.ToDictionary(c => c.Name, c => c);
 
