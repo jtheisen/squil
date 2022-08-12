@@ -1,0 +1,21 @@
+﻿<header>
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="container">
+            <ul class="nav navbar-nav mr-auto">
+                <li class="nav-item"><a class="nav-link text-muted" asp-area="" asp-controller="Home" asp-action="Index">Databases</a></li>
+                @NavItems
+            </ul>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment NavItems { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

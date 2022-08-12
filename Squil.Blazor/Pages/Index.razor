@@ -7,44 +7,46 @@
 
 <PageTitle>Select database</PageTitle>
 
-<div>
-    <h1 class="display-4 mb-4">Welcome,</h1>
+<DefaultLayout>
+    <div>
+        <h1 class="display-4 mb-4">Welcome,</h1>
 
-    @if (showDemoText)
-    {
-        <p>this is the demo hosting of the SQuiL prototype: a generic UI for relational databases.</p>
-
-        <p>
-            If you click on a choice of datasource below, you will be able to browse that database with something that
-            looks like a custom user interface - but there's nothing custom about it: Everything is derived
-            from the database schema itself by using foreign key information and sensible heuristics.
-        </p>
-    }
-    else
-    {
-        <p>Please select one of the connected data sources.</p>
-    }
-
-    <div class="row mt-5">
-        @foreach (var e in connections.GetConnnections())
+        @if (showDemoText)
         {
-            var c = e.config;
+            <p>this is the demo hosting of the SQuiL prototype: a generic UI for relational databases.</p>
 
-            <div class="col-12 col-lg-6 py-3">
-                <div class="card bg-light">
-                    <div class="card-header">
-                        @c.Name
-                    </div>
-                    <div class="card-body">
-                        <h5>@(c.LongName ?? c.Name)</h5>
-                        <p>
-                            @c.Description
-                        </p>
-                        <a href="/query/@c.Name" class="btn btn-outline-dark float-right stretched-link">🞂 enter</a>
+            <p>
+                If you click on a choice of datasource below, you will be able to browse that database with something that
+                looks like a custom user interface - but there's nothing custom about it: Everything is derived
+                from the database schema itself by using foreign key information and sensible heuristics.
+            </p>
+        }
+        else
+        {
+            <p>Please select one of the connected data sources.</p>
+        }
+
+        <div class="row mt-5">
+            @foreach (var e in connections.GetConnnections())
+            {
+                var c = e.config;
+
+                <div class="col-12 col-lg-6 py-3">
+                    <div class="card bg-light">
+                        <div class="card-header">
+                            @c.Name
+                        </div>
+                        <div class="card-body">
+                            <h5>@(c.LongName ?? c.Name)</h5>
+                            <p>
+                                @c.Description
+                            </p>
+                            <a href="/query/@c.Name" class="btn btn-outline-dark float-right stretched-link">🞂 enter</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
 
-</div>
+    </div>
+</DefaultLayout>
