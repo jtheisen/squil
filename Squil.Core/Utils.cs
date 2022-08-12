@@ -81,6 +81,10 @@ public static class Extensions
     }
 
     [DebuggerHidden]
+    public static T GetOrDefault<T>(this T[] source, Int32 index)
+        => source.Length <= index ? default : source[index];
+
+    [DebuggerHidden]
     public static void Apply<S>(this S source, Action<S> func)
         => func(source);
 

@@ -1,0 +1,378 @@
+﻿
+
+
+$bg-light-1: #f5f5f4;
+$bg-light-2: #e7e5e4;
+
+/* unused, height issue */
+@mixin ellipsis
+{
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@mixin text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@function sz($n) {
+    @return $n * 0.125em;
+}
+
+@mixin grid-base {
+    display: grid;
+    column-gap: sz(2);
+    row-gap: sz(2);
+}
+
+@mixin grid-3 {
+    @include grid-base;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@mixin grid-2 {
+    @include grid-base;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@mixin hide-labels-and-legends {
+    label, legend, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
+        display: none;
+    }
+}
+
+@mixin border($radius) {
+    border-radius: $radius;
+}
+
+@mixin stretched-link {
+    position: relative;
+
+    > header > a::after {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
+        pointer-events: auto;
+        content: "";
+        background-color: rgba(0,0,0,0);
+    }
+}
+
+.entity-context {
+    --entity-bg-prev: white;
+
+    li.ellipsis {
+        display: none;
+    }
+
+    label {
+        @include text-ellipsis;
+
+        &:hover {
+            overflow: visible;
+            color: black;
+            position: relative;
+            z-index: 1;
+
+            > * {
+                /*          Taking this out so long as we don't have an example where it's needed.  
+                background: white;
+                outline: 2px solid white;
+                isolation: isolate;
+*/
+                :after {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+                    left: 0;
+                    z-index: 1;
+                    pointer-events: auto;
+                    content: "";
+                    background-color: rgba(0,0,0,0);
+                }
+            }
+        }
+    }
+
+    a {
+        color: inherit;
+    }
+
+    header {
+        display: flex;
+
+        > a, span {
+            @include text-ellipsis;
+        }
+    }
+
+    legend {
+        display: none;
+    }
+
+    fieldset {
+        display: block;
+        position: relative;
+
+        > legend {
+            font-size: inherit;
+        }
+    }
+
+    .entity-relation > ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    ol:empty:before {
+        content: "-"
+    }
+
+    ol {
+        position: relative;
+    }
+
+    ol[data-flavor=block],
+    ol[data-flavor=page] {
+        > li:not(:first-child) {
+            margin-top: 2em;
+        }
+
+        > li:first-child {
+            margin-top: .5em;
+        }
+
+        > li {
+            margin: -10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: var(--entity-bg-0);
+            --entity-bg-prev: var(--entity-bg-0);
+
+
+            > header {
+                font-size: 2em;
+                font-weight: 200;
+            }
+        }
+    }
+
+    ol[data-flavor=page] {
+        > li > fieldset {
+            margin-top: 1em;
+
+            > legend {
+
+                @media (min-width: 1200px) {
+                    display: block;
+                }
+
+                position: absolute;
+                font-variant: small-caps;
+                top: 0;
+                left: -20px;
+                text-align: right;
+                width: 5em;
+                margin-left: -5em;
+            }
+
+            &[data-layout=grid3] {
+                @include grid-3;
+            }
+        }
+
+        > li > fieldset > .entity-relation.is-empty > ol:before {
+            font-style: italic;
+            content: "none";
+        }
+    }
+
+    .entity-relation.is-empty > ol[data-flavor=page]:before {
+        font-style: italic;
+        content: "no results";
+    }
+
+    label {
+        display: block; /* labels are inline by default */
+        font-variant: small-caps;
+        text-transform: lowercase;
+        color: #ccc;
+        font-weight: bold;
+        margin-bottom: 0;
+    }
+
+    .entity-relation > label {
+        span:not(:first-child) {
+            font-size: .75em;
+
+            &:before {
+                content: " in ";
+            }
+
+            &.entity-relation-name-fk:before {
+                content: " through ";
+            }
+        }
+    }
+
+    .entity-column {
+        > label {
+            font-size: .8em;
+            margin-bottom: -.5em;
+        }
+
+        > div {
+            @include text-ellipsis;
+        }
+    }
+
+    .null-value:before {
+        font-style: italic;
+        content: "null";
+    }
+
+    .empty-value:before {
+        font-style: italic;
+        content: "empty";
+    }
+
+    .ws-value:before {
+        font-style: italic;
+        content: "whitespace";
+    }
+
+    .entity-thumb {
+        font-variant: small-caps;
+        font-weight: 900;
+        /* a whole space is way too much, so we go with a tiny margin */
+        margin-right: .12em;
+    }
+
+    ol[data-flavor=block] {
+        > li {
+            &.potentially-last {
+                display: none;
+            }
+
+            &.ellipsis {
+                display: block;
+                background: none;
+
+                &:after {
+                    font-style: italic;
+                    content: "...and more (load more not implemented yet)";
+                }
+            }
+        }
+    }
+
+
+    ol[data-flavor=inline] {
+        @include grid-3;
+        @include hide-labels-and-legends;
+
+        > li {
+            background-color: var(--entity-bg-1);
+            padding: .125em .5em;
+            @include border(5px);
+            @include stretched-link;
+
+            ol[data-flavor=inline2] {
+                font-size: .75em;
+
+                > li {
+                    &:before {
+                        content: "in ";
+                    }
+
+                    * {
+                        display: inline;
+                    }
+
+                    @include text-ellipsis;
+                }
+            }
+
+            &.ellipsis {
+                background-color: var(--entity-bg-prev);
+                height: 32px;
+                width: 32px;
+                border-radius: 0;
+                display: block;
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                clip-path: path('M 24 27.999 C 24 29.325 22.925 30.4 21.599 30.4 C 20.273 30.4 19.198 29.325 19.198 27.999 C 19.198 26.673 20.273 25.598 21.599 25.598 C 22.925 25.598 24 26.673 24 27.999 Z M 30.402 27.999 C 30.402 29.325 29.327 30.4 28.001 30.4 C 26.675 30.4 25.6 29.325 25.6 27.999 C 25.6 26.673 26.675 25.598 28.001 25.598 C 29.327 25.598 30.402 26.673 30.402 27.999 Z M 17.6 28 C 17.6 29.325 16.525 30.4 15.2 30.4 C 13.875 30.4 12.8 29.325 12.8 28 C 12.8 26.675 13.875 25.6 15.2 25.6 C 16.525 25.6 17.6 26.675 17.6 28 Z M 33.6 33.6 L 33.6 0 L 32 0 L 0 32 L 0 33.6 L 32 33.6 L 33.6 33.6 Z');
+            }
+        }
+    }
+    /* old inline */
+    ol[data-flavor=inline-old] {
+        > li {
+            display: inline-block;
+
+            header {
+                max-width: 8em;
+            }
+        }
+
+        > li {
+            * {
+                display: inline;
+            }
+
+            header {
+                display: inline-flex;
+            }
+        }
+
+        li {
+            &:not(:last-child):after {
+                content: ", ";
+                margin-right: 4px;
+            }
+        }
+
+        li.potentially-last {
+            * {
+                display: none !important;
+                /*width: 0;
+            height: 0;
+            overflow: hidden;*/
+            }
+
+            &:after {
+                content: "..."
+            }
+        }
+        /* No labels and legends, and without labels unproper content is meaningless. */
+        label, legend, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
+            display: none;
+        }
+
+        ol[data-flavor=inline2] {
+            font-size: .75em;
+
+            > li:before {
+                margin-left: .2em;
+                content: "in "
+            }
+
+            > li:not(:last-child):after {
+                content: ", "
+            }
+        }
+    }
+
+    .relation.is-empty {
+        display: none;
+    }
+}
