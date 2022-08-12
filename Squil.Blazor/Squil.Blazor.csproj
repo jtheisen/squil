@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blazor-Analytics" Version="3.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Squil.Core\Squil.Core.csproj" />
   </ItemGroup>
 

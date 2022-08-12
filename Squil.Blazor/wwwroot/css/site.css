@@ -1,10 +1,18 @@
-@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+html {
+    font-size: 14px;
 }
 
-h1:focus {
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+/* Blazor
+-------------------------------------------------- */
+
+/*h1:focus {
     outline: none;
 }
 
@@ -33,6 +41,7 @@ a, .btn-link {
 .validation-message {
     color: red;
 }
+*/
 
 #blazor-error-ui {
     background: lightyellow;
@@ -62,3 +71,36 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+
+/* Sticky footer styles
+-------------------------------------------------- */
+
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    /* Margin bottom by footer height */
+    margin-bottom: 60px;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+}

@@ -6,7 +6,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil", "Squil\Squil.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Core", "Squil.Core\Squil.Core.csproj", "{FE5F16B4-F465-4124-84F1-EB8D25C57009}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Squil.Blazor", "Squil.Blazor\Squil.Blazor.csproj", "{CF06324C-A060-47A9-975E-5221DC7C7A7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Blazor", "Squil.Blazor\Squil.Blazor.csproj", "{CF06324C-A060-47A9-975E-5221DC7C7A7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

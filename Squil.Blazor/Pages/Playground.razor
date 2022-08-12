@@ -1,0 +1,41 @@
+﻿@page "/playground/{index:int?}"
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current init id: @Guid</p>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+<p role="status">Current index: @Index</p>
+
+<a href="/counter/@(Index + 1)" class="btn btn-link">Move up</a>
+
+@code {
+    [Parameter]
+    public Int32 Index { get; set; }
+
+    public Guid Guid { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        Guid = Guid.NewGuid();
+    }
+
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

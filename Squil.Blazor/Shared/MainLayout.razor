@@ -1,19 +1,34 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>Squil.Blazor</PageTitle>
+<PageTitle>SQuiL</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<a class="github-fork-ribbon" href="https://github.com/jtheisen/squil" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+<header>
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="container">
+            <ul class="nav navbar-nav mr-auto">
+                <li class="nav-item"><a class="nav-link text-muted" asp-area="" asp-controller="Home" asp-action="Index">Databases</a></li>
+@*                @RenderSection("NavItems", required: false)
+*@            </ul>
         </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    </nav>
+</header>
+<div class="container">
+    @Body
 </div>
+
+<nav class="border-top navbar navbar-expand-sm footer text-muted">
+    <div class="container">
+        <ul class="navbar-collapse nav navbar-nav mr-auto">
+            <li class="nav-item mr-auto">
+                <span class="navbar-text">SQuiL &copy; @DateTime.Now.Year - Jens Theisen</span>
+            </li>
+            <li class="nav-item"><a class="nav-link text-muted" href="https://squil.net">Introduction</a></li>
+            <li class="nav-item"><a class="nav-link text-muted" href="https://github.com/jtheisen/squil">Github</a></li>
+        </ul>
+    </div>
+</nav>
+
+
+

@@ -6,9 +6,9 @@ For a quick look at the thing, use the public demo hosting:
 
 [Live demo of this prototype](https://squil.azurewebsites.net)
 
-If you have a database with proper foreign key constraints between the tables, you may want
-to check out how it looks in SQuiL. It's easy to install with the docker image, see the
-section below.
+If you have a SQL Server database with proper foreign key constraints between the tables,
+you may want to check out how it looks in SQuiL. It's easy to install with the docker image,
+see the section below.
 
 If you are interested in the vision behind this prototype, I've written something about
 that and myself on a dedicated site:
@@ -53,7 +53,7 @@ Then, you can create and run a container:
      docker run -d -p 8080:80 --env-file <environment-file> --name squil squiltech/squil
 
 This will create and run a container named *squil* that can be started and stopped and uses
-the connections defined in the environment file (which won't be used any more after that).
+the connections defined in the environment file (which won't be used anymore after that).
 When running, it listens to port 8080, so the app will be at http://localhost:8080.
 
 ## Connect to a server on your local machine
