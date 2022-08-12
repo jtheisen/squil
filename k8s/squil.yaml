@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: squil
+  labels:
+    app: squil
+spec:  
+  containers:
+  - name: latest
+    image: 'squiltech/squil:latest'
+    ports:
+    - containerPort: 80
+    env:
+    - name: Connections__0__Name
+      value: "AdventureWorks2019"
+    - name: Connections__0__LongName
+      value: "AdventureWorks2019"
+    - name: Connections__0__Description
+      value: "AdventureWorks2019"
+    - name: Connections__0__ConnectionString
+      value: "Server=192.168.100.102,30127;Initial Catalog=AdventureWorks2019;User ID=squil;Password=password;TrustServerCertificate=True;Connection Timeout=30;"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: squil
+  name: squil
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: squil
+  type: NodePort
