@@ -1,4 +1,6 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@inject IOptions<AppSettings> Settings
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -10,3 +12,8 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@if (!String.IsNullOrEmpty(Settings.Value.GoogleAnalyticsToken))
+{
+    <NavigationTracker />
+}

@@ -1,7 +1,7 @@
+using Blazor.Analytics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Squil;
-using Squil.Blazor.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +18,11 @@ services.AddServerSideBlazor();
 services.AddSingleton<ConnectionManager>();
 services.AddSingleton<LocationQueryRunner>();
 
-builder.Services.AddSingleton<WeatherForecastService>();
+var googleAnalyticsToken = configuration["GoogleAnalyticsToken"];
+if (!String.IsNullOrEmpty(googleAnalyticsToken))
+{
+    services.AddGoogleAnalytics(googleAnalyticsToken);
+}
 
 var app = builder.Build();
 
