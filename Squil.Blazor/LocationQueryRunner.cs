@@ -29,21 +29,6 @@ namespace Squil
             this.connections = connections;
         }
 
-        public LocationQueryResult Query(String location)
-        {
-            var uri = new Uri(location);
-
-            var path = uri.AbsolutePath.TrimStart('/').Split('/');
-
-            var query = HttpUtility.ParseQueryString(uri.Query);
-
-            var connectionName = path.GetOrDefault(1);
-            var table = path.GetOrDefault(2);
-            var index = path.GetOrDefault(3);
-
-            return Query(connectionName, table, index, query);
-        }
-
         public LocationQueryResult Query(String connectionName, String table, String index, NameValueCollection query)
         {
             var context = connections.GetContext(connectionName);

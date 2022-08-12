@@ -52,6 +52,10 @@
     {
         base.OnParametersSet();
 
-        Result = Runner.Query(NavigationManager.Uri);
+        var query = new Uri(NavigationManager.Uri).Query;
+
+        var queryParams = HttpUtility.ParseQueryString(query);
+
+        Result = Runner.Query(ConnectionName, Table, Index, queryParams);
     }
 }
