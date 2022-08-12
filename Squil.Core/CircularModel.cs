@@ -65,7 +65,9 @@ namespace Squil
             {
                 var table = tables[isTable.GetName()];
 
-                table.ColumnsInOrder = isTable.Columns.Select((c, i) => new CMColumn
+                table.ColumnsInOrder = isTable.Columns
+                    .Where(c => c.DATA_TYPE != "varbinary" && c.DATA_TYPE != "geography")
+                    .Select((c, i) => new CMColumn
                 {
                     Order = i,
                     Name = c.COLUMN_NAME,
