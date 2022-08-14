@@ -10,6 +10,10 @@
         <li class="nav-item"><a class="nav-link text-muted" href="@Result.RootUrl">@Result.RootName</a></li>
     </NavItems>
 
+    <ActionItems>
+        <button class="btn btn-light text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+    </ActionItems>
+
     <ChildContent>
         <div class="row small text-muted d-xl-none">
             <div class="col-lg-12">
@@ -31,6 +35,30 @@
                 <HelpText QueryType="@Result.QueryType" />
             </div>
         </div>
+
+        <Modal OnClose="SqlModalSubscription">
+            <Title>SQL Query</Title>
+            <HeaderExtra>
+                <small>
+                    <p class="mt-2 mr-4">
+                        Each page's data is requested in only one query. The query is textually long, but
+                        executes efficiently as it relies only on a series of nested table seeks. (This isn't
+                        quite guaranteed yet, but a future version of SQuiL will make sure that it is.)
+                    </p>
+                    <p>
+                        Although this query uses the nonstandard XML query syntax of SQL Server, a similar
+                        query can be created for other database engines - although this may look even more
+                        convoluted for those.
+                    </p>
+
+                </small>
+            </HeaderExtra>
+            <Body>
+                <pre>
+                    @Result.Sql
+                </pre>
+            </Body>
+        </Modal>
     </ChildContent>
 </DefaultLayout>
 
@@ -45,8 +73,11 @@
     [Parameter]
     public String Index { get; set; }
 
-    public LocationQueryResult Result { get; set; }
+    LocationQueryResult Result { get; set; }
 
+    void OpenSqlModal() => SqlModalSubscription = () => SqlModalSubscription = null;
+
+    Action SqlModalSubscription { get; set; }
 
     protected override void OnParametersSet()
     {

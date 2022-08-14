@@ -5,6 +5,10 @@
                 <li class="nav-item"><a class="nav-link text-muted" href="/">Databases</a></li>
                 @NavItems
             </ul>
+            <div class="d-flex align-self-start">
+                @ActionItems
+                <div style="width: 120px"></div>
+            </div>
         </div>
     </nav>
 </header>
@@ -15,6 +19,9 @@
 @code {
     [Parameter]
     public RenderFragment NavItems { get; set; }
+
+    [Parameter]
+    public RenderFragment ActionItems { get; set; }
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }

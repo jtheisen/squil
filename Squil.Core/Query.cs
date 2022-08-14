@@ -156,17 +156,17 @@ namespace Squil
             };
         }
 
-        public Entity Query(SqlConnection connection, Extent extent)
+        public (Entity entity, String sql, XElement resultXml) Query(SqlConnection connection, Extent extent)
         {
             var sql = GetCompleteSql(extent);
 
-            var xml = connection.QueryXml(sql);
+            var resultXml = connection.QueryXml(sql);
 
             var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
-            var entity = MakeEntity(extent, rootTable, xml);
+            var entity = MakeEntity(extent, rootTable, resultXml);
 
-            return entity;
+            return (entity, sql, resultXml);
         }
 
         public X Query<X>(SqlConnection connection, Extent extent)

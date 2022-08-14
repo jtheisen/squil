@@ -16,6 +16,7 @@ namespace Squil
         public QueryControllerQueryType QueryType { get; set; }
         public String RootUrl { get; set; }
         public String RootName { get; set; }
+        public String Sql { get; set; }
         public String Html { get; set; }
     }
 
@@ -53,17 +54,18 @@ namespace Squil
 
             using var connection = context.GetConnection();
 
-            var result = context.QueryGenerator.Query(connection, extent);
+            var (entity, sql, resultXml) = context.QueryGenerator.Query(connection, extent);
 
             var renderer = new HtmlRenderer(rest => $"/query/{connectionName}/{rest}");
 
-            var html = renderer.RenderToHtml(result);
+            var html = renderer.RenderToHtml(entity);
 
             return new LocationQueryResult
             {
                 QueryType = table == null ? QueryControllerQueryType.Root : isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist,
                 RootName = connectionName,
                 RootUrl = $"/query/{connectionName}",
+                Sql = sql,
                 Html = html
             };
         }
