@@ -21,14 +21,9 @@
 
 <div class="@String.Join(' ', classes)" style="@styleForHue">
     <label>
-        @if (entities.RelationEnd.IsMany && parentEntity != null)
-        {
-            @RenderLink(parentEntity, entities, @<EntityRelationNameView RelatedEntities="entities" />);
-        }
-        else
-        {
+        <a href="@Context.RenderEntitiesUrl(parentEntity, entities)">
             <EntityRelationNameView RelatedEntities="entities" />
-        }
+        </a>
     </label>
     <ol data-flavor="@flavor">
         @for (var i = 0; i < entities.List.Length; ++i)
@@ -46,7 +41,6 @@
             <li class="ellipsis" />
         }
     </ol>
-
 </div>
 
 @code {
@@ -71,22 +65,5 @@
         style += $"--entity-bg-0: #{GetColorForHue(hue, 20, 95)};";
 
         return style;
-    }
-
-    RenderFragment RenderLink(Entity parentEntity, RelatedEntities relatedEntities, RenderFragment content)
-    {
-        var tableName = relatedEntities.TableName;
-
-        var end = relatedEntities.RelationEnd;
-
-        var key = end.Key;
-
-        var keyPart = parentEntity != null && end.Key != null
-        ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={parentEntity.ColumnValues[pc.Name]}"))
-        : "";
-
-        var url = Context.RenderUrl($"{tableName.Escaped}{keyPart.TrimEnd('?')}");
-
-        return @<a href="@url">@content</a>;
     }
 }

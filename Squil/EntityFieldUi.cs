@@ -26,6 +26,25 @@
 
             return url;
         }
+
+        public String RenderEntitiesUrl(Entity parentEntity, RelatedEntities relatedEntities)
+        {
+            if (parentEntity == null || !relatedEntities.RelationEnd.IsMany) return null;
+
+            var tableName = relatedEntities.TableName;
+
+            var end = relatedEntities.RelationEnd;
+
+            var key = end.Key;
+
+            var keyPart = parentEntity != null && end.Key != null
+            ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={parentEntity.ColumnValues[pc.Name]}"))
+            : "";
+
+            var url = RenderUrl($"{tableName.Escaped}{keyPart.TrimEnd('?')}");
+
+            return url;
+        }
     }
 
     public enum ColumnRenderClass
