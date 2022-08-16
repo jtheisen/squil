@@ -28,6 +28,15 @@
         }
     }
 
+    public enum ColumnRenderClass
+    {
+        None,
+        PrimaryName,
+        Data
+    }
+
+    public delegate String UrlRenderer(String rest);
+
     public class EntityFieldUi
     {
         public Entity Entity { get; set; }

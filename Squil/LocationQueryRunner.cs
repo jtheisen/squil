@@ -18,7 +18,6 @@ namespace Squil
         public String RootName { get; set; }
         public String Sql { get; set; }
         public Entity Entity { get; set; }
-        public String Html { get; set; }
     }
 
     public class LocationQueryRunner
@@ -57,18 +56,13 @@ namespace Squil
 
             var (entity, sql, resultXml) = context.QueryGenerator.Query(connection, extent);
 
-            var renderer = new HtmlRenderer(rest => $"/query/{connectionName}/{rest}");
-
-            var html = renderer.RenderToHtml(entity);
-
             return new LocationQueryResult
             {
                 QueryType = table == null ? QueryControllerQueryType.Root : isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist,
                 RootName = connectionName,
                 RootUrl = $"/query/{connectionName}",
                 Sql = sql,
-                Entity = entity,
-                Html = html
+                Entity = entity
             };
         }
     }
