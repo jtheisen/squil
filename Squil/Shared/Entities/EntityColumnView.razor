@@ -1,0 +1,44 @@
+﻿<div class="entity-column" data-x-name="@Column.Name">
+    <label>@Column.Name</label>
+    <div>
+        <a href="@Context.RenderEntityUrl(Table, Entity)">
+            @{
+                var value = Entity.ColumnValues[Column.Name];
+
+                if (value == null)
+                {
+                    <span class="null-value" />
+                }
+                else if (value.Length == 0)
+                {
+                    <span class="empty-value" />
+                }
+                else if (String.IsNullOrWhiteSpace(value))
+                {
+                    <span class="ws-value" />
+                }
+                else
+                {
+                    <text>@value</text>
+                }
+            }
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Entity Entity { get; set; }
+
+    [Parameter]
+    public CMTable Table { get; set; }
+
+    [Parameter]
+    public CMColumn Column { get; set; }
+
+    [Parameter]
+    public ColumnRenderClass Cls { get; set; }
+
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+}

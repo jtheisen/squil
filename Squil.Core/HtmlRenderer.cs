@@ -17,7 +17,7 @@ namespace Squil
         Data
     }
 
-    public delegate String LinkRenderer(String rest);
+    public delegate String UrlRenderer(String rest);
 
     public class HtmlRenderer
     {
@@ -25,11 +25,11 @@ namespace Squil
         static readonly Object emptySpan = new XElement("span", new XAttribute("class", "empty-value"));
         static readonly Object wsSpan = new XElement("span", new XAttribute("class", "ws-value"));
 
-        private readonly LinkRenderer urlRenderer;
+        private readonly UrlRenderer urlRenderer;
 
         Int32 debugId = 0;
 
-        public HtmlRenderer(LinkRenderer urlRenderer)
+        public HtmlRenderer(UrlRenderer urlRenderer)
         {
             this.urlRenderer = urlRenderer;
         }
@@ -148,7 +148,7 @@ namespace Squil
 
         struct Fieldset
         {
-            public Object legend;
+            public String legend;
             public String layout;
             public IEnumerable<Object> items;
         }
@@ -241,7 +241,7 @@ namespace Squil
 
             // In the singular case, a link is either superfluous (when there's is an entry)
             // or misleading (when there isn't), so we better not render it as a link at all.
-            if(entities.RelationEnd.IsMany && parentEntity != null)
+            if (entities.RelationEnd.IsMany && parentEntity != null)
             {
                 labelContent = RenderLink(parentEntity, entities, labelContent);
             }

@@ -17,6 +17,7 @@ namespace Squil
         public String RootUrl { get; set; }
         public String RootName { get; set; }
         public String Sql { get; set; }
+        public Entity Entity { get; set; }
         public String Html { get; set; }
     }
 
@@ -66,6 +67,7 @@ namespace Squil
                 RootName = connectionName,
                 RootUrl = $"/query/{connectionName}",
                 Sql = sql,
+                Entity = entity,
                 Html = html
             };
         }

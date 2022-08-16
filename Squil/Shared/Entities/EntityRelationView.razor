@@ -1,0 +1,92 @@
+﻿@using ColorHelper
+
+@{
+    var entities = Ui.RelatedEntites;
+    var parentEntity = Ui.Entity;
+
+    var lastIndex = entities.Extent.Limit?.Apply(l => l - 1);
+
+    var classes = new List<String>();
+
+    classes.Add("entity-relation");
+    classes.Add(entities.RelationEnd.IsMany ? "entity-relation-plural" : "entity-relation-singular");
+    if (entities.List.Length == 0) classes.Add("is-empty");
+
+    var isLeaf = !entities.Extent.Children.Any();
+
+    var styleForHue = GetStyleForHue(entities.RelationEnd.Table.Hue);
+
+    var flavor = entities.Extent.Flavor.Apply(f => f.GetCssValue(isLeaf));
+}
+
+<div class="@String.Join(' ', classes)" style="@styleForHue">
+    <label>
+        @if (entities.RelationEnd.IsMany && parentEntity != null)
+        {
+            @RenderLink(parentEntity, entities, @<EntityRelationNameView RelatedEntities="entities" />);
+        }
+        else
+        {
+            <EntityRelationNameView RelatedEntities="entities" />
+        }
+    </label>
+    <ol data-flavor="@flavor">
+        @for (var i = 0; i < entities.List.Length; ++i)
+        {
+            var entity = entities.List[i];
+
+            var itemClasses = i == lastIndex ? "potentially-last" : null;
+
+            <li class="@itemClasses">
+                <EntityContentView Entity="entity" ParentCollection="entities" />
+            </li>
+        }
+        @if (entities.List.Length == entities.Extent.Limit)
+        {
+            <li class="ellipsis" />
+        }
+    </ol>
+
+</div>
+
+@code {
+    [Parameter]
+    public EntityRelationFieldUi Ui { get; set; }
+
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+
+    String GetColorForHue(Double hue, Int32 s, Int32 l)
+    {
+        var hsl = new HSL((int)hue, (byte)s, (byte)l);
+
+        return ColorConverter.HslToHex(hsl).Value;
+    }
+
+    String GetStyleForHue(Double hue)
+    {
+        String style = "";
+
+        style += $"--entity-bg-1: #{GetColorForHue(hue, 20, 90)};";
+        style += $"--entity-bg-0: #{GetColorForHue(hue, 20, 95)};";
+
+        return style;
+    }
+
+    RenderFragment RenderLink(Entity parentEntity, RelatedEntities relatedEntities, RenderFragment content)
+    {
+        var tableName = relatedEntities.TableName;
+
+        var end = relatedEntities.RelationEnd;
+
+        var key = end.Key;
+
+        var keyPart = parentEntity != null && end.Key != null
+        ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={parentEntity.ColumnValues[pc.Name]}"))
+        : "";
+
+        var url = Context.RenderUrl($"{tableName.Escaped}{keyPart.TrimEnd('?')}");
+
+        return @<a href="@url">@content</a>;
+    }
+}

@@ -23,7 +23,9 @@
 
         <div class="row">
             <div class="entity-context col-12 col-xl-10">
-                @((MarkupString)Result.Html)
+                <CascadingValue Value="QueryContext">
+                    <EntityContentView Entity="Result.Entity" />
+                </CascadingValue>
 
                 @*<pre class="debug-xml-original">
             @Model.Html
@@ -75,6 +77,8 @@
 
     LocationQueryResult Result { get; set; }
 
+    QueryContext QueryContext { get; set; }
+
     void OpenSqlModal() => SqlModalSubscription = () => SqlModalSubscription = null;
 
     Action SqlModalSubscription { get; set; }
@@ -88,5 +92,7 @@
         var queryParams = HttpUtility.ParseQueryString(query);
 
         Result = Runner.Query(ConnectionName, Table, Index, queryParams);
+
+        QueryContext = new QueryContext(rest => $"/query/{ConnectionName}/{rest}");
     }
 }

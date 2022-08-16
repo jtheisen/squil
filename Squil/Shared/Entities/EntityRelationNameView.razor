@@ -1,0 +1,29 @@
+﻿@using System.Xml.Linq
+@using Humanizer
+
+@{
+    var tableName = RelatedEntities.TableName;
+
+    var end = RelatedEntities.RelationEnd;
+
+    var parts = tableName.GetDistinguishedParts(end.OtherEnd.Table.Name);
+
+    if (parts.Length == 0) throw new Exception("Unexpectedly no parts for relation name");
+
+    foreach (var (p, i) in parts.Reverse().Select((p, i) => (p, i)))
+    {
+        <span>@(i == 0 && !end.IsMany ? p.Singularize() : p)</span>
+    }
+
+    var fk = end.GetForeignKey()?.Name;
+
+    if (!end.IsUniquelyTyped && !String.IsNullOrWhiteSpace(fk))
+    {
+        <span class="entity-relation-name-fk">@fk</span>
+    }
+}
+
+@code {
+    [Parameter]
+    public RelatedEntities RelatedEntities { get; set; }
+}
