@@ -53,6 +53,36 @@ namespace Squil.Core
                                         Alias = "referential"
                                     }
                                 }
+                            },
+
+                            new Extent
+                            {
+                                RelationName = "sys-table",
+                                Alias = "sys-table",
+                                Children = new[]
+                                {
+                                    new Extent
+                                    {
+                                        Order = new[] { "index_id" },
+                                        RelationName = "indexes",
+                                        Alias = "indexes",
+                                        Children = new[]
+                                        {
+                                            new Extent
+                                            {
+                                                Order = new[] { "column_index_id" },
+                                                RelationName = "columns",
+                                                Alias = "columns"
+                                            }
+                                        }
+                                    },
+                                    new Extent
+                                    {
+                                        Order = new[] { "column_id" },
+                                        RelationName = "columns",
+                                        Alias = "columns"
+                                    }
+                                }
                             }
                         }
                     }

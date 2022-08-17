@@ -28,6 +28,13 @@ public class MultipleElementsException : InvalidOperationException
     }
 }
 
+public class Empties<T>
+{
+    public static T[] Array = new T[0];
+
+    public static IEnumerable<T> Enumerable = Array;
+}
+
 public static class Extensions
 {
     static readonly XmlWriterSettings xmlWriterSettings = new XmlWriterSettings { Indent = true };
