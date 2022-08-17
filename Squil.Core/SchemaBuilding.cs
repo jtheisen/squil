@@ -8,7 +8,7 @@ namespace Squil.Core
 {
     public static class SchemaBuildingExtensions
     {
-        public static CMRoot GetCircularModel(this SqlConnection connection)
+        static ISRoot GetISSchema(this SqlConnection connection)
         {
             var cmRootForInfSch = new CMRoot("INFORMATION_SCHEMA");
             cmRootForInfSch.Populate(InformationSchemaSchema.GetSchema());
@@ -53,44 +53,83 @@ namespace Squil.Core
                                         Alias = "referential"
                                     }
                                 }
-                            },
-
-                            new Extent
-                            {
-                                RelationName = "sys-table",
-                                Alias = "sys-table",
-                                Children = new[]
-                                {
-                                    new Extent
-                                    {
-                                        Order = new[] { "index_id" },
-                                        RelationName = "indexes",
-                                        Alias = "indexes",
-                                        Children = new[]
-                                        {
-                                            new Extent
-                                            {
-                                                Order = new[] { "column_index_id" },
-                                                RelationName = "columns",
-                                                Alias = "columns"
-                                            }
-                                        }
-                                    },
-                                    new Extent
-                                    {
-                                        Order = new[] { "column_id" },
-                                        RelationName = "columns",
-                                        Alias = "columns"
-                                    }
-                                }
                             }
                         }
                     }
                 }
             });
 
+            return cSchema;
+        }
+
+        static SysRoot GetSysSchema(this SqlConnection connection)
+        {
+            var cmRootForSys = new CMRoot("sys");
+            cmRootForSys.Populate(SystemSchema.GetSchema());
+            cmRootForSys.PopulateRoot();
+            cmRootForSys.Populate(SystemSchema.GetRelations().ToArray());
+
+            var sysGenerator = new QueryGenerator(cmRootForSys, true);
+
+            var cSchema = sysGenerator.Query<SysRoot>(connection, new Extent
+            {
+                RelationName = "",
+                Children = new[]
+                {
+                    new Extent
+                    {
+                        RelationName = "sys.schemas",
+                        Alias = "s",
+                        Children = new[]
+                        {
+                                new Extent
+                                {
+                                    RelationName = "tables",
+                                    Alias = "t",
+                                    Children = new[]
+                                    {
+                                        new Extent
+                                        {
+                                            Order = new[] { "index_id" },
+                                            RelationName = "indexes",
+                                            Alias = "i",
+                                            Children = new[]
+                                            {
+                                                new Extent
+                                                {
+                                                    Order = new[] { "index_column_id" },
+                                                    RelationName = "columns",
+                                                    Alias = "ic"
+                                                }
+                                            }
+                                        },
+                                        new Extent
+                                        {
+                                            Order = new[] { "column_id" },
+                                            RelationName = "columns",
+                                            Alias = "c"
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+            });
+
+            return cSchema;
+        }
+
+        public static CMRoot GetCircularModel(this SqlConnection connection)
+        {
+            var isSchema = connection.GetISSchema();
+            var sysSchema = connection.GetSysSchema();
+
+            System.Diagnostics.Debug.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(sysSchema, Newtonsoft.Json.Formatting.Indented));
+
+            // populate from sysschema
+
             var cmRootForCs = new CMRoot("business model");
-            cmRootForCs.Populate(cSchema);
+            cmRootForCs.Populate(isSchema);
             cmRootForCs.PopulateRoot();
             cmRootForCs.PopulateRelationsFromForeignKeys();
             cmRootForCs.Closeup();
