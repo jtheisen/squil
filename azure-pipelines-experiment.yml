@@ -1,0 +1,14 @@
+trigger:
+- master
+- staging
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: AzureStaticWebApp@0
+  inputs:
+    output_location: 'public'
+    is_static_export: true
+
+
