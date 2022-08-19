@@ -38,8 +38,14 @@ namespace Squil
             return sha1.ComputeHash(Encoding.UTF8.GetBytes(name))[0] * 360.0 / 255.0;
         }
 
-        public void Populate(ISRoot isRoot, Boolean includeViews = false)
+        public void Populate(ISRoot isRoot, SysRoot sysRoot = null, Boolean includeViews = false)
         {
+            var sysTables = sysRoot?.Apply(r => (
+                from s in r.Schemas
+                from t in s.Tables
+                select (s, t)
+            ).ToLookup(p => (p.s.Name, p.t.Name), p => p.t));
+
             var isTables = isRoot.Tables.ToArray();
 
             if (!includeViews)
@@ -98,6 +104,8 @@ namespace Squil
             {
                 var table = tables[isTable.GetName()];
 
+                var sysTable = sysTables?[(isTable.Schema, isTable.Name)].Single($"Can't find sys table for table {isTable.Schema}.{isTable.Name}");
+
                 table.ForeignKeys = isTable.Constraints
                     .Where(c => c.CONSTRAINT_TYPE == "FOREIGN KEY")
                     .Select(c => new CMForeignKey
@@ -127,6 +135,28 @@ namespace Squil
                         }
                     }
                 }
+
+                var sysColumns = sysTable?.Columns.ToLookup(c => c.ColumnId, c => c);
+
+                table.Indexes = (sysTable?.Indexes ?? Empties<SysIndex>.Array).Apply(indexes =>
+                    from i in indexes
+                    let support = i.CheckSupport()
+                    where i.Name != null
+                    select new CMIndex
+                    {
+                        Name = i.Name,
+                        IsUnique = i.IsUnique,
+                        Table = table,
+                        UnsupportedTag = support.tag,
+                        UnsupportedReason = support.reason,
+                        Columns = (
+                            from ci in i.Columns
+                            from c in sysColumns[ci.ColumnId]
+                            let cmc = table.Columns[c.Name]
+                            select (ci.IsDescendingKey ? CMDirection.Desc : CMDirection.Asc, cmc)
+                        ).ToArray()
+                    }
+                ).ToDictionary(i => i.Name, i => i);
             }
         }
 
@@ -282,6 +312,7 @@ namespace Squil
 
         public CMDomesticKey PrimaryKey { get; set; }
 
+        public Dictionary<String, CMIndex> Indexes { get; set; }
         public Dictionary<String, CMKey> Keys { get; set; }
         public Dictionary<String, CMDomesticKey> DomesticKeys { get; set; }
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
@@ -290,17 +321,42 @@ namespace Squil
     }
 
     [DebuggerDisplay("{Name}")]
-    public class CMKey
+    public class CMColumnTuple
     {
         public ObjectName ObjectName { get; set; }
 
-        // The name is not unique accross schemas, but it is within a table (and a schema).
+        // The name is not unique accross schemas, but it is within a table.
         public String Name { get; set; }
 
         public CMTable Table { get; set; }
 
         public CMColumn[] Columns { get; set; }
+    }
 
+    public enum CMDirection
+    {
+        Asc,
+        Desc
+    }
+
+    public class CMIndex
+    {
+        public String Name { get; set; }
+
+        public CMTable Table { get; set; }
+
+        public Boolean IsSupported { get; set; }
+
+        public String UnsupportedTag { get; set; }
+        public String UnsupportedReason { get; set; }
+
+        public Boolean IsUnique { get; set; }
+
+        public (CMDirection, CMColumn)[] Columns { get; set; }
+    }
+
+    public class CMKey : CMColumnTuple
+    {
         public HashSet<String> SuperKeys { get; set; } = new HashSet<string>();
         public HashSet<String> Subkeys { get; set; } = new HashSet<string>();
     }

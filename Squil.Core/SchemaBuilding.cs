@@ -124,12 +124,10 @@ namespace Squil.Core
             var isSchema = connection.GetISSchema();
             var sysSchema = connection.GetSysSchema();
 
-            System.Diagnostics.Debug.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(sysSchema, Newtonsoft.Json.Formatting.Indented));
-
             // populate from sysschema
 
             var cmRootForCs = new CMRoot("business model");
-            cmRootForCs.Populate(isSchema);
+            cmRootForCs.Populate(isSchema, sysSchema);
             cmRootForCs.PopulateRoot();
             cmRootForCs.PopulateRelationsFromForeignKeys();
             cmRootForCs.Closeup();

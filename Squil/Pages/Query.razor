@@ -21,15 +21,35 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row position-relative">
             <div class="entity-context col-12 col-xl-10">
                 <CascadingValue Value="QueryContext">
                     <EntityContentView Entity="Result.Entity" />
                 </CascadingValue>
             </div>
 
+            <div class="position-absolute" style="left: 0; right: 0; top: 0">
+                <div class="col-12 bg-dark" style="transform: translate(100%, 0)">
+                    te
+                </div>
+            </div>
+
+
             <div class="d-none d-xl-block col-xl-2 small text-muted">
                 <HelpText QueryType="@Result.QueryType" />
+
+                @{
+                    var end = Result.Entity.Related.FirstOrDefault().RelationEnd;
+
+                    <div>
+                        <label>indexes for @end.Table.Name.Simple</label>
+                        @foreach (var item in end.Table.Indexes.Values)
+                        {
+                            <div>@item.Name</div>
+                        }
+                    </div>
+                }
+
             </div>
         </div>
 

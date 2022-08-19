@@ -42,8 +42,11 @@ namespace Squil
         [XmlAttribute("name")]
         public String Name { get; set; }
 
+        [XmlArray("columns")]
+        public SysColumn[] Columns { get; set; } = Empties<SysColumn>.Array;
+
         [XmlArray("indexes")]
-        public SysIndex[] SysIndexes { get; set; } = Empties<SysIndex>.Array;
+        public SysIndex[] Indexes { get; set; } = Empties<SysIndex>.Array;
     }
 
     [XmlType("i")]
@@ -81,7 +84,15 @@ namespace Squil
         [XmlArray("columns")]
         public SysIndexColumn[] Columns { get; set; } = Empties<SysIndexColumn>.Array;
 
-        public Boolean IsSupported() => Type >= 1 && Type <= 2 && !IsDisabled && !HasFilter && !IsHypothetical;
+        public (String tag, String reason) CheckSupport()
+        {
+            if (IsDisabled) return ("disabled", "Disabled indexes can't be used");
+            if (IsHypothetical) return ("hypothetical", "Hypothetical indexes can't be searched");
+            if (HasFilter) return ("filtered", "Filtered indexes are not yet supported");
+            if (Type != 1 && Type != 2) return (TypeDesc, "Only b-tree indexes are supported");
+            return (null, null);
+        }
+
     }
 
     [XmlType("ic")]
@@ -99,6 +110,9 @@ namespace Squil
 
         [XmlAttribute("column_id")]
         public Int32 ColumnId { get; set; }
+
+        [XmlAttribute("is_descending_key")]
+        public Boolean IsDescendingKey { get; set; }
     }
 
     [XmlType("c")]

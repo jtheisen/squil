@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "Squil.Blazor": {
+    "Squil": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
