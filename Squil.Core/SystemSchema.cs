@@ -75,6 +75,9 @@ namespace Squil
         [XmlAttribute("is_unique")]
         public Boolean IsUnique { get; set; }
 
+        [XmlAttribute("is_primary_key")]
+        public Boolean IsPrimary { get; set; }
+
         [XmlAttribute("has_filter")]
         public Boolean HasFilter { get; set; }
 
@@ -144,7 +147,7 @@ namespace Squil
                     MakeISTable("columns",
                         new [] { "object_id", "column_id", "name" }),
                     MakeISTable("indexes",
-                        new [] { "object_id", "index_id", "name", "type", "type_desc", "is_disabled", "is_unique", "has_filter", "is_hypothetical" }),
+                        new [] { "object_id", "index_id", "name", "type", "type_desc", "is_disabled", "is_unique", "is_primary_key", "has_filter", "is_hypothetical" }),
                     MakeISTable("index_columns",
                         new [] { "object_id", "index_id", "index_column_id", "column_id" })
                 }

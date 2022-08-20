@@ -16,7 +16,7 @@ namespace Squil
         String name;
         CMTable rootTable;
         Dictionary<ObjectName, CMTable> tables;
-        Dictionary<ObjectName, CMDomesticKey> keys;
+        Dictionary<ObjectName, CMIndexlike> keys;
 
         public CMTable GetTable(ObjectName name) => tables[name];
 
@@ -26,7 +26,7 @@ namespace Squil
         {
             this.name = name;
             tables = new Dictionary<ObjectName, CMTable>();
-            keys = new Dictionary<ObjectName, CMDomesticKey>();
+            keys = new Dictionary<ObjectName, CMIndexlike>();
         }
 
         public CMTable RootTable => rootTable;
@@ -71,6 +71,8 @@ namespace Squil
             {
                 var table = tables[isTable.GetName()];
 
+                var sysTable = sysTables?[(isTable.Schema, isTable.Name)].Single($"Can't find sys table for table {isTable.Schema}.{isTable.Name}");
+
                 table.ColumnsInOrder = isTable.Columns.Select((c, i) => new CMColumn
                 {
                     Order = i,
@@ -80,72 +82,18 @@ namespace Squil
 
                 table.Columns = table.ColumnsInOrder.ToDictionary(c => c.Name, c => c);
 
-                table.DomesticKeys = isTable.Constraints
-                    .Where(c => c.CONSTRAINT_TYPE == "PRIMARY KEY" || c.CONSTRAINT_TYPE == "UNIQUE KEY")
-                    .Select(c => new CMDomesticKey
-                    {
-                        ObjectName = c.GetName(),
-                        Name = c.Name,
-                        IsPrimary = c.CONSTRAINT_TYPE == "PRIMARY KEY",
-                        Table = table,
-                        Columns = c.Columns.Select(cc => table.Columns[cc.COLUMN_NAME]).ToArray()
-                    })
-                    .ToDictionary(c => c.Name, c => c);
-
-                foreach (var key in table.DomesticKeys)
-                {
-                    if (key.Value.IsPrimary) table.PrimaryKey = key.Value;
-
-                    keys.Add(key.Value.ObjectName, key.Value);
-                }
-            }
-
-            foreach (var isTable in isTables)
-            {
-                var table = tables[isTable.GetName()];
-
-                var sysTable = sysTables?[(isTable.Schema, isTable.Name)].Single($"Can't find sys table for table {isTable.Schema}.{isTable.Name}");
-
-                table.ForeignKeys = isTable.Constraints
-                    .Where(c => c.CONSTRAINT_TYPE == "FOREIGN KEY")
-                    .Select(c => new CMForeignKey
-                    {
-                        Name = c.Name,
-                        Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").GetName()],
-                        Table = table,
-                        Columns = c.Columns.Select(cc => table.Columns[cc.COLUMN_NAME]).ToArray()
-                    })
-                    .ToDictionary(c => c.Name, c => c);
-
-                table.Keys = new Dictionary<String, CMKey>();
-
-                foreach (var p in table.DomesticKeys) table.Keys[p.Key] = p.Value;
-                foreach (var p in table.ForeignKeys) table.Keys[p.Key] = p.Value;
-
-                foreach (var key in table.Keys.Values)
-                {
-                    var hash = new HashSet<String>(key.Columns.Select(c => c.Name));
-
-                    foreach (var key2 in table.Keys.Values)
-                    {
-                        if (hash.IsSubsetOf(key2.Columns.Select(c => c.Name)))
-                        {
-                            key.SuperKeys.Add(key2.Name);
-                            key2.Subkeys.Add(key.Name);
-                        }
-                    }
-                }
-
                 var sysColumns = sysTable?.Columns.ToLookup(c => c.ColumnId, c => c);
 
                 table.Indexes = (sysTable?.Indexes ?? Empties<SysIndex>.Array).Apply(indexes =>
                     from i in indexes
                     let support = i.CheckSupport()
                     where i.Name != null
-                    select new CMIndex
+                    select new CMIndexlike
                     {
                         Name = i.Name,
+                        ObjectName = new ObjectName(isTable.Catalog, isTable.Schema, i.Name),
                         IsUnique = i.IsUnique,
+                        IsPrimary = i.IsPrimary,
                         Table = table,
                         UnsupportedTag = support.tag,
                         UnsupportedReason = support.reason,
@@ -157,6 +105,69 @@ namespace Squil
                         ).ToArray()
                     }
                 ).ToDictionary(i => i.Name, i => i);
+
+                var keysUnknownFromIndexes = (
+                    from c in isTable.Constraints
+                    // When constraints appear as indexes, the index version has more complete information
+                    where !table.Indexes.ContainsKey(c.Name)
+                    where c.CONSTRAINT_TYPE == "PRIMARY KEY" || c.CONSTRAINT_TYPE == "UNIQUE KEY"
+                    select new CMIndexlike
+                    {
+                        ObjectName = c.GetName(),
+                        Name = c.Name,
+                        IsPrimary = c.CONSTRAINT_TYPE == "PRIMARY KEY",
+                        Table = table,
+                        Columns = c.Columns.Select(cc => (CMDirection.Unknown, table.Columns[cc.COLUMN_NAME])).ToArray()
+                    }
+                ).ToArray();
+
+                table.UniqueIndexlikes = table.Indexes.Values
+                    .Cast<CMIndexlike>()
+                    .Where(i => i.IsUnique)
+                    .Concat(keysUnknownFromIndexes)
+                    .ToDictionary(t => t.Name, t => t);
+
+                table.PrimaryKey = table.UniqueIndexlikes.Values.FirstOrDefault(i => i.IsPrimary);
+
+                foreach (var key in table.UniqueIndexlikes)
+                {
+                    keys.Add(key.Value.ObjectName, key.Value);
+                }
+            }
+
+            foreach (var isTable in isTables)
+            {
+                var table = tables[isTable.GetName()];
+
+                table.ForeignKeys = isTable.Constraints
+                    .Where(c => c.CONSTRAINT_TYPE == "FOREIGN KEY")
+                    .Select(c => new CMForeignKey
+                    {
+                        Name = c.Name,
+                        Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").GetName()],
+                        Table = table,
+                        Columns = c.Columns.Select(cc => (CMDirection.Unknown, table.Columns[cc.COLUMN_NAME])).ToArray()
+                    })
+                    .ToDictionary(c => c.Name, c => c);
+
+                table.ColumnTuples = new Dictionary<String, CMColumnTuple>();
+
+                foreach (var p in table.UniqueIndexlikes) table.ColumnTuples[p.Key] = p.Value;
+                foreach (var p in table.ForeignKeys) table.ColumnTuples[p.Key] = p.Value;
+
+                foreach (var key in table.ColumnTuples.Values)
+                {
+                    var hash = new HashSet<String>(key.Columns.Select(c => c.c.Name));
+
+                    foreach (var key2 in table.ColumnTuples.Values)
+                    {
+                        if (hash.IsSubsetOf(key2.Columns.Select(c => c.c.Name)))
+                        {
+                            key.SuperTuples.Add(key2.Name);
+                            key2.SubTupels.Add(key.Name);
+                        }
+                    }
+                }
             }
         }
 
@@ -172,13 +183,13 @@ namespace Squil
 
             rootTable = tables[ObjectName.RootName] = new CMTable { Name = ObjectName.RootName, Root = this };
 
-            rootTable.DomesticKeys = new Dictionary<String, CMDomesticKey>();
+            rootTable.ColumnTuples = new Dictionary<String, CMColumnTuple>();
+            rootTable.UniqueIndexlikes = new Dictionary<String, CMIndexlike>();
             rootTable.ForeignKeys = new Dictionary<String, CMForeignKey>();
-            rootTable.Keys = new Dictionary<String, CMKey>();
 
-            var rootKey = rootTable.DomesticKeys[""] = new CMDomesticKey() { Name = "", IsPrimary = true, Columns = new CMColumn[0], Table = rootTable };
+            var rootKey = rootTable.UniqueIndexlikes[""] = new CMIndexlike() { Name = "", IsPrimary = true, Columns = new (CMDirection, CMColumn)[0], Table = rootTable };
 
-            rootTable.Keys[""] = rootKey;
+            rootTable.ColumnTuples[""] = rootKey;
 
             foreach (var table in tables.Values)
             {
@@ -201,12 +212,12 @@ namespace Squil
                 var principalTable = GetTable(relation.Principal.TableName);
                 var dependentTable = GetTable(relation.Dependent.TableName);
 
-                static CMRelationEnd MakeRelationEnd(Boolean isPrincipalEnd, RelationEnd end, CMTable table, CMKey key) => new CMRelationEnd
+                static CMRelationEnd MakeRelationEnd(Boolean isPrincipalEnd, RelationEnd end, CMTable table, CMColumnTuple key) => new CMRelationEnd
                 {
                     Name = end.Name,
                     Table = table,
                     IsPrincipalEnd = isPrincipalEnd,
-                    IsMany = !key?.Subkeys.Any(sk => table.DomesticKeys.ContainsKey(sk)) ?? true,
+                    IsMany = !key?.SubTupels.Any(sk => table.UniqueIndexlikes.ContainsKey(sk)) ?? true,
                     Key = key,
                     Columns = end.ColumnNames.Select(n => table.ColumnsInOrder
                         .Where(c => c.Name == n)
@@ -214,7 +225,7 @@ namespace Squil
                     ).ToArray()
                 };
 
-                var principalEnd = MakeRelationEnd(true, relation.Principal, principalTable, relation.Principal.KeyName?.Apply(n => principalTable.DomesticKeys[n]));
+                var principalEnd = MakeRelationEnd(true, relation.Principal, principalTable, relation.Principal.KeyName?.Apply(n => principalTable.UniqueIndexlikes[n]));
                 var dependentEnd = MakeRelationEnd(false, relation.Dependent, dependentTable, relation.Dependent.KeyName?.Apply(n => dependentTable.ForeignKeys[n]));
 
                 principalEnd.OtherEnd = dependentEnd;
@@ -243,8 +254,8 @@ namespace Squil
 
                     yield return new Relation
                     {
-                        Dependent = new RelationEnd { TableName = table.Name, Name = "D_" + fk.Name, KeyName = fk.Name, ColumnNames = fk.Columns.Select(c => c.Name).ToArray() },
-                        Principal = new RelationEnd { TableName = fk.Principal.Table.Name, Name = "P_" + fk.Name, KeyName = fk.Principal.Name, ColumnNames = fk.Principal.Columns.Select(c => c.Name).ToArray() }
+                        Dependent = new RelationEnd { TableName = table.Name, Name = "D_" + fk.Name, KeyName = fk.Name, ColumnNames = fk.Columns.Select(c => c.c.Name).ToArray() },
+                        Principal = new RelationEnd { TableName = fk.Principal.Table.Name, Name = "P_" + fk.Name, KeyName = fk.Principal.Name, ColumnNames = fk.Principal.Columns.Select(c => c.c.Name).ToArray() }
                     };
                 }
             }
@@ -310,65 +321,58 @@ namespace Squil
 
         public Dictionary<String, CMColumn> Columns = new Dictionary<String, CMColumn>();
 
-        public CMDomesticKey PrimaryKey { get; set; }
+        public CMIndexlike PrimaryKey { get; set; }
 
-        public Dictionary<String, CMIndex> Indexes { get; set; }
-        public Dictionary<String, CMKey> Keys { get; set; }
-        public Dictionary<String, CMDomesticKey> DomesticKeys { get; set; }
+        public Dictionary<String, CMIndexlike> Indexes { get; set; }
+        public Dictionary<String, CMColumnTuple> ColumnTuples { get; set; }
+        public Dictionary<String, CMIndexlike> UniqueIndexlikes { get; set; }
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
 
         //public Dictionary<String, CMIndex> Indexes { get; set; }
     }
 
-    [DebuggerDisplay("{Name}")]
-    public class CMColumnTuple
-    {
-        public ObjectName ObjectName { get; set; }
-
-        // The name is not unique accross schemas, but it is within a table.
-        public String Name { get; set; }
-
-        public CMTable Table { get; set; }
-
-        public CMColumn[] Columns { get; set; }
-    }
-
     public enum CMDirection
     {
+        Unknown,
         Asc,
         Desc
     }
 
-    public class CMIndex
+    [DebuggerDisplay("{Name}")]
+    public abstract class CMColumnTuple
     {
         public String Name { get; set; }
 
+        public ObjectName ObjectName { get; set; }
+
         public CMTable Table { get; set; }
+
+        public (CMDirection d, CMColumn c)[] Columns { get; set; }
+
+        public HashSet<String> SuperTuples { get; set; } = new HashSet<String>();
+        public HashSet<String> SubTupels { get; set; } = new HashSet<String>();
+    }
+
+    public class CMIndexlike : CMColumnTuple
+    {
+        public Boolean IsPrimary { get; set; }
+
+        public Boolean IsUnique { get; set; }
 
         public Boolean IsSupported { get; set; }
 
         public String UnsupportedTag { get; set; }
         public String UnsupportedReason { get; set; }
-
-        public Boolean IsUnique { get; set; }
-
-        public (CMDirection, CMColumn)[] Columns { get; set; }
     }
 
-    public class CMKey : CMColumnTuple
-    {
-        public HashSet<String> SuperKeys { get; set; } = new HashSet<string>();
-        public HashSet<String> Subkeys { get; set; } = new HashSet<string>();
-    }
+    //public class CMDomesticKey : CMIndexlike
+    //{
+    //    public override Boolean IsUniqueIndexlike => true;
+    //}
 
-    public class CMDomesticKey : CMKey
+    public class CMForeignKey : CMColumnTuple
     {
-        public Boolean IsPrimary { get; set; }
-    }
-
-    public class CMForeignKey : CMKey
-    {
-        public CMDomesticKey Principal { get; set; }
+        public CMIndexlike Principal { get; set; }
     }
 
     //[DebuggerDisplay("{Name}")]
@@ -400,7 +404,7 @@ namespace Squil
 
         public CMRelationEnd AmbiguouslyTypedWitness => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => !r.IsMany && r != this).FirstOrDefault();
 
-        public CMKey Key { get; set; }
+        public CMColumnTuple Key { get; set; }
 
         // redudant if we always demand a key
         public CMColumn[] Columns { get; set; }

@@ -28,30 +28,27 @@
                 </CascadingValue>
             </div>
 
-            <div class="position-absolute" style="left: 0; right: 0; top: 0">
-                <div class="col-12 bg-dark" style="transform: translate(100%, 0)">
-                    te
+            <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
+                <div class="bg-light border p-2 w-50">
+                    @{
+                        var end = Result.Entity.Related.FirstOrDefault().RelationEnd;
+
+                        <div>
+                            <label>indexes for @end.Table.Name.Simple</label>
+                            @foreach (var item in end.Table.Indexes.Values)
+                            {
+                                <div>@item.Name</div>
+                            }
+                        </div>
+                    }
                 </div>
             </div>
 
 
-            <div class="d-none d-xl-block col-xl-2 small text-muted">
+@*            <div class="d-none d-xl-block col-xl-2 small text-muted">
                 <HelpText QueryType="@Result.QueryType" />
-
-                @{
-                    var end = Result.Entity.Related.FirstOrDefault().RelationEnd;
-
-                    <div>
-                        <label>indexes for @end.Table.Name.Simple</label>
-                        @foreach (var item in end.Table.Indexes.Values)
-                        {
-                            <div>@item.Name</div>
-                        }
-                    </div>
-                }
-
             </div>
-        </div>
+*@        </div>
 
         <Modal OnClose="SqlModalSubscription">
             <Title>SQL Query</Title>

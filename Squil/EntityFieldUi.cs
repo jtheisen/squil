@@ -16,10 +16,10 @@
             return table.PrimaryKey?.Apply(k => RenderEntityUrl(entity, k));
         }
 
-        public String RenderEntityUrl(Entity entity, CMKey key)
+        public String RenderEntityUrl(Entity entity, CMIndexlike key)
         {
             var keyPart = entity != null && key != null
-                ? $"/{key.Name}?" + String.Join("&", key.Columns.Select(c => $"{c.Name}={entity.ColumnValues[c.Name]}"))
+                ? $"/{key.Name}?" + String.Join("&", key.Columns.Select(c => $"{c.c.Name}={entity.ColumnValues[c.c.Name]}"))
                 : "";
 
             var url = RenderUrl($"{key.Table.Name.Escaped}{keyPart.TrimEnd('?')}");
@@ -38,7 +38,7 @@
             var key = end.Key;
 
             var keyPart = parentEntity != null && end.Key != null
-            ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.Name}={parentEntity.ColumnValues[pc.Name]}"))
+            ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.c.Name}={parentEntity.ColumnValues[pc.c.Name]}"))
             : "";
 
             var url = RenderUrl($"{tableName.Escaped}{keyPart.TrimEnd('?')}");
