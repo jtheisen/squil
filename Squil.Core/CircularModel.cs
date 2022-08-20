@@ -155,18 +155,17 @@ namespace Squil
                 foreach (var p in table.UniqueIndexlikes) table.ColumnTuples[p.Key] = p.Value;
                 foreach (var p in table.ForeignKeys) table.ColumnTuples[p.Key] = p.Value;
 
-                // We really only need this for foreign keys to check if a subtuple is actually unique and
-                // we therefore get singular cardinality on both ends of a relationship. However, the code gets
-                // cleaner if we write it generally.
-                foreach (var key in table.ColumnTuples.Values)
+                foreach (var tuple in table.ColumnTuples.Values)
                 {
-                    var hash = new HashSet<String>(key.Columns.Select(c => c.c.Name));
+                    var hash = new HashSet<String>(tuple.Columns.Select(c => c.c.Name));
 
-                    foreach (var key2 in table.ColumnTuples.Values)
+                    foreach (var key in table.UniqueIndexlikes.Values)
                     {
-                        if (hash.IsSubsetOf(key2.Columns.Select(c => c.c.Name)))
+                        if (hash.IsSupersetOf(key.Columns.Select(c => c.c.Name)))
                         {
-                            key2.SubTupels.Add(key.Name);
+                            tuple.ContainsKey = true;
+
+                            break;
                         }
                     }
                 }
@@ -219,7 +218,7 @@ namespace Squil
                     Name = end.Name,
                     Table = table,
                     IsPrincipalEnd = isPrincipalEnd,
-                    IsMany = !key?.SubTupels.Any(sk => table.UniqueIndexlikes.ContainsKey(sk)) ?? true,
+                    IsMany = !key?.ContainsKey ?? true,
                     Key = key,
                     Columns = end.ColumnNames.Select(n => table.ColumnsInOrder
                         .Where(c => c.Name == n)
@@ -329,8 +328,6 @@ namespace Squil
         public Dictionary<String, CMColumnTuple> ColumnTuples { get; set; }
         public Dictionary<String, CMIndexlike> UniqueIndexlikes { get; set; }
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
-
-        //public Dictionary<String, CMIndex> Indexes { get; set; }
     }
 
     public enum CMDirection
@@ -351,9 +348,9 @@ namespace Squil
 
         public (CMDirection d, CMColumn c)[] Columns { get; set; }
 
-        public abstract Boolean IsDomestic { get; }
+        public Boolean ContainsKey { get; set; }
 
-        public HashSet<String> SubTupels { get; set; } = new HashSet<String>();
+        public abstract Boolean IsDomestic { get; }
     }
 
     public class CMIndexlike : CMColumnTuple
