@@ -155,6 +155,9 @@ namespace Squil
                 foreach (var p in table.UniqueIndexlikes) table.ColumnTuples[p.Key] = p.Value;
                 foreach (var p in table.ForeignKeys) table.ColumnTuples[p.Key] = p.Value;
 
+                // We really only need this for foreign keys to check if a subtuple is actually unique and
+                // we therefore get singular cardinality on both ends of a relationship. However, the code gets
+                // cleaner if we write it generally.
                 foreach (var key in table.ColumnTuples.Values)
                 {
                     var hash = new HashSet<String>(key.Columns.Select(c => c.c.Name));
@@ -163,7 +166,6 @@ namespace Squil
                     {
                         if (hash.IsSubsetOf(key2.Columns.Select(c => c.c.Name)))
                         {
-                            key.SuperTuples.Add(key2.Name);
                             key2.SubTupels.Add(key.Name);
                         }
                     }
@@ -349,12 +351,15 @@ namespace Squil
 
         public (CMDirection d, CMColumn c)[] Columns { get; set; }
 
-        public HashSet<String> SuperTuples { get; set; } = new HashSet<String>();
+        public abstract Boolean IsDomestic { get; }
+
         public HashSet<String> SubTupels { get; set; } = new HashSet<String>();
     }
 
     public class CMIndexlike : CMColumnTuple
     {
+        public override Boolean IsDomestic => true;
+
         public Boolean IsPrimary { get; set; }
 
         public Boolean IsUnique { get; set; }
@@ -365,27 +370,12 @@ namespace Squil
         public String UnsupportedReason { get; set; }
     }
 
-    //public class CMDomesticKey : CMIndexlike
-    //{
-    //    public override Boolean IsUniqueIndexlike => true;
-    //}
-
     public class CMForeignKey : CMColumnTuple
     {
+        public override Boolean IsDomestic => false;
+
         public CMIndexlike Principal { get; set; }
     }
-
-    //[DebuggerDisplay("{Name}")]
-    //public class CMIndex
-    //{
-    //    public String Name { get; set; }
-
-    //    public Boolean IsReal { get; set; }
-
-    //    public CMTable Table { get; set; }
-
-    //    public CMColumn[] Columns { get; set; }
-    //}
 
     [DebuggerDisplay("{OtherEnd.Name}->{Table.Name}")]
     public class CMRelationEnd

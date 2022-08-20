@@ -38,13 +38,12 @@ namespace Squil
 
             var extentFactory = new ExtentFactory(2);
 
-            // We're using keys for the time being. FIXME: do we not only want Indexlikes?
-            var cmKey = index?.Apply(i => cmTable.ColumnTuples.Get(i, $"Could not find index '{index}' in table '{table}'"));
+            var cmIndex = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
-            var extentOrder = cmKey?.Columns.Select(c => c.c.Name).ToArray();
-            var extentValues = cmKey?.Columns.Select(c => (String)query[c.c.Name]).TakeWhile(c => c != null).ToArray();
+            var extentOrder = cmIndex?.Columns.Select(c => c.c.Name).ToArray();
+            var extentValues = cmIndex?.Columns.Select(c => (String)query[c.c.Name]).TakeWhile(c => c != null).ToArray();
 
-            var isSingletonQuery = cmKey != null && cmKey is CMIndexlike && extentValues?.Length == extentOrder?.Length;
+            var isSingletonQuery = cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length;
 
             var extent = extentFactory.CreateRootExtent(
                 cmTable,
