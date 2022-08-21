@@ -18,6 +18,7 @@ namespace Squil
         public String RootName { get; set; }
         public String Sql { get; set; }
         public Entity Entity { get; set; }
+        public RelatedEntities RootRelation { get; set; }
     }
 
     public class LocationQueryRunner
@@ -34,7 +35,9 @@ namespace Squil
         {
             var context = connections.GetContext(connectionName);
 
-            var cmTable = table?.Apply(t => context.CircularModel.GetTable(parser.Parse(t))) ?? context.CircularModel.RootTable;
+            var isRoot = table == null;
+
+            var cmTable = isRoot ? context.CircularModel.RootTable : context.CircularModel.GetTable(parser.Parse(table));
 
             var extentFactory = new ExtentFactory(2);
 
@@ -43,7 +46,7 @@ namespace Squil
             var extentOrder = cmIndex?.Columns.Select(c => c.c.Name).ToArray();
             var extentValues = cmIndex?.Columns.Select(c => (String)query[c.c.Name]).TakeWhile(c => c != null).ToArray();
 
-            var isSingletonQuery = cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length;
+            var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length);
 
             var extent = extentFactory.CreateRootExtent(
                 cmTable,
@@ -61,7 +64,8 @@ namespace Squil
                 RootName = connectionName,
                 RootUrl = $"/query/{connectionName}",
                 Sql = sql,
-                Entity = entity
+                Entity = entity,
+                RootRelation = isRoot ? null : entity.Related.Single()
             };
         }
     }

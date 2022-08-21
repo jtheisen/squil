@@ -35,43 +35,18 @@
 
             var end = relatedEntities.RelationEnd;
 
-            var key = end.Key;
+            var index = end.Key is CMForeignKey fk ? fk.GetIndexes()?.FirstOrDefault() : end.Key;
+
+            // We're allowing no index if we're looking at an entire table
+            if (end.Key.Name != "" && index == null) return null;
 
             var keyPart = parentEntity != null && end.Key != null
-            ? $"/{key.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.c.Name}={parentEntity.ColumnValues[pc.c.Name]}"))
+            ? $"/{index?.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.c.Name}={parentEntity.ColumnValues[pc.c.Name]}"))
             : "";
 
             var url = RenderUrl($"{tableName.Escaped}{keyPart.TrimEnd('?')}");
 
             return url;
         }
-    }
-
-    public enum ColumnRenderClass
-    {
-        None,
-        PrimaryName,
-        Data
-    }
-
-    public delegate String UrlRenderer(String rest);
-
-    public class EntityFieldUi
-    {
-        public Entity Entity { get; set; }
-
-        public CMTable Table { get; set; }
-    }
-
-    public class EntityRelationFieldUi : EntityFieldUi
-    {
-        public RelatedEntities RelatedEntites { get; set; }
-    }
-
-    public class EntityColumnFieldUi : EntityFieldUi
-    {
-        public CMColumn Column { get; set; }
-
-        public ColumnRenderClass RenderClass { get; set; }
     }
 }

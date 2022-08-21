@@ -171,6 +171,20 @@ namespace Squil
                         }
                     }
                 }
+
+                foreach (var fk in table.ForeignKeys.Values)
+                {
+                    var fkColumns = fk.Columns.Select(c => c.c.Name).OrderBy(c => c).ToArray();
+
+                    Boolean IsIndexBacking(CMIndexlike index)
+                    {
+                        var ixColumns = index.Columns.Take(fkColumns.Length).Select(c => c.c.Name).OrderBy(c => c);
+
+                        return ixColumns.SequenceEqual(fkColumns);
+                    }
+
+                    fk.BackingIndexes = table.Indexes.Values.Where(IsIndexBacking).ToArray();
+                }
             }
         }
 
@@ -373,7 +387,12 @@ namespace Squil
     {
         public override Boolean IsDomestic => false;
 
+        public CMIndexlike[] BackingIndexes { get; set; }
+
         public CMIndexlike Principal { get; set; }
+
+
+        public IEnumerable<CMIndexlike> GetIndexes() => Table.Name.IsRootName ? Table.Indexes.Values : BackingIndexes;
     }
 
     [DebuggerDisplay("{OtherEnd.Name}->{Table.Name}")]
@@ -431,6 +450,23 @@ namespace Squil
             {
                 return null;
             }
+        }
+
+        public static IEnumerable<CMIndexlike> StartsWith(this IEnumerable<CMIndexlike> indexes, IEnumerable<String> columns)
+        {
+            var prefixColumns = columns.OrderBy(c => c).ToArray();
+
+            Boolean HasIndexMatchingPrefix(CMIndexlike index)
+            {
+                var ixColumns = index.Columns
+                    .Take(prefixColumns.Length)
+                    .Select(c => c.c.Name)
+                    .OrderBy(c => c);
+
+                return ixColumns.SequenceEqual(prefixColumns);
+            }
+
+            return indexes.Where(HasIndexMatchingPrefix);
         }
     }
 }

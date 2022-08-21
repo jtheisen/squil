@@ -30,14 +30,26 @@
 
             <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
                 <div class="bg-light border p-2 w-50">
-                    @{
-                        var end = Result.Entity.Related.FirstOrDefault().RelationEnd;
+                    @if (Result.RootRelation != null)
+                    {
+                        var relation = Result.Entity.Related.FirstOrDefault();
+
+                        var table = Result.RootRelation.RelationEnd.Table;
+
+                        var indexes = table.Indexes.Values.StartsWith(FixedColumns);
 
                         <div>
-                            <label>indexes for @end.Table.Name.Simple</label>
-                            @foreach (var item in end.Table.Indexes.Values)
+                            <label>indexes for @table.Name.Simple</label>
+
+                            @foreach (var index in indexes)
                             {
-                                <div>@item.Name</div>
+                                <fieldset class="index">
+                                    <label>@index.Name</label>
+                                    @foreach (var c in index.Columns)
+                                    {
+                                        //<input placeholder="@c.c.Name" />
+                                    }
+                                </fieldset>
                             }
                         </div>
                     }
@@ -87,6 +99,8 @@
     [Parameter]
     public String Index { get; set; }
 
+    String[] FixedColumns { get; set; }
+
     LocationQueryResult Result { get; set; }
 
     QueryContext QueryContext { get; set; }
@@ -102,6 +116,8 @@
         var query = new Uri(NavigationManager.Uri).Query;
 
         var queryParams = HttpUtility.ParseQueryString(query);
+
+        FixedColumns = queryParams.Keys.Cast<String>().ToArray();
 
         Result = Runner.Query(ConnectionName, Table, Index, queryParams);
 
