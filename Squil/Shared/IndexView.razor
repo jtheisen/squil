@@ -1,6 +1,10 @@
 ﻿@using System.Diagnostics
 @using Squil.Shared.IndexFields
 
+@{
+    var columns = Index.Columns.Skip(HiddenPrefixLength).ToArray();
+}
+
 <fieldset class="index mb-1">
     @*                                    <label>@index.Name</label>
     *@
@@ -9,9 +13,7 @@
         {
             var c = columns[i];
 
-            var i0 = i;
-
-            <IndexTextField @ref="fieldReferences[i0]" Name="@c.c.Name" IsActive="@IsActive" @bind-Value="SearchValues[c.c.Name]" />
+            <IndexTextField Name="@c.c.Name" Focus="@(i == 0)" IsActive="@IsActive" @bind-Value="@SearchValues[c.c.Name]" />
         }
     </div>
 </fieldset>
@@ -31,23 +33,4 @@
 
     [Parameter]
     public IMap<String, String> SearchValues { get; set; }
-
-    (CMDirection d, CMColumn c)[] columns;
-    IndexTextField[] fieldReferences;
-
-    protected override void OnParametersSet()
-    {
-        columns = Index.Columns.Skip(HiddenPrefixLength).ToArray();
-        fieldReferences = new IndexTextField[columns.Length];
-    }
-
-    protected override async Task OnAfterRenderAsync(Boolean firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-
-        if (firstRender && fieldReferences.Length > 0)
-        {
-            await fieldReferences[0].FocusAsync();
-        }
-    }
 }

@@ -18,11 +18,26 @@
     public String Value { get; set; }
 
     [Parameter]
+    public Boolean Focus { get; set; }
+
+    [Parameter]
     public EventCallback<String> ValueChanged { get; set; }
 
     ElementReference element;
 
+    Boolean wasActive;
+
     public ValueTask FocusAsync() => element.FocusAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!wasActive && IsActive)
+        {
+            await FocusAsync();
+        }
+
+        wasActive = IsActive;
+    }
 
     async Task HandleChange(ChangeEventArgs e)
     {
