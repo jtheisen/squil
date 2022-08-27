@@ -1,0 +1,35 @@
+﻿@page "/info/{connectionName}"
+
+@inject ConnectionManager Connections
+
+@{
+    var connection = Connections.GetContext(ConnectionName);
+
+    var tables = connection.CircularModel.RootTable.Relations.Values.Select(r => r.Table).ToArray();
+
+    var tableWithOverlappingIndexes = (
+        from t in tables
+        let columns = (
+            from i in t.Indexes.Values
+            where i.IsSupported
+            from c in i.Columns
+            group (i, c) by c.c.Name into g
+            where g.Count() > 1
+            select g.Key
+        ).FirstOrDefault()
+        where columns != null
+        select t
+    ).FirstOrDefault();
+}
+
+@if (tableWithOverlappingIndexes != null)
+{
+    <div>
+        Table with overlapping indexes: @tableWithOverlappingIndexes.Name.Simple
+    </div>
+}
+
+@code {
+    [Parameter]
+    public String ConnectionName { get; set; }
+}

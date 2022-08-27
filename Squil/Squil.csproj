@@ -9,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Shared\Entities\IndexView.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Shared\Entities\IndexView.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazor-Analytics" Version="3.11.0" />
   </ItemGroup>
 

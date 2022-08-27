@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -33,6 +35,13 @@ public class Empties<T>
     public static T[] Array = new T[0];
 
     public static IEnumerable<T> Enumerable = Array;
+}
+
+public class Empties<K, T>
+{
+    public static Dictionary<K, T> Dictionary = new Dictionary<K, T>();
+
+    public static ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
 }
 
 public static class Extensions
@@ -84,6 +93,19 @@ public static class Extensions
         catch (KeyNotFoundException ex)
         {
             throw new KeyNotFoundException(error, ex);
+        }
+    }
+
+    [DebuggerHidden]
+    public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key)
+    {
+        if (dict.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+        else
+        {
+            return default;
         }
     }
 

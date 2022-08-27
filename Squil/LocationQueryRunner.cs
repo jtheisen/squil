@@ -51,7 +51,7 @@ namespace Squil
             var extent = extentFactory.CreateRootExtent(
                 cmTable,
                 isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
-                extentOrder, extentValues
+                cmIndex, extentOrder, extentValues
                 );
 
             using var connection = context.GetConnection();

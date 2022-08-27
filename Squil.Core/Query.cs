@@ -72,7 +72,9 @@ namespace Squil
 
             if ((extent.Values?.Length ?? 0) > (extent.Order?.Length ?? 0)) throw new Exception("More filter values than order columns");
 
-            var filterPredicates = extent.Values?.Select((v, i) => $"{alias}.{extent.Order[i]} = '{v}'") ?? Enumerable.Empty<String>();
+            var filterItems = extent.Values?.Select((v, i) => (column: extent.Order[i], value: v));
+
+            var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column} >= '{i.value}'") ?? Enumerable.Empty<String>();
 
             var allPredicates = filterPredicates.Concat(joinPredicates).ToArray();
 
@@ -87,6 +89,13 @@ namespace Squil
             else
             {
                 selectables.AddRange(forwardEnd.Table.ColumnsInOrder.Select(c => c.Escaped));
+            }
+
+            if (extent.Values?.Length > 0)
+            {
+                var predicate = String.Join(" and ", from i in filterItems select $"{alias}.{i.column} = '{i.value}'");
+
+                selectables.Add($"case when {predicate} then 1 else 0 end [{IsMatchingAlias}]");
             }
 
             selectables.AddRange(children);
@@ -113,13 +122,16 @@ namespace Squil
             return sql;
         }
 
+        static String IsMatchingAlias = "__is-matching";
+
         Entity MakeEntity(Extent extent, CMTable table, XElement element)
         {
             var data = element.Attributes().ToDictionary(a => a.Name.LocalName.UnescapeSqlServerXmlName(), a => a.Value);
 
             return new Entity
             {
-                ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)),
+                IsMatching = data.GetOrDefault(IsMatchingAlias)?.Apply(im => im == "1"),
+                ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)) ?? Empties<String, String>.Dictionary,
                 Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(GetXmlRelationName(c.RelationName))))).ToArray()
             };
         }
@@ -189,6 +201,8 @@ namespace Squil
 
     public class Entity
     {
+        public Boolean? IsMatching { get; set; }
+
         public Dictionary<String, String> ColumnValues { get; set; }
 
         public RelatedEntities[] Related { get; set; }
@@ -197,6 +211,7 @@ namespace Squil
     public class RelatedEntities
     {
         public String RelationName { get; set; }
+
         public ObjectName TableName { get; set; }
 
         [JsonIgnore]
@@ -216,6 +231,8 @@ namespace Squil
         public String RelationPrettyName { get; set; }
 
         public ExtentFlavor Flavor { get; set; }
+
+        public String IndexName { get; set; }
 
         public Int32? Limit { get; set; }
 
@@ -324,6 +341,32 @@ namespace Squil
             var rootRow = XElement.Load(reader);
 
             return rootRow;
+        }
+
+        public static CMIndexlike ChooseIndex(this RelatedEntities relatedEntities)
+        {
+            var end = relatedEntities.RelationEnd;
+            var table = end.Table;
+            var key = end.Key;
+
+            var extentIndexName = relatedEntities.Extent.IndexName;
+
+            if (extentIndexName != null)
+            {
+                return table.Indexes[extentIndexName];
+            }
+
+            if (key is CMForeignKey fk)
+            {
+                return fk.GetIndexes()?.FirstOrDefault();
+            }
+
+            if (key is CMIndexlike ix)
+            {
+                return ix;
+            }
+
+            return null;
         }
     }
 }

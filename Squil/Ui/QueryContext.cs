@@ -1,4 +1,6 @@
-﻿namespace Squil
+﻿using static System.Web.HttpUtility;
+
+namespace Squil
 {
     public class QueryContext
     {
@@ -27,26 +29,50 @@
             return url;
         }
 
+        String RenderColumnTupleUrl(
+            CMTable table,
+            CMColumnTuple columnTuple,
+            CMColumnTuple columns,
+            IDictionary<String, String> columnValueSource
+        )
+        {
+            var queryPart = "";
+
+            var columnValues = columns.Columns
+                .Select(c => columnValueSource.GetOrDefault(c.c.Name))
+                .TakeWhile(c => c != null);
+
+            if (columnValues.Any())
+            {
+                queryPart = "?" + String.Join("&", columns.Columns
+                    .Zip(columnValues, (ic, cv) => $"{UrlEncode(ic.c.Name)}={UrlEncode(cv)}")
+                );
+            }
+
+            var subNamePart = columnTuple != null ? $"/{UrlEncode(columnTuple.Name)}" : "";
+
+            var url = RenderUrl($"{table.Name.Escaped}{subNamePart}{queryPart}");
+
+            return url;
+        }
+
         public String RenderEntitiesUrl(Entity parentEntity, RelatedEntities relatedEntities)
         {
             if (parentEntity == null || !relatedEntities.RelationEnd.IsMany) return null;
 
-            var tableName = relatedEntities.TableName;
-
             var end = relatedEntities.RelationEnd;
 
-            var index = end.Key is CMForeignKey fk ? fk.GetIndexes()?.FirstOrDefault() : end.Key;
+            var index = relatedEntities.ChooseIndex();
 
             // We're allowing no index if we're looking at an entire table
             if (end.Key.Name != "" && index == null) return null;
 
-            var keyPart = parentEntity != null && end.Key != null
-            ? $"/{index?.Name}?" + String.Join("&", end.Key.Columns.Zip(end.OtherEnd.Key.Columns, (c, pc) => $"{c.c.Name}={parentEntity.ColumnValues[pc.c.Name]}"))
-            : "";
+            return RenderColumnTupleUrl(end.Table, index, end.Key, parentEntity.ColumnValues);
+        }
 
-            var url = RenderUrl($"{tableName.Escaped}{keyPart.TrimEnd('?')}");
-
-            return url;
+        public String RenderIndexUrl(CMIndexlike index, IDictionary<String, String> columnValueSource)
+        {
+            return RenderColumnTupleUrl(index.Table, index, index, columnValueSource);
         }
     }
 }

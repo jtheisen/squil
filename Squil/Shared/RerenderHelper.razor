@@ -1,0 +1,49 @@
+﻿@implements IDisposable
+
+@using System.ComponentModel
+
+@code {
+    [Parameter]
+    public Object Observable { get; set; }
+
+    [Parameter]
+    public Action OnChange { get; set; }
+
+    INotifyPropertyChanged currentObservable;
+    INotifyPropertyChanged CurrentObservable
+    {
+        get => currentObservable;
+
+        set
+        {
+            if (currentObservable != null)
+            {
+                currentObservable.PropertyChanged -= Handle;
+            }
+
+            currentObservable = value;
+
+            if (currentObservable != null)
+            {
+                currentObservable.PropertyChanged += Handle;
+            }
+        }
+    }
+
+    void Handle(Object o, EventArgs e)
+    {
+        OnChange?.Invoke();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        CurrentObservable = Observable as INotifyPropertyChanged;
+    }
+
+    public void Dispose()
+    {
+        CurrentObservable = null;
+    }
+}

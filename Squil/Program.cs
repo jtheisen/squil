@@ -2,6 +2,7 @@ using Blazor.Analytics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Squil;
+using System.Dynamic;
 
 var builder = WebApplication.CreateBuilder(args);
 

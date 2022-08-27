@@ -1,0 +1,35 @@
+﻿@using System.Diagnostics
+
+<fieldset class="index mb-1">
+    @*                                    <label>@index.Name</label>
+    *@
+    <div class="index-columns d-flex">
+        @foreach (var c in Index.Columns.Skip(HiddenPrefixLength))
+        {
+            <span class="index-column index-column-text d-flex flex-column border">
+
+                <input class="index-column-value outline-none" @bind="SearchValues[c.c.Name]" @bind:event="oninput" />
+
+                <span class="index-column-name" type="text">@c.c.Name</span>
+
+            </span>
+        }
+    </div>
+</fieldset>
+
+@code {
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+
+    [Parameter]
+    public CMIndexlike Index { get; set; }
+
+    [Parameter]
+    public Boolean IsActive { get; set; }
+
+    [Parameter]
+    public Int32 HiddenPrefixLength { get; set; }
+
+    [Parameter]
+    public IMap<String, String> SearchValues { get; set; }
+}

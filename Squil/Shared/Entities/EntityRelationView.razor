@@ -17,6 +17,8 @@
     var styleForHue = GetStyleForHue(entities.RelationEnd.Table.Hue);
 
     var flavor = entities.Extent.Flavor.Apply(f => f.GetCssValue(isLeaf));
+
+    var hadOnlyMatching = true;
 }
 
 <div class="@String.Join(' ', classes)" style="@styleForHue">
@@ -31,6 +33,13 @@
             var entity = entities.List[i];
 
             var itemClasses = i == lastIndex ? "potentially-last" : null;
+
+            if (hadOnlyMatching && entity.IsMatching == false)
+            {
+                hadOnlyMatching = false;
+
+                <li><strong>Not matching from here!!</strong></li>
+            }
 
             <li class="@itemClasses">
                 <EntityContentView Entity="entity" ParentCollection="entities" />

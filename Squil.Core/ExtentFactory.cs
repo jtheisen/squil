@@ -16,7 +16,7 @@ namespace Squil
             this.totalLimit = totalLimit;
         }
 
-        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, String[] order = null, String[] values = null)
+        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, String[] order = null, String[] values = null)
         {
             if (table == table.Root.RootTable)
             {
@@ -32,7 +32,7 @@ namespace Squil
                 {
                     Limit = 2,
                     Flavor = (type, 2),
-                    Children = new[] { CreateExtent(rootRelation, (type, 2), order, values) }
+                    Children = new[] { CreateExtent(rootRelation, (type, 2), index, order, values) }
                 };
             }
         }
@@ -56,7 +56,7 @@ namespace Squil
                 ;
         }
 
-        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, String[] order = null, String[] values = null)
+        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, String[] order = null, String[] values = null)
         {
             if (order != null)
             {
@@ -74,6 +74,7 @@ namespace Squil
             {
                 return new Extent
                 {
+                    IndexName = (index ?? end.Table.Indexes.Values.FirstOrDefault())?.Name,
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
                     Limit = GetLimitInFlavor(flavor.type),

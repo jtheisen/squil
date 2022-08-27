@@ -1,7 +1,7 @@
 ﻿@page "/query/{connectionName}/{table?}/{index?}"
-@using System.Web
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <PageTitle>@Result.RootName</PageTitle>
 
@@ -15,78 +15,83 @@
     </ActionItems>
 
     <ChildContent>
-        <div class="row small text-muted d-xl-none">
-            <div class="col-lg-12">
-                <p><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
-            </div>
-        </div>
-
-        <div class="row position-relative">
-            <div class="entity-context col-12 col-xl-10">
-                <CascadingValue Value="QueryContext">
-                    <EntityContentView Entity="Result.Entity" />
-                </CascadingValue>
-            </div>
-
-            <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
-                <div class="bg-light border p-2 w-50">
-                    @if (Result.RootRelation != null)
-                    {
-                        var relation = Result.Entity.Related.FirstOrDefault();
-
-                        var table = Result.RootRelation.RelationEnd.Table;
-
-                        var indexes = table.Indexes.Values.StartsWith(FixedColumns);
-
-                        <div>
-                            <label>indexes for @table.Name.Simple</label>
-
-                            @foreach (var index in indexes)
-                            {
-                                <fieldset class="index">
-                                    <label>@index.Name</label>
-                                    @foreach (var c in index.Columns)
-                                    {
-                                        //<input placeholder="@c.c.Name" />
-                                    }
-                                </fieldset>
-                            }
-                        </div>
-                    }
+        <CascadingValue Value="QueryContext">
+            <div class="row small text-muted d-xl-none">
+                <div class="col-lg-12">
+                    <p><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
                 </div>
             </div>
 
+            <div class="row position-relative">
+                <div class="entity-context col-12 col-xl-10">
+                    <EntityContentView Entity="Result.Entity" />
+                </div>
 
-@*            <div class="d-none d-xl-block col-xl-2 small text-muted">
+                <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
+                    <div class="bg-light border p-2 w-50">
+                        @if (Result.RootRelation != null)
+                        {
+                            var relation = Result.Entity.Related.FirstOrDefault();
+
+                            var table = Result.RootRelation.RelationEnd.Table;
+
+                            var indexes = table.Indexes.Values
+                                .StartsWith(FixedColumns)
+                                .Where(i => i.Columns.Length > FixedColumns.Length);
+
+                            <div>
+                                <h4>indexes for @table.Name.Simple</h4>
+
+                                @foreach (var index in indexes)
+                                {
+                                    var isCurrent = index.Name == Index;
+
+                                    var url = isCurrent ? null : QueryContext.RenderIndexUrl(index, Result.Entity.ColumnValues);
+
+                                    <a href="@url">
+                                        <IndexView Index="@index" IsActive="@isCurrent" HiddenPrefixLength="@FixedColumns.Length" SearchValues="@SearchValues" />
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+
+                @*            <div class="d-none d-xl-block col-xl-2 small text-muted">
                 <HelpText QueryType="@Result.QueryType" />
+                </div>
+                *@
             </div>
-*@        </div>
 
-        <Modal OnClose="SqlModalSubscription">
-            <Title>SQL Query</Title>
-            <HeaderExtra>
-                <small>
-                    <p class="mt-2 mr-4">
-                        Each page's data is requested in only one query. The query is textually long, but
-                        executes efficiently as it relies only on a series of nested table seeks. (This isn't
-                        quite guaranteed yet, but a future version of SQuiL will make sure that it is.)
-                    </p>
-                    <p>
-                        Although this query uses the nonstandard XML query syntax of SQL Server, a similar
-                        query can be created for other database engines - although this may look even more
-                        convoluted for those.
-                    </p>
+            <Modal OnClose="SqlModalSubscription">
+                <Title>SQL Query</Title>
+                <HeaderExtra>
+                    <small>
+                        <p class="mt-2 mr-4">
+                            Each page's data is requested in only one query. The query is textually long, but
+                            executes efficiently as it relies only on a series of nested table seeks. (This isn't
+                            quite guaranteed yet, but a future version of SQuiL will make sure that it is.)
+                        </p>
+                        <p>
+                            Although this query uses the nonstandard XML query syntax of SQL Server, a similar
+                            query can be created for other database engines - although this may look even more
+                            convoluted for those.
+                        </p>
 
-                </small>
-            </HeaderExtra>
-            <Body>
-                <pre>
-                    @Result.Sql
+                    </small>
+                </HeaderExtra>
+                <Body>
+                    <pre>
+                        @Result.Sql
                 </pre>
-            </Body>
-        </Modal>
+                </Body>
+            </Modal>
+        </CascadingValue>
     </ChildContent>
 </DefaultLayout>
+
+<RerenderHelper Observable="@SearchValues.Backing" OnChange="@HandleSeekValuesChanged" />
 
 @code {
 
@@ -99,6 +104,8 @@
     [Parameter]
     public String Index { get; set; }
 
+    IMap<String, String> SearchValues { get; set; } = new ExpandoObject().AsMap(withDefaults: true).Convert(o => o as String, o => o);
+
     String[] FixedColumns { get; set; }
 
     LocationQueryResult Result { get; set; }
@@ -109,18 +116,52 @@
 
     Action SqlModalSubscription { get; set; }
 
-    protected override void OnParametersSet()
+    void RunQuery()
     {
-        base.OnParametersSet();
-
         var query = new Uri(NavigationManager.Uri).Query;
 
         var queryParams = HttpUtility.ParseQueryString(query);
 
         FixedColumns = queryParams.Keys.Cast<String>().ToArray();
 
+        foreach (var p in SearchValues.Convert(o => o as String, o => o))
+        {
+            queryParams[p.Key] = p.Value;
+        }
+
         Result = Runner.Query(ConnectionName, Table, Index, queryParams);
 
         QueryContext = new QueryContext(rest => $"/query/{ConnectionName}/{rest}");
+
+        StateHasChanged();
+    }
+
+    void HandleSeekValuesChanged()
+    {
+        StateHasChanged();
+
+        RunQuery();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        RunQuery();
+    }
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += LocationChanged;
+    }
+
+    void LocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        RunQuery();
+    }
+    
+    void IDisposable.Dispose()
+    {
+        NavigationManager.LocationChanged -= LocationChanged;
     }
 }
