@@ -5,18 +5,23 @@
 
 
 function openBoostrapModal(element, show) {
-    console.info("modal" + show);
     $(element).modal({ show: false });
     $(element).modal(show ? 'show' : 'hide');
-
-//    if (show) {
-//        modal.show();
-//    } else {
-//        modal.hide();
-//    }
 }
 
 
 function getInnerText(element) {
-    return element?.innerText ?? "";
+    const result = element?.innerText ?? "";
+
+    console.info(`got text '${result}'`);
+
+    return result;
+}
+
+function setInnerText(element, text) {
+    if (element && element.innerText != text) {
+        console.info(`set text from '${element.innerText}' to '${text}'`);
+        element.innerText = text;
+        //window.getSelection().selectAllChildren(element);
+    }
 }

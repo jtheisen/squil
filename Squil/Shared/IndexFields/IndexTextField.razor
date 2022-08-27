@@ -2,7 +2,7 @@
 
 <span class="index-column index-column-text d-flex flex-column border">
 
-    <span @ref="element" class="index-column-value outline-none" contenteditable="@IsActive" @oninput="HandleChange">@Value</span>
+    <span @ref="element" class="index-column-value outline-none" contenteditable="@IsActive" @oninput="HandleChange" />
 
     <span class="index-column-name" type="text">@Name</span>
 
@@ -28,6 +28,10 @@
 
     Boolean wasActive;
 
+    String DesiredInnerText => Value ?? "";
+
+    String innerText;
+
     public ValueTask FocusAsync() => element.FocusAsync();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -38,14 +42,26 @@
         }
 
         wasActive = IsActive;
+
+        if (innerText != DesiredInnerText)
+        {
+            //await js.InvokeVoidAsync("console.info", $"server: set value of '{element}' to '{DesiredInnerText}' in {firstRender}");
+
+            await js.InvokeVoidAsync("setInnerText", element, DesiredInnerText);
+
+            innerText = DesiredInnerText;
+        }
     }
 
     async Task HandleChange(ChangeEventArgs e)
     {
-        var givenValue = await js.InvokeAsync<String>("getInnerText", element);
+        innerText = await js.InvokeAsync<String>("getInnerText", element);
 
-        var newValue = givenValue == "" ? null : givenValue;
+        var newValue = innerText == "" ? null : innerText;
 
-        await ValueChanged.InvokeAsync(newValue);
+        if (newValue != Value)
+        {
+            await ValueChanged.InvokeAsync(newValue);
+        }
     }
 }
