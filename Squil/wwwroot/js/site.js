@@ -15,3 +15,8 @@ function openBoostrapModal(element, show) {
 //        modal.hide();
 //    }
 }
+
+
+function getInnerText(element) {
+    return element?.innerText ?? "";
+}

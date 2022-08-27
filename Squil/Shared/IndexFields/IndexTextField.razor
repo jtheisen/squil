@@ -1,7 +1,8 @@
-﻿
+﻿@inject IJSRuntime js
+
 <span class="index-column index-column-text d-flex flex-column border">
 
-    <input @ref="element" class="index-column-value outline-none" value="@Value" @oninput="HandleChange" />
+    <span @ref="element" class="index-column-value outline-none" contenteditable="@IsActive" @oninput="HandleChange">@Value</span>
 
     <span class="index-column-name" type="text">@Name</span>
 
@@ -41,7 +42,7 @@
 
     async Task HandleChange(ChangeEventArgs e)
     {
-        var givenValue = (String)e.Value;
+        var givenValue = await js.InvokeAsync<String>("getInnerText", element);
 
         var newValue = givenValue == "" ? null : givenValue;
 
