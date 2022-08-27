@@ -1,0 +1,35 @@
+﻿
+<span class="index-column index-column-text d-flex flex-column border">
+
+    <input @ref="element" class="index-column-value outline-none" value="@Value" @oninput="HandleChange" />
+
+    <span class="index-column-name" type="text">@Name</span>
+
+</span>
+
+@code {
+    [Parameter]
+    public String Name { get; set; }
+
+    [Parameter]
+    public Boolean IsActive { get; set; }
+
+    [Parameter]
+    public String Value { get; set; }
+
+    [Parameter]
+    public EventCallback<String> ValueChanged { get; set; }
+
+    ElementReference element;
+
+    public ValueTask FocusAsync() => element.FocusAsync();
+
+    async Task HandleChange(ChangeEventArgs e)
+    {
+        var givenValue = (String)e.Value;
+
+        var newValue = givenValue == "" ? null : givenValue;
+
+        await ValueChanged.InvokeAsync(newValue);
+    }
+}

@@ -1,0 +1,53 @@
+﻿@using System.Diagnostics
+@using Squil.Shared.IndexFields
+
+<fieldset class="index mb-1">
+    @*                                    <label>@index.Name</label>
+    *@
+    <div class="index-columns d-flex">
+        @for (var i = 0; i < columns.Length; ++i)
+        {
+            var c = columns[i];
+
+            var i0 = i;
+
+            <IndexTextField @ref="fieldReferences[i0]" Name="@c.c.Name" IsActive="@IsActive" @bind-Value="SearchValues[c.c.Name]" />
+        }
+    </div>
+</fieldset>
+
+@code {
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+
+    [Parameter]
+    public CMIndexlike Index { get; set; }
+
+    [Parameter]
+    public Boolean IsActive { get; set; }
+
+    [Parameter]
+    public Int32 HiddenPrefixLength { get; set; }
+
+    [Parameter]
+    public IMap<String, String> SearchValues { get; set; }
+
+    (CMDirection d, CMColumn c)[] columns;
+    IndexTextField[] fieldReferences;
+
+    protected override void OnParametersSet()
+    {
+        columns = Index.Columns.Skip(HiddenPrefixLength).ToArray();
+        fieldReferences = new IndexTextField[columns.Length];
+    }
+
+    protected override async Task OnAfterRenderAsync(Boolean firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender && fieldReferences.Length > 0)
+        {
+            await fieldReferences[0].FocusAsync();
+        }
+    }
+}
