@@ -24,6 +24,19 @@ public static class Map
 
     public static IMap<K, T> Convert<K, T, S>(this IMap<K, S> source, Func<S, T> convert, Func<T, S> convertBack)
         => new CastingMap<K, T, S>(source, convert, convertBack);
+
+
+    public static NameValueCollection ToNameValueCollection(this IMap<String, String> map)
+    {
+        var nvc = new NameValueCollection();
+
+        foreach (var kvp in map)
+        {
+            nvc.Add(kvp.Key, kvp.Value);
+        }
+
+        return nvc;
+    }
 }
 
 class FromDictionaryMap<K, T> : IMap<K, T>

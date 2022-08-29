@@ -1,6 +1,7 @@
-﻿@inject IJSRuntime Js
+﻿@using System.Diagnostics
+@inject IJSRuntime Js
 
-<div @ref="ModalReference" class="blazor-modal modal" tabindex="-1" role="dialog">
+<div @ref="ModalReference" @onhiddenbsmodal="HandleClose" class="blazor-modal modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -44,6 +45,11 @@
 
     Boolean hadFirstRender;
 
+    void HandleClose(HiddenBsModalEventArgs a)
+    {
+        OnClose?.Invoke();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (!hadFirstRender) return;
@@ -51,5 +57,13 @@
         await Js.InvokeVoidAsync("openBoostrapModal", ModalReference, OnClose != null);
     }
 
-    protected override void OnAfterRender(bool firstRender) => hadFirstRender = true;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Js.InvokeVoidAsync("translateEvent", ModalReference, "hidden.bs.modal", "hiddenbsmodal");
+
+            hadFirstRender = true;
+        }
+    }
 }

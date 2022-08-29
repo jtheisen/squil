@@ -1,41 +1,20 @@
-﻿@page "/playground/{index:int?}"
+﻿@page "/playground2/{foo}/{bar}"
+@page "/playground/{*pageroute}"
 
-<PageTitle>Counter</PageTitle>
+<PageTitle>Playground</PageTitle>
 
-<h1>Counter</h1>
+<p role="status">combined: @PageRoute</p>
 
-<p role="status">Current init id: @Guid</p>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
-<p role="status">Current index: @Index</p>
-
-<a href="/counter/@(Index + 1)" class="btn btn-link">Move up</a>
+<p role="status">separate: @Foo // @Bar</p>
 
 @code {
     [Parameter]
-    public Int32 Index { get; set; }
+    public string PageRoute { get; set; }
 
-    public Guid Guid { get; set; }
+    [Parameter]
+    public string Foo { get; set; }
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-    }
+    [Parameter]
+    public string Bar { get; set; }
 
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-
-        Guid = Guid.NewGuid();
-    }
-
-    private int currentCount = 0;
-
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
 }

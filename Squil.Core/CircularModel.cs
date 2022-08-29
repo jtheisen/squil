@@ -79,6 +79,7 @@ namespace Squil
                     {
                         Order = i,
                         Name = c.COLUMN_NAME,
+                        Type = TypeRegistry.Instance.GetTypeOrNull(c.DATA_TYPE),
                         IsString = c.DATA_TYPE.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
                     }).ToArray();
 
@@ -428,6 +429,8 @@ namespace Squil
         public String Name { get; set; }
 
         public String Escaped => Name.EscapeNamePart();
+
+        public ColumnType Type { get; set; }
 
         public Boolean IsString { get; set; }
 

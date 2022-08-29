@@ -72,9 +72,9 @@ namespace Squil
 
             if ((extent.Values?.Length ?? 0) > (extent.Order?.Length ?? 0)) throw new Exception("More filter values than order columns");
 
-            var filterItems = extent.Values?.Select((v, i) => (column: extent.Order[i], value: v));
+            var filterItems = extent.Values?.Select((v, i) => (column: extent.Order[i], value: v, op: i >= extent.KeyValueCount ? ">=" : "="));
 
-            var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column} >= '{i.value}'") ?? Enumerable.Empty<String>();
+            var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column} {i.op} '{i.value}'") ?? Enumerable.Empty<String>();
 
             var allPredicates = filterPredicates.Concat(joinPredicates).ToArray();
 
@@ -154,6 +154,32 @@ namespace Squil
             };
         }
 
+        Entity MakeDummyEntity(Extent extent, CMTable table)
+        {
+            return new Entity
+            {
+                Related = extent.Children?.Select(c => MakeDummyEntities(c, table)).ToArray()
+            };
+        }
+
+        RelatedEntities MakeDummyEntities(Extent extent, CMTable parentTable)
+        {
+            var forwardEnd = parentTable.Relations.GetValueOrDefault(extent.RelationName) ?? throw new Exception(
+                $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
+            );
+
+            var table = forwardEnd.OtherEnd.Table;
+
+            return new RelatedEntities
+            {
+                Extent = extent,
+                RelationEnd = forwardEnd,
+                RelationName = extent.RelationName,
+                TableName = forwardEnd.Table.Name,
+                List = new[] { MakeDummyEntity(extent, forwardEnd.Table) }
+            };
+        }
+
         public DebugEntity InterpretXml(XElement element)
         {
             return new DebugEntity
@@ -179,6 +205,13 @@ namespace Squil
             var entity = MakeEntity(extent, rootTable, resultXml);
 
             return (entity, sql, resultXml);
+        }
+
+        public Entity QueryDummy(Extent extent)
+        {
+            var rootTable = cmRoot.GetTable(ObjectName.RootName);
+
+            return MakeDummyEntity(extent, rootTable);
         }
 
         public X Query<X>(SqlConnection connection, Extent extent)
@@ -245,6 +278,8 @@ namespace Squil
         public String[] Order { get; set; }
 
         public String[] Values { get; set; }
+
+        public Int32 KeyValueCount { get; set; }
 
         public Boolean IsDescending { get; set; }
 

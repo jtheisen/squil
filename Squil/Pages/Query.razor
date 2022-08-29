@@ -22,47 +22,64 @@
                 </div>
             </div>
 
-            <div class="row position-relative">
-                <div class="entity-context col-12 col-xl-10">
-                    <EntityContentView Entity="Result.Entity" />
+            @if (LatestEntity != null)
+            {
+                <div class="row position-relative">
+                    <div class="entity-context col-12 col-xl-10">
+                        <EntityContentView Entity="LatestEntity" />
+                    </div>
+
+                    <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
+                        <div class="bg-light border p-2 w-50">
+                            @if (Result.RootRelation != null)
+                            {
+                                var relation = LatestEntity.Related.FirstOrDefault();
+
+                                var table = Result.RootRelation.RelationEnd.Table;
+
+                                var indexes = table.Indexes.Values
+                                    .StartsWith(KeyValuesArray)
+                                    .Where(i => i.Columns.Length > KeyValuesArray.Length);
+
+                                <div class="indexes-form">
+                                    <h4>indexes for @table.Name.Simple</h4>
+
+                                    @foreach (var index in indexes)
+                                    {
+                                        var isCurrent = index.Name == Index;
+
+                                        var url = isCurrent ? null : QueryContext.RenderIndexUrl(index, LatestEntity.ColumnValues);
+
+                                        <a href="@url">
+                                            <IndexView Index="@index" IsActive="@isCurrent" HiddenPrefixLength="@KeyValuesArray.Length" SearchValues="@SearchValues" />
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+
+                    @*            <div class="d-none d-xl-block col-xl-2 small text-muted">
+                    <HelpText QueryType="@Result.QueryType" />
+                    </div>
+                    *@
                 </div>
-
-                <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
-                    <div class="bg-light border p-2 w-50">
-                        @if (Result.RootRelation != null)
+            }
+            else
+            {
+                <div>
+                    <h4>No entity</h4>
+                    <p>
+                        @foreach (var c in Result.ValidatedColumns.Where(c => !c.IsOk))
                         {
-                            var relation = Result.Entity.Related.FirstOrDefault();
-
-                            var table = Result.RootRelation.RelationEnd.Table;
-
-                            var indexes = table.Indexes.Values
-                                .StartsWith(FixedColumns)
-                                .Where(i => i.Columns.Length > FixedColumns.Length);
-
-                            <div class="indexes-form">
-                                <h4>indexes for @table.Name.Simple</h4>
-
-                                @foreach (var index in indexes)
-                                {
-                                    var isCurrent = index.Name == Index;
-
-                                    var url = isCurrent ? null : QueryContext.RenderIndexUrl(index, Result.Entity.ColumnValues);
-
-                                    <a href="@url">
-                                        <IndexView Index="@index" IsActive="@isCurrent" HiddenPrefixLength="@FixedColumns.Length" SearchValues="@SearchValues" />
-                                    </a>
-                                }
+                            <div>
+                                @c.Error
                             </div>
                         }
-                    </div>
+                    </p>
                 </div>
-
-
-                @*            <div class="d-none d-xl-block col-xl-2 small text-muted">
-                <HelpText QueryType="@Result.QueryType" />
-                </div>
-                *@
-            </div>
+            }
 
             <Modal OnClose="SqlModalSubscription">
                 <Title>SQL Query</Title>
@@ -106,9 +123,11 @@
 
     IMap<String, String> SearchValues { get; set; } = new ExpandoObject().AsMap(withDefaults: true).Convert(o => o as String, o => o);
 
-    String[] FixedColumns { get; set; }
+    String[] KeyValuesArray { get; set; }
 
     LocationQueryResult Result { get; set; }
+
+    Entity LatestEntity { get; set; }
 
     QueryContext QueryContext { get; set; }
 
@@ -123,14 +142,19 @@
 
         var queryParams = HttpUtility.ParseQueryString(query);
 
-        FixedColumns = queryParams.Keys.Cast<String>().ToArray();
+        KeyValuesArray = queryParams.Keys.Cast<String>().ToArray();
 
-        foreach (var p in SearchValues.Convert(o => o as String, o => o))
+        var request = new LocationQueryRequest()
         {
-            queryParams[p.Key] = p.Value;
-        }
+            Table = Table,
+            Index = Index,
+            KeyValues = queryParams,
+            SearchValues = SearchValues.ToNameValueCollection()
+        };
 
-        Result = Runner.Query(ConnectionName, Table, Index, queryParams);
+        Result = Runner.Query(ConnectionName, request);
+
+        LatestEntity = Result.Entity;
 
         QueryContext = new QueryContext(rest => $"/query/{ConnectionName}/{rest}");
 
