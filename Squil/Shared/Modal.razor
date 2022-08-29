@@ -35,11 +35,8 @@
     [Parameter]
     public RenderFragment Body { get; set; }
 
-    // Not yet ever called, but setting this each does lead to opening the modal.
-    // Should really be called on the appropriate dom event.
     [Parameter]
     public Action OnClose { get; set; }
-
 
     ElementReference ModalReference { get; set; }
 
@@ -61,6 +58,8 @@
     {
         if (firstRender)
         {
+            // Bootstrap's modal events don't bubble and Blazor can handle only those that do,
+            // so we need to translate the event.
             await Js.InvokeVoidAsync("translateEvent", ModalReference, "hidden.bs.modal", "hiddenbsmodal");
 
             hadFirstRender = true;
