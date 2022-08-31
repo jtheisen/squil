@@ -223,8 +223,6 @@ namespace Squil
         {
             var sql = GetCompleteSql(extent);
 
-            Console.WriteLine(connection.QueryXml(sql));
-
             return connection.QueryXml<X>(sql);
         }
     }
