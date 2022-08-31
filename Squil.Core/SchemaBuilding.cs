@@ -17,7 +17,7 @@ namespace Squil.Core
             cmRootForInfSch.PopulateRoot();
             cmRootForInfSch.Populate(InformationSchemaSchema.GetRelations().ToArray());
 
-            var infSchGenerator = new QueryGenerator(cmRootForInfSch, true);
+            var infSchGenerator = new QueryGenerator(cmRootForInfSch, false);
 
             var cSchema = infSchGenerator.Query<ISRoot>(connection, new Extent
             {
@@ -73,7 +73,7 @@ namespace Squil.Core
             cmRootForSys.PopulateRoot();
             cmRootForSys.Populate(SystemSchema.GetRelations().ToArray());
 
-            var sysGenerator = new QueryGenerator(cmRootForSys, true);
+            var sysGenerator = new QueryGenerator(cmRootForSys, false);
 
             var cSchema = sysGenerator.Query<SysRoot>(connection, new Extent
             {
