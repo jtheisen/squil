@@ -3,7 +3,7 @@
   --entity-bg-prev: white;
   /* old inline */
 }
-.entity-context li.ellipsis {
+.entity-context li.list-marker {
   display: none;
 }
 .entity-context label {
@@ -66,6 +66,10 @@
 .entity-context ol {
   position: relative;
 }
+.entity-context ol[data-flavor=block] > li.list-marker,
+.entity-context ol[data-flavor=page] > li.list-marker {
+  display: block;
+}
 .entity-context ol[data-flavor=block] > li:not(:first-child),
 .entity-context ol[data-flavor=page] > li:not(:first-child) {
   margin-top: 2em;
@@ -74,13 +78,16 @@
 .entity-context ol[data-flavor=page] > li:first-child {
   margin-top: 0.5em;
 }
+.entity-context ol[data-flavor=block] > li:not(.list-marker),
+.entity-context ol[data-flavor=page] > li:not(.list-marker) {
+  background-color: var(--entity-bg-0);
+  --entity-bg-prev: var(--entity-bg-0);
+}
 .entity-context ol[data-flavor=block] > li,
 .entity-context ol[data-flavor=page] > li {
   margin: -10px;
   padding: 10px;
   border-radius: 5px;
-  background-color: var(--entity-bg-0);
-  --entity-bg-prev: var(--entity-bg-0);
 }
 .entity-context ol[data-flavor=block] > li > header,
 .entity-context ol[data-flavor=page] > li > header {
@@ -166,11 +173,11 @@
 .entity-context ol[data-flavor=block] > li.potentially-last {
   display: none;
 }
-.entity-context ol[data-flavor=block] > li.ellipsis {
+.entity-context ol[data-flavor=block] > li.list-marker-ellipsis {
   display: block;
   background: none;
 }
-.entity-context ol[data-flavor=block] > li.ellipsis:after {
+.entity-context ol[data-flavor=block] > li.list-marker-ellipsis:after {
   font-style: italic;
   content: "...and more (load more not implemented yet)";
 }
@@ -214,7 +221,7 @@
 .entity-context ol[data-flavor=inline] > li ol[data-flavor=inline2] > li * {
   display: inline;
 }
-.entity-context ol[data-flavor=inline] > li.ellipsis {
+.entity-context ol[data-flavor=inline] > li.list-marker-ellipsis {
   background-color: var(--entity-bg-prev);
   height: 32px;
   width: 32px;

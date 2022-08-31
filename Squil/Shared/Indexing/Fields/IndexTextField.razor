@@ -36,7 +36,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!wasActive && IsActive)
+        if (!wasActive && IsActive && Focus)
         {
             await FocusAsync();
         }

@@ -2,6 +2,7 @@
 
 @{
     var entities = Ui.RelatedEntites;
+    var extent = entities.Extent;
     var parentEntity = Ui.Entity;
 
     var lastIndex = entities.Extent.Limit?.Apply(l => l - 1);
@@ -18,6 +19,8 @@
 
     var flavor = entities.Extent.Flavor.Apply(f => f.GetCssValue(isLeaf));
 
+    var ai = Ui.RelatedEntites.GetListAnnotationInfo();
+
     var hadOnlyMatching = true;
 }
 
@@ -28,26 +31,61 @@
         </a>
     </label>
     <ol data-flavor="@flavor">
+        @if (entities.List.Length == 0)
+        {
+            if (ai.wasSearch)
+            {
+                <li class="list-marker">
+                    No results could be found with @ai.column >= @ai.value.
+                </li>
+            }
+            else
+            {
+                <li class="list-marker list-marker-empty">
+                    This table or related slice is empty.
+                </li>
+            }
+        }
+
+        @if (ai.wasSearch && ai.matchCount > 0)
+        {
+            if (ai.afterCount == 0)
+            {
+                <li class="list-marker">
+                    All @ai.matchCount loaded results are exact matches with @ai.column = @ai.value.
+                </li>
+            }
+            else
+            {
+                <li class="list-marker">
+                    The first @ai.matchCount results are exact matches with @ai.column = @ai.value.
+                </li>
+            }
+        }
+
         @for (var i = 0; i < entities.List.Length; ++i)
         {
             var entity = entities.List[i];
 
             var itemClasses = i == lastIndex ? "potentially-last" : null;
 
-            if (hadOnlyMatching && entity.IsMatching == false)
+            if (ai.wasSearch && hadOnlyMatching && entity.IsMatching == false)
             {
                 hadOnlyMatching = false;
 
-                <li><strong>Not matching from here!!</strong></li>
+                <li class="list-marker">
+                    The following items are not exact matches and come after the search value with @ai.column >= @ai.value.
+                </li>
             }
 
             <li class="@itemClasses">
                 <EntityContentView Entity="entity" ParentCollection="entities" />
             </li>
         }
+
         @if (entities.List.Length == entities.Extent.Limit)
         {
-            <li class="ellipsis" />
+            <li class="list-marker list-marker-ellipsis" />
         }
     </ol>
 </div>

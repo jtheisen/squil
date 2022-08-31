@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.Dynamic;
 using System.Web;
 
 namespace Squil
@@ -32,6 +33,63 @@ namespace Squil
         public RelatedEntities RootRelation => IsRoot ? null : Entity?.Related.Single();
         public Boolean IsValidationOk { get; set; }
         public ValidationResult[] ValidatedColumns { get; set; }
+    }
+
+    public class LocationQueryVm
+    {
+        public LocationQueryRequest Request { get; }
+        public LocationQueryResult Result { get; }
+        public LocationQueryResult LastResult { get; private set; }
+
+        public Int32 KeyValuesCount { get; }
+
+        public LocationQueryVm(LocationQueryRequest request, LocationQueryResult result)
+        {
+            Request = request;
+            Result = result;
+
+            var relation = Result.RootRelation;
+
+            if (relation != null)
+            {
+                var table = relation.RelationEnd.Table;
+
+                var keyValuesArray = Request.KeyValues.Cast<String>().ToArray();
+
+                KeyValuesCount = keyValuesArray.Length;
+
+                Indexes = table.Indexes.Values
+                    .StartsWith(keyValuesArray)
+                    .Where(i => i.Columns.Length > keyValuesArray.Length)
+                    .Select(i => new IndexVm { Index = i, IsCurrent = request.Index == i.Name })
+                    .ToArray();
+            }
+
+            Update(result);
+        }
+
+        public void Update(LocationQueryResult result)
+        {
+            LastResult = result;
+
+            if (CurrentIndex != null)
+            {
+                CurrentIndex.ValidatedValues = result.ValidatedColumns;
+            }
+        }
+
+        public IndexVm CurrentIndex { get; }
+
+        public IndexVm[] Indexes { get; }
+    }
+
+    public class IndexVm
+    {
+        public ValidationResult[] ValidatedValues { get; set; }
+
+        public CMIndexlike Index { get; set; }
+
+        public Boolean IsCurrent { get; set; }
     }
 
     public class LocationQueryRunner
@@ -76,7 +134,7 @@ namespace Squil
             var extentOrder = cmIndex?.Columns.Select(c => c.c.Name).ToArray();
             var extentValues = columnValues?.TakeWhile(cv => cv.SqlValue != null).Select(cv => cv.SqlValue).ToArray();
 
-            var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length);
+            var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
 
             var extent = extentFactory.CreateRootExtent(
                 cmTable,

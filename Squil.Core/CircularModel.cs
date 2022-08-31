@@ -79,6 +79,7 @@ namespace Squil
                     {
                         Order = i,
                         Name = c.COLUMN_NAME,
+                        SqlType = c.DATA_TYPE,
                         Type = TypeRegistry.Instance.GetTypeOrNull(c.DATA_TYPE),
                         IsString = c.DATA_TYPE.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
                     }).ToArray();
@@ -87,9 +88,25 @@ namespace Squil
 
                 var sysColumns = sysTable?.Columns.ToLookup(c => c.ColumnId, c => c);
 
+                (String tag, String reason)? CheckColumnSupport(IEnumerable<CMColumn> columns)
+                {
+                    foreach (var column in columns)
+                    {
+                        if (!column.Type.IsSupported) return ("column", $"unsupported column data type");
+                    }
+
+                    return null;
+                }
+
                 table.Indexes = (sysTable?.Indexes ?? Empties<SysIndex>.Array).Apply(indexes =>
                     from i in indexes
-                    let support = i.CheckSupport()
+                    let columns = (
+                        from ci in i.Columns
+                        from c in sysColumns[ci.ColumnId]
+                        let cmc = table.Columns[c.Name]
+                        select (ci.IsDescendingKey ? CMDirection.Desc : CMDirection.Asc, cmc)
+                    ).ToArray()
+                    let support = i.CheckIntrinsicSupport() ?? CheckColumnSupport(columns.Select(c => c.cmc))
                     where i.Name != null
                     select new CMIndexlike
                     {
@@ -98,14 +115,9 @@ namespace Squil
                         IsUnique = i.IsUnique,
                         IsPrimary = i.IsPrimary,
                         Table = table,
-                        UnsupportedTag = support.tag,
-                        UnsupportedReason = support.reason,
-                        Columns = (
-                            from ci in i.Columns
-                            from c in sysColumns[ci.ColumnId]
-                            let cmc = table.Columns[c.Name]
-                            select (ci.IsDescendingKey ? CMDirection.Desc : CMDirection.Asc, cmc)
-                        ).ToArray()
+                        UnsupportedTag = support?.tag,
+                        UnsupportedReason = support?.reason,
+                        Columns = columns
                     }
                 ).ToDictionary(i => i.Name, i => i);
 
@@ -378,7 +390,7 @@ namespace Squil
 
         public Boolean IsUnique { get; set; }
 
-        public Boolean IsSupported { get; set; }
+        public Boolean IsSupported => UnsupportedTag == null;
 
         public String UnsupportedTag { get; set; }
         public String UnsupportedReason { get; set; }
@@ -427,6 +439,8 @@ namespace Squil
         public Int32 Order { get; set; }
 
         public String Name { get; set; }
+
+        public String SqlType { get; set; }
 
         public String Escaped => Name.EscapeNamePart();
 

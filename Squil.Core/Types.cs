@@ -25,9 +25,15 @@ public struct ColumnTypePrecisions
 
 }
 
+public static class ColumnTypeExtensions
+{ 
+}
+
 public abstract class ColumnType
 {
     public String Name { get; set; }
+
+    public virtual Boolean IsSupported => true;
 
     public ValidationResult Validate(String keyValue, String searchValue, ColumnTypePrecisions precisions)
     {
@@ -65,6 +71,16 @@ public abstract class ColumnType
     protected ValidationResult Ok(String sqlValue)
     {
         return new ValidationResult { ColumnType = this, SqlValue = sqlValue };
+    }
+}
+
+public class UnknownColumnType : ColumnType
+{
+    public override Boolean IsSupported => false;
+
+    protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
+    {
+        return Issue("the data type of this column is unsupported");
     }
 }
 
@@ -204,6 +220,13 @@ public class TypeRegistry
 
     public ColumnType GetTypeOrNull(String name)
     {
-        return types.GetOrDefault(name);
+        if (types.TryGetValue(name, out var type))
+        {
+            return type;
+        }
+        else
+        {
+            return types[name] = new UnknownColumnType { Name = name };
+        }
     }
 }

@@ -3,14 +3,19 @@
 @inject NavigationManager NavigationManager
 @implements IDisposable
 
-<PageTitle>@Result.RootName</PageTitle>
+@{
+    renderCount++; 
+}
+
+<PageTitle>@vm.Result.RootName</PageTitle>
 
 <DefaultLayout>
     <NavItems>
-        <li class="nav-item"><a class="nav-link text-muted" href="@Result.RootUrl">@Result.RootName</a></li>
+        <li class="nav-item"><a class="nav-link text-muted" href="@vm.Result.RootUrl">@vm.Result.RootName</a></li>
     </NavItems>
 
     <ActionItems>
+        <span>@queryCount / @renderCount</span>
         <button class="btn btn-light text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
     </ActionItems>
 
@@ -22,64 +27,41 @@
                 </div>
             </div>
 
-            @if (LatestEntity != null)
-            {
-                <div class="row position-relative">
-                    <div class="entity-context col-12 col-xl-10">
-                        <EntityContentView Entity="LatestEntity" />
-                    </div>
-
-                    <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
-                        <div class="bg-light border p-2 w-50">
-                            @if (Result.RootRelation != null)
+            <div class="row position-relative">
+                <div class="entity-context col-12 col-xl-10">
+                    @if (vm.LastResult.Entity != null)
+                    {
+                        <EntityContentView Entity="vm.LastResult.Entity" />
+                    }
+                    else
+                    {
+                        <h4>No entity</h4>
+                        <p>
+                            @foreach (var c in vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
                             {
-                                var relation = LatestEntity.Related.FirstOrDefault();
-
-                                var table = Result.RootRelation.RelationEnd.Table;
-
-                                var indexes = table.Indexes.Values
-                                    .StartsWith(KeyValuesArray)
-                                    .Where(i => i.Columns.Length > KeyValuesArray.Length);
-
-                                <div class="indexes-form">
-                                    <h4>indexes for @table.Name.Simple</h4>
-
-                                    @foreach (var index in indexes)
-                                    {
-                                        var isCurrent = index.Name == Index;
-
-                                        var url = isCurrent ? null : QueryContext.RenderIndexUrl(index, LatestEntity.ColumnValues);
-
-                                        <a href="@url">
-                                            <IndexView Index="@index" IsActive="@isCurrent" HiddenPrefixLength="@KeyValuesArray.Length" SearchValues="@SearchValues" />
-                                        </a>
-                                    }
+                                <div>
+                                    @c.Error
                                 </div>
                             }
-                        </div>
-                    </div>
-
-
-                    @*            <div class="d-none d-xl-block col-xl-2 small text-muted">
-                    <HelpText QueryType="@Result.QueryType" />
-                    </div>
-                    *@
+                        </p>
+                    }
                 </div>
-            }
-            else
-            {
-                <div>
-                    <h4>No entity</h4>
-                    <p>
-                        @foreach (var c in Result.ValidatedColumns.Where(c => !c.IsOk))
+
+                <div class="d-none d-xl-block col-xl-10 position-absolute" style="left: 0; right: 0; top: 0; transform: translate(100%, 0)">
+                    <div class="bg-light border p-2 w-50">
+                        @if (vm.Indexes != null)
                         {
-                            <div>
-                                @c.Error
-                            </div>
+                            <IndexPanel Vm="vm" SearchValues="SearchValues" />
                         }
-                    </p>
+                    </div>
                 </div>
-            }
+
+
+                @*            <div class="d-none d-xl-block col-xl-2 small text-muted">
+                <HelpText QueryType="@Result.QueryType" />
+                </div>
+                *@
+            </div>
 
             <Modal OnClose="SqlModalSubscription">
                 <Title>SQL Query</Title>
@@ -100,7 +82,7 @@
                 </HeaderExtra>
                 <Body>
                     <pre>
-                        @Result.Sql
+                        @vm.LastResult.Sql
                 </pre>
                 </Body>
             </Modal>
@@ -121,13 +103,11 @@
     [Parameter]
     public String Index { get; set; }
 
+    Int32 renderCount, queryCount;
+
     IMap<String, String> SearchValues { get; set; } = new ExpandoObject().AsMap(withDefaults: true).Convert(o => o as String, o => o);
 
-    String[] KeyValuesArray { get; set; }
-
-    LocationQueryResult Result { get; set; }
-
-    Entity LatestEntity { get; set; }
+    LocationQueryVm vm = null;
 
     QueryContext QueryContext { get; set; }
 
@@ -136,13 +116,11 @@
     Action SqlModalSubscription { get; set; }
 
 
-    void RunQuery()
+    void RunQuery(Boolean isLocationChange = true)
     {
         var query = new Uri(NavigationManager.Uri).Query;
 
         var queryParams = HttpUtility.ParseQueryString(query);
-
-        KeyValuesArray = queryParams.Keys.Cast<String>().ToArray();
 
         var request = new LocationQueryRequest()
         {
@@ -152,11 +130,20 @@
             SearchValues = SearchValues.ToNameValueCollection()
         };
 
-        Result = Runner.Query(ConnectionName, request);
+        var result = Runner.Query(ConnectionName, request);
 
-        LatestEntity = Result.Entity;
+        ++queryCount;
 
-        QueryContext = new QueryContext(rest => $"/query/{ConnectionName}/{rest}");
+        if (isLocationChange)
+        {
+            vm = new LocationQueryVm(request, result);
+
+            QueryContext = new QueryContext(rest => $"/query/{ConnectionName}/{rest}");
+        }
+        else
+        {
+            vm.Update(result);
+        }
 
         StateHasChanged();
     }
@@ -165,14 +152,14 @@
     {
         StateHasChanged();
 
-        RunQuery();
+        RunQuery(false);
     }
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
 
-        RunQuery();
+        RunQuery(true);
     }
 
     protected override void OnInitialized()
@@ -182,7 +169,7 @@
 
     void LocationChanged(object sender, LocationChangedEventArgs e)
     {
-        RunQuery();
+        RunQuery(true);
     }
     
     void IDisposable.Dispose()

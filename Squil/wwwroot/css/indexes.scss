@@ -8,6 +8,7 @@
     .index {
         font-size: .75rem;
         line-height: 1rem;
+        overflow-x: auto;
     }
 
     .index-column {
@@ -39,8 +40,9 @@
 
     .index-column-value {
         min-height: 1rem;
+        white-space: nowrap;
     }
-    
+
     .index-column-value:not(:empty) + .index-column-name {
         opacity: 0;
     }

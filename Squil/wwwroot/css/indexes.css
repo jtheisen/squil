@@ -5,6 +5,7 @@
 .indexes-form .index {
   font-size: 0.75rem;
   line-height: 1rem;
+  overflow-x: auto;
 }
 .indexes-form .index-column {
   white-space: nowrap;
@@ -30,6 +31,7 @@
 }
 .indexes-form .index-column-value {
   min-height: 1rem;
+  white-space: nowrap;
 }
 .indexes-form .index-column-value:not(:empty) + .index-column-name {
   opacity: 0;

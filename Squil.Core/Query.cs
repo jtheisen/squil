@@ -72,7 +72,11 @@ namespace Squil
 
             if ((extent.Values?.Length ?? 0) > (extent.Order?.Length ?? 0)) throw new Exception("More filter values than order columns");
 
-            var filterItems = extent.Values?.Select((v, i) => (column: extent.Order[i], value: v, op: i >= extent.KeyValueCount ? ">=" : "="));
+            var valuesLength = extent.Values?.Length;
+
+            // We currently only allow the last value to be unequal as otherwise we need a convoluted filter
+            // predicate with uncertain performance characteristics.
+            var filterItems = extent.Values?.Select((v, i) => (column: extent.Order[i], value: v, op: i < valuesLength - 1 || i < extent.KeyValueCount ? "=" : ">="));
 
             var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column} {i.op} '{i.value}'") ?? Enumerable.Empty<String>();
 
@@ -343,6 +347,17 @@ namespace Squil
         public String[] ColumnNames { get; set; } = EmptyColumnArrays;
     }
 
+    public struct RelatedEntitiesListItemAnnotationInfo
+    {
+        public bool wasSearch;
+
+        public int matchCount;
+        public int afterCount;
+
+        public string column;
+        public string value;
+    }
+
     public static class Extensions
     {
         public static SqlCommand CreateSqlCommandFromSql(this SqlConnection connection, String sql)
@@ -402,6 +417,33 @@ namespace Squil
             }
 
             return null;
+        }
+
+        public static RelatedEntitiesListItemAnnotationInfo GetListAnnotationInfo(this RelatedEntities entities)
+        {
+            var values = entities.Extent.Values;
+
+            if (values == null) return default;
+
+            var valueCount = entities.Extent.Values!.Length;
+
+            if (valueCount == 0) return default;
+
+            var lastValueI = valueCount - 1;
+
+            var matchCount = entities.List.Count(e => e.IsMatching == true);
+            var afterCount = entities.List.Count(e => e.IsMatching == false);
+
+            return new RelatedEntitiesListItemAnnotationInfo
+            {
+                wasSearch = entities.Extent.KeyValueCount < valueCount,
+
+                matchCount = entities.List.Count(e => e.IsMatching == true),
+                afterCount = entities.List.Count(e => e.IsMatching == false),
+
+                column = entities.Extent.Order[lastValueI],
+                value = values[lastValueI],
+            };
         }
     }
 }

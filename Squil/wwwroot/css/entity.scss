@@ -68,7 +68,7 @@ $bg-light-2: #e7e5e4;
 .entity-context {
     --entity-bg-prev: white;
 
-    li.ellipsis {
+    li.list-marker {
         display: none;
     }
 
@@ -142,6 +142,10 @@ $bg-light-2: #e7e5e4;
 
     ol[data-flavor=block],
     ol[data-flavor=page] {
+        > li.list-marker {
+            display: block;
+        }
+
         > li:not(:first-child) {
             margin-top: 2em;
         }
@@ -150,13 +154,15 @@ $bg-light-2: #e7e5e4;
             margin-top: .5em;
         }
 
+        > li:not(.list-marker) {
+            background-color: var(--entity-bg-0);
+            --entity-bg-prev: var(--entity-bg-0);
+        }
+
         > li {
             margin: -10px;
             padding: 10px;
             border-radius: 5px;
-            background-color: var(--entity-bg-0);
-            --entity-bg-prev: var(--entity-bg-0);
-
 
             > header {
                 font-size: 2em;
@@ -262,7 +268,7 @@ $bg-light-2: #e7e5e4;
                 display: none;
             }
 
-            &.ellipsis {
+            &.list-marker-ellipsis {
                 display: block;
                 background: none;
 
@@ -301,7 +307,7 @@ $bg-light-2: #e7e5e4;
                 }
             }
 
-            &.ellipsis {
+            &.list-marker-ellipsis {
                 background-color: var(--entity-bg-prev);
                 height: 32px;
                 width: 32px;

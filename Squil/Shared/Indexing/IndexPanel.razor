@@ -1,0 +1,26 @@
+﻿@using System.Diagnostics
+@using Squil.Shared.Indexing.Fields
+
+<div class="indexes-form">
+    @foreach (var index in Vm.Indexes)
+    {
+        if (!index.Index.IsSupported) continue;
+
+        var url = index.IsCurrent ? null : QueryContext.RenderIndexUrl(index.Index, Vm.Result.Entity.ColumnValues);
+
+        <a href="@url">
+            <IndexLine Index="@index.Index" IsActive="@index.IsCurrent" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" />
+        </a>
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    public QueryContext QueryContext { get; set; }
+
+    [Parameter]
+    public LocationQueryVm Vm { get; set; }
+
+    [Parameter]
+    public IMap<String, String> SearchValues { get; set; }
+}

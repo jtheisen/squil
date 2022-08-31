@@ -87,13 +87,13 @@ namespace Squil
         [XmlArray("columns")]
         public SysIndexColumn[] Columns { get; set; } = Empties<SysIndexColumn>.Array;
 
-        public (String tag, String reason) CheckSupport()
+        public (String tag, String reason)? CheckIntrinsicSupport()
         {
             if (IsDisabled) return ("disabled", "Disabled indexes can't be used");
             if (IsHypothetical) return ("hypothetical", "Hypothetical indexes can't be searched");
             if (HasFilter) return ("filtered", "Filtered indexes are not yet supported");
             if (Type != 1 && Type != 2) return (TypeDesc, "Only b-tree indexes are supported");
-            return (null, null);
+            return null;
         }
 
     }
