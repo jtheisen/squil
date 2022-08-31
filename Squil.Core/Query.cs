@@ -12,6 +12,8 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using TaskLedgering;
+using NLog;
 
 namespace Squil
 {
@@ -369,6 +371,8 @@ namespace Squil
         public static X QueryXml<X>(this SqlConnection connection, String sql)
             where X : class
         {
+            using var _ = GetCurrentLedger().TimedScope("query-parsing-and-binding");
+
             var command = connection.CreateSqlCommandFromSql(sql);
 
             using var reader = command.ExecuteXmlReader();
@@ -382,6 +386,8 @@ namespace Squil
 
         public static XElement QueryXml(this SqlConnection connection, String sql)
         {
+            using var _ = GetCurrentLedger().TimedScope("query-and-parsing");
+
             var command = connection.CreateSqlCommandFromSql(sql);
 
             using var reader = command.ExecuteXmlReader();

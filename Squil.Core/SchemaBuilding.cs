@@ -10,6 +10,8 @@ namespace Squil.Core
     {
         static ISRoot GetISSchema(this SqlConnection connection)
         {
+            using var _ = GetCurrentLedger().GroupingScope(nameof(GetISSchema));
+
             var cmRootForInfSch = new CMRoot("INFORMATION_SCHEMA");
             cmRootForInfSch.Populate(InformationSchemaSchema.GetSchema());
             cmRootForInfSch.PopulateRoot();
@@ -64,6 +66,8 @@ namespace Squil.Core
 
         static SysRoot GetSysSchema(this SqlConnection connection)
         {
+            using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
+
             var cmRootForSys = new CMRoot("sys");
             cmRootForSys.Populate(SystemSchema.GetSchema());
             cmRootForSys.PopulateRoot();
@@ -121,6 +125,8 @@ namespace Squil.Core
 
         public static CMRoot GetCircularModel(this SqlConnection connection)
         {
+            using var _ = GetCurrentLedger().GroupingScope(nameof(GetCircularModel));
+
             var isSchema = connection.GetISSchema();
             var sysSchema = connection.GetSysSchema();
 

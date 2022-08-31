@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Dynamic;
 using System.Web;
+using TaskLedgering;
 
 namespace Squil
 {
@@ -33,6 +34,7 @@ namespace Squil
         public RelatedEntities RootRelation => IsRoot ? null : Entity?.Related.Single();
         public Boolean IsValidationOk { get; set; }
         public ValidationResult[] ValidatedColumns { get; set; }
+        public IEnumerable<LedgerEntry> LedgerEntries { get; set; }
     }
 
     public class LocationQueryVm
@@ -104,6 +106,8 @@ namespace Squil
 
         public LocationQueryResult Query(String connectionName, LocationQueryRequest request)
         {
+            using var ledger = InstallTaskLedger();
+
             var context = connections.GetContext(connectionName);
 
             var table = request.Table;
@@ -149,7 +153,8 @@ namespace Squil
                 RootUrl = $"/query/{connectionName}",
                 IsRoot = isRoot,
                 ValidatedColumns = columnValues,
-                IsValidationOk = columnValues?.All(r => r.IsOk) ?? true
+                IsValidationOk = columnValues?.All(r => r.IsOk) ?? true,
+                LedgerEntries = ledger.GetEntries()
             };
 
             if (!result.IsValidationOk) return result;

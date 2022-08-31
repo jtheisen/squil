@@ -20,6 +20,20 @@
     </ActionItems>
 
     <ChildContent>
+
+        @if (vm.LastResult?.LedgerEntries != null)
+        {
+            <div class="position-sticky bg-white">
+                <dl>
+                    @foreach (var entry in vm.LastResult.LedgerEntries)
+                    {
+                        <dt>@entry.name</dt>
+                        <dd>@entry.time</dd>
+                    }
+                </dl>
+            </div>
+        }
+
         <CascadingValue Value="QueryContext">
             <div class="row small text-muted d-xl-none">
                 <div class="col-lg-12">

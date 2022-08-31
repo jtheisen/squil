@@ -44,7 +44,7 @@ public class Empties<K, T>
     public static ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
 }
 
-public static class Extensions
+public static partial class Extensions
 {
     static readonly XmlWriterSettings xmlWriterSettings = new XmlWriterSettings { Indent = true };
 
