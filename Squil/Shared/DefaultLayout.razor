@@ -1,20 +1,18 @@
 ﻿<header>
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-        <div class="container">
+        <div class="container-fluid">
             <ul class="nav navbar-nav mr-auto">
                 <li class="nav-item"><a class="nav-link text-muted" href="/">Databases</a></li>
                 @NavItems
             </ul>
             <div class="d-flex align-self-start">
                 @ActionItems
-                <div style="width: 120px"></div>
             </div>
         </div>
     </nav>
 </header>
-<div class="container">
-    @ChildContent
-</div>
+
+@ChildContent
 
 @code {
     [Parameter]

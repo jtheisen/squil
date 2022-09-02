@@ -1,0 +1,29 @@
+﻿
+<div class="layout">
+    <div class="left">
+        <div>
+            @LeftContent
+        </div>
+    </div>
+    <div class="middle">
+        <div class="squil-container">
+            @ChildContent
+        </div>
+    </div>
+    <div class="right">
+        <div class="position-sticky" style="top: 72px">
+            @RightContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment LeftContent { get; set; }
+
+    [Parameter]
+    public RenderFragment RightContent { get; set; }
+}

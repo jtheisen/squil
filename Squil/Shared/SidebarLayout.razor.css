@@ -1,0 +1,80 @@
+﻿
+.layout {
+    display: flex;
+    gap: 15px;
+}
+
+.left,
+.right {
+    padding: 0 15px;
+}
+
+.right {
+    flex: 1 0 0;
+}
+
+.left {
+    flex: 3 0 0;
+}
+
+    .left,
+    .right,
+    .left > div,
+    .right > div {
+        display: none;
+    }
+
+.middle {
+    padding: 0 15px;
+    width: 100%;
+}
+
+@media (min-width: 576px) {
+    .middle {
+        width: 100% /*540px*/;
+    }
+}
+
+@media (min-width: 768px) {
+    .middle {
+        width: 540px /*720px*/;
+    }
+
+    .left > div {
+        display: block;
+    }
+
+    .left {
+        display: block;
+    }
+}
+
+@media (min-width: 992px) {
+    .middle {
+        width: 540px /*960px*/;
+    }
+
+    .right {
+        display: block;
+    }
+}
+
+@media (min-width: 1200px) {
+    .middle {
+        width: 720px /*1140px*/;
+    }
+}
+
+@media (min-width: 1400px) {
+    .middle {
+        width: 720px /*1320px*/;
+    }
+
+    .right > div {
+        display: block;
+    }
+
+    .left {
+        flex: 1 0 0;
+    }
+}

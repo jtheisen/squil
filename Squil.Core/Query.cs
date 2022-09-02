@@ -368,6 +368,21 @@ namespace Squil
             return command;
         }
 
+        public static String QueryXmlString(this SqlConnection connection, String sql)
+        {
+            using var _ = GetCurrentLedger().TimedScope("query");
+
+            var command = connection.CreateSqlCommandFromSql(sql);
+
+            using var reader = command.ExecuteXmlReader();
+
+            reader.Read();
+
+            var xml = reader.ReadOuterXml();
+
+            return xml;
+        }
+
         public static X QueryXml<X>(this SqlConnection connection, String sql)
             where X : class
         {
