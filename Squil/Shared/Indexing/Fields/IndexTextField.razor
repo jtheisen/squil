@@ -1,10 +1,10 @@
 ﻿@inject IJSRuntime js
 
-<span class="index-column index-column-text d-flex flex-column border">
-
-    <span @ref="element" class="index-column-value outline-none" contenteditable="@IsActive" @oninput="HandleChange" />
+<span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(HasIssue))">
 
     <span class="index-column-name" type="text">@Name</span>
+
+    <span @ref="element" class="index-column-value outline-none" contenteditable="@IsActive" @oninput="HandleChange">&nbsp;</span>
 
 </span>
 
@@ -22,7 +22,12 @@
     public Boolean Focus { get; set; }
 
     [Parameter]
+    public Boolean HasIssue { get; set; }
+
+    [Parameter]
     public EventCallback<String> ValueChanged { get; set; }
+
+
 
     ElementReference element;
 

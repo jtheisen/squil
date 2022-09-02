@@ -3,35 +3,38 @@
   outline: none;
 }
 .indexes-form .index {
-  font-size: 0.75rem;
-  line-height: 1rem;
+  /*        font-size: .75rem;
+          line-height: 1rem;
+  */
   overflow-x: auto;
+  margin-top: -1px;
 }
 .indexes-form .index-column {
   white-space: nowrap;
-  height: 2rem;
-  padding: 0.5rem;
   background: white;
   flex: 1 1 auto;
+  border: 1px solid #eee;
 }
-.indexes-form .index-column:first-child {
-  border-top-left-radius: 0.25rem;
-  border-bottom-left-radius: 0.25rem;
-}
-.indexes-form .index-column:last-child {
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+.indexes-form .index-column-error {
+  border-color: red;
+  z-index: 1;
 }
 .indexes-form .index-column:not(:first-child) {
   border-left: 0 !important;
 }
 .indexes-form .index-column-name {
-  transform: translateY(-1rem);
   pointer-events: none;
+  padding: 0 0.5rem;
+  font-variant: small-caps;
+  color: #ccc;
+  font-weight: bold;
+  text-transform: lowercase;
+  font-size: 0.8rem;
 }
 .indexes-form .index-column-value {
   min-height: 1rem;
   white-space: nowrap;
+  padding: 0.25rem 0.5rem;
 }
 .indexes-form .index-column-value:not(:empty) + .index-column-name {
   opacity: 0;

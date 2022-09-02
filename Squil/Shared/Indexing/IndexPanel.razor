@@ -2,6 +2,16 @@
 @using Squil.Shared.Indexing.Fields
 
 <div class="indexes-form">
+
+    <p>
+        You can search by the following indexes on this table.
+    </p>
+
+    @if (!Vm.Result.IsValidationOk)
+    {
+        
+    }
+
     @foreach (var index in Vm.Indexes)
     {
         if (!index.Index.IsSupported) continue;
@@ -9,7 +19,7 @@
         var url = index.IsCurrent ? null : QueryContext.RenderIndexUrl(index.Index, Vm.Result.Entity.ColumnValues);
 
         <a href="@url">
-            <IndexLine Index="@index.Index" IsActive="@index.IsCurrent" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" />
+            <IndexLine Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" />
         </a>
     }
 </div>

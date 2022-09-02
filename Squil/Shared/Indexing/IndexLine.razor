@@ -2,18 +2,20 @@
 @using Squil.Shared.Indexing.Fields
 
 @{
-    var columns = Index.Columns.Skip(HiddenPrefixLength).ToArray();
+    var columns = Index.Index.Columns.Skip(HiddenPrefixLength).ToArray();
+    var validation = Index.ValidatedValues?.Skip(HiddenPrefixLength).ToArray();
 }
 
-<fieldset class="index mb-1">
+<fieldset class="index">
     <div class="index-columns d-flex">
         @for (var i = 0; i < columns.Length; ++i)
         {
             var c = columns[i];
+            var isOk = validation?[i].IsOk ?? true;
 
             var first = i == 0;
 
-            <IndexTextField Name="@c.c.Name" Focus="@first" IsActive="@IsActive" @bind-Value="@SearchValues[c.c.Name]" />
+            <IndexTextField Name="@c.c.Name" HasIssue="@(!isOk)" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c.Name]" />
         }
     </div>
 </fieldset>
@@ -23,10 +25,7 @@
     public QueryContext Context { get; set; }
 
     [Parameter]
-    public CMIndexlike Index { get; set; }
-
-    [Parameter]
-    public Boolean IsActive { get; set; }
+    public IndexVm Index { get; set; }
 
     [Parameter]
     public Int32 HiddenPrefixLength { get; set; }

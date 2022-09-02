@@ -44,6 +44,11 @@ public class Empties<K, T>
     public static ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
 }
 
+public static class RazorHelpers
+{
+    public static String ClassNames(params String[] classes) => String.Join(' ', classes);
+}
+
 public static partial class Extensions
 {
     static readonly XmlWriterSettings xmlWriterSettings = new XmlWriterSettings { Indent = true };
@@ -147,6 +152,8 @@ public static partial class Extensions
             }
         }
     }
+
+    public static T If<T>(this T source, Boolean predicate) => predicate ? source : default;
 
     [DebuggerHidden]
     public static T Assert<T>(this T value, Predicate<T> predicate, String message = null)

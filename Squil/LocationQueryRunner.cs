@@ -65,6 +65,8 @@ namespace Squil
                     .Where(i => i.Columns.Length > keyValuesArray.Length)
                     .Select(i => new IndexVm { Index = i, IsCurrent = request.Index == i.Name })
                     .ToArray();
+
+                CurrentIndex = Indexes.FirstOrDefault(i => i.IsCurrent);
             }
 
             Update(result);
