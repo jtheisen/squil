@@ -18,9 +18,12 @@ namespace Squil
         Dictionary<ObjectName, CMTable> tables;
         Dictionary<ObjectName, CMIndexlike> keys;
 
+        public IEnumerable<CMIndexlike> GetAllIndexes() =>
+            from t in tables.Values
+            from i in t.Indexes?.Values ?? Empties<CMIndexlike>.Enumerable
+            select i;
+
         public CMTable GetTable(ObjectName name) => tables[name];
-
-
 
         public CMRoot(String name)
         {

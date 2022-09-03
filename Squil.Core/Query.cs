@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 using TaskLedgering;
 using NLog;
 
@@ -204,7 +203,7 @@ namespace Squil
         {
             var sql = GetCompleteSql(extent);
 
-            var resultXml = connection.QueryXml(sql);
+            var resultXml = connection.QueryAndParseXml(sql);
 
             var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
@@ -225,7 +224,7 @@ namespace Squil
         {
             var sql = GetCompleteSql(extent);
 
-            return connection.QueryXml<X>(sql);
+            return connection.QueryAndParseXml<X>(sql);
         }
     }
 
@@ -356,113 +355,5 @@ namespace Squil
 
         public string column;
         public string value;
-    }
-
-    public static class Extensions
-    {
-        public static SqlCommand CreateSqlCommandFromSql(this SqlConnection connection, String sql)
-        {
-            var command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandType = CommandType.Text;
-            return command;
-        }
-
-        public static String QueryXmlString(this SqlConnection connection, String sql)
-        {
-            using var _ = GetCurrentLedger().TimedScope("query");
-
-            var command = connection.CreateSqlCommandFromSql(sql);
-
-            using var reader = command.ExecuteXmlReader();
-
-            reader.Read();
-
-            var xml = reader.ReadOuterXml();
-
-            return xml;
-        }
-
-        public static X QueryXml<X>(this SqlConnection connection, String sql)
-            where X : class
-        {
-            using var _ = GetCurrentLedger().TimedScope("query-parsing-and-binding");
-
-            var command = connection.CreateSqlCommandFromSql(sql);
-
-            using var reader = command.ExecuteXmlReader();
-
-            var serializer = new XmlSerializer(typeof(X));
-
-            var result = serializer.Deserialize(reader);
-
-            return result as X;
-        }
-
-        public static XElement QueryXml(this SqlConnection connection, String sql)
-        {
-            using var _ = GetCurrentLedger().TimedScope("query-and-parsing");
-
-            var command = connection.CreateSqlCommandFromSql(sql);
-
-            using var reader = command.ExecuteXmlReader();
-
-            var rootRow = XElement.Load(reader);
-
-            return rootRow;
-        }
-
-        public static CMIndexlike ChooseIndex(this RelatedEntities relatedEntities)
-        {
-            var end = relatedEntities.RelationEnd;
-            var table = end.Table;
-            var key = end.Key;
-
-            var extentIndexName = relatedEntities.Extent.IndexName;
-
-            if (extentIndexName != null)
-            {
-                return table.Indexes[extentIndexName];
-            }
-
-            if (key is CMForeignKey fk)
-            {
-                return fk.GetIndexes()?.FirstOrDefault();
-            }
-
-            if (key is CMIndexlike ix)
-            {
-                return ix;
-            }
-
-            return null;
-        }
-
-        public static RelatedEntitiesListItemAnnotationInfo GetListAnnotationInfo(this RelatedEntities entities)
-        {
-            var values = entities.Extent.Values;
-
-            if (values == null) return default;
-
-            var valueCount = entities.Extent.Values!.Length;
-
-            if (valueCount == 0) return default;
-
-            var lastValueI = valueCount - 1;
-
-            var matchCount = entities.List.Count(e => e.IsMatching == true);
-            var afterCount = entities.List.Count(e => e.IsMatching == false);
-
-            return new RelatedEntitiesListItemAnnotationInfo
-            {
-                wasSearch = entities.Extent.KeyValueCount < valueCount,
-
-                matchCount = entities.List.Count(e => e.IsMatching == true),
-                afterCount = entities.List.Count(e => e.IsMatching == false),
-
-                column = entities.Extent.Order[lastValueI],
-                value = values[lastValueI],
-            };
-        }
     }
 }

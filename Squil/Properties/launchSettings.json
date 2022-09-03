@@ -3,7 +3,7 @@
     "Squil": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "query/playground/[playground].[dbo].[People]/IX_People_Name_1",
+      "launchUrl": "query/playground/[playground].[dbo].[DateTimeTests]/IX_DateTimeTests_1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

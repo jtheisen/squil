@@ -5,7 +5,9 @@
 @{
     var connection = Connections.GetContext(ConnectionName);
 
-    var tables = connection.CircularModel.RootTable.Relations.Values.Select(r => r.Table).ToArray();
+    var cm = connection.CircularModel;
+
+    var tables = cm.RootTable.Relations.Values.Select(r => r.Table).ToArray();
 
     var tableWithOverlappingIndexes = (
         from t in tables
@@ -20,6 +22,11 @@
         where columns != null
         select t
     ).FirstOrDefault();
+
+    var indexes = cm.GetAllIndexes().ToArray();
+
+    var dateIndexes = indexes.Where(i => i.Columns.Any(c => c.c.Type is DateOrTimeColumnType)).ToArray();
+
 }
 
 @if (tableWithOverlappingIndexes != null)
@@ -28,6 +35,12 @@
         Table with overlapping indexes: @tableWithOverlappingIndexes.Name.Simple
     </div>
 }
+
+<div>
+    <label>Date/time-featureing indexes:</label>
+
+    @String.Join(", ", dateIndexes.Select(i => i.Name));
+</div>
 
 @code {
     [Parameter]

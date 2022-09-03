@@ -16,6 +16,7 @@ public class TimedScope : IDisposable
         this.report = report;
         this.name = name;
         this.watch = watch?.IsRunning == false ? watch : new Stopwatch();
+        watch.Reset();
         watch.Start();
     }
 

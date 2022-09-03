@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Squil;
@@ -55,6 +56,8 @@ public abstract class ColumnType
         return result;
     }
 
+    public virtual void Init() { }
+
     protected abstract ValidationResult Validate(String text, ColumnTypePrecisions precisions);
 
     public static ColumnType Create<T>(String name)
@@ -89,6 +92,127 @@ public class CharacterColumnType : ColumnType
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
         return Ok(text);
+    }
+}
+
+public enum DateTimeEndPositions
+{
+    Year = 4,
+    Month = Year + 3,
+    Day = Month + 3,
+    Hour = Day + 3,
+    Minute = Hour + 3,
+    Second = Minute + 3
+}
+
+public class DateOrTimeColumnType : ColumnType
+{
+    String pattern;
+    String error;
+
+    public Boolean WithDate { get; set; }
+
+    public Boolean WithTime { get; set; }
+
+    public Boolean WithOffset { get; set; }
+
+    public override void Init()
+    {
+        if (WithDate && WithTime)
+        {
+            pattern = "0001-01-01 00:00:00";
+        }
+        else if (WithDate)
+        {
+            pattern = "0001-01-01";
+        }
+        else if (WithTime)
+        {
+            pattern = "00:00:00";
+        }
+
+        error = $"text should be of the form {pattern}";
+    }
+
+    protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
+    {
+        if (text.Length > pattern.Length) return Issue(error);
+
+        for (var i = 0; i < text.Length; ++i)
+        {
+            var pid = Char.GetUnicodeCategory(pattern[i]);
+            var tid = Char.GetUnicodeCategory(text[i]);
+
+            var isMatchingClass = pid == UnicodeCategory.SpaceSeparator || pid == UnicodeCategory.DecimalDigitNumber;
+
+            if (pid != tid || (!isMatchingClass && (pattern[i] != text[i]))) return Issue(error);
+        }
+
+        var result = Validate(text);
+
+        if (WithOffset)
+        {
+            result.SqlValue += " +00:00"; // FIXME
+        }
+
+        return result;
+    }
+
+    ValidationResult Validate(String text)
+    {
+        if (WithDate)
+        {
+            if (text.Length < 6)
+            {
+                return Ok(text + pattern[text.Length..]);
+            }
+            else if (text.Length == 6 && text[5] == '0')
+            {
+                return Ok(text + pattern[text.Length..]);
+            }
+            else if (text.Length == 9 && text[8] == '0')
+            {
+                return Ok(text + pattern[text.Length..]);
+            }
+            else if (text.Length <= 11)
+            {
+                return ParseDateTime(text.TrimEnd('-'));
+            }
+            else if (WithTime)
+            {
+                return ParseDateTime(text + pattern[text.Length..]);
+            }
+        }
+        else if (WithTime)
+        {
+            return ParseTime(text + pattern[text.Length..]);
+        }
+
+        return Issue("internal validation error");
+    }
+
+    ValidationResult ParseDateTime(String text)
+    {
+        if (DateTime.TryParse(text, out var result))
+        {
+            return Ok(result.ToString("o")[..pattern.Length].Replace('T', ' '));
+        }
+        else
+        {
+            return Issue($"{text} is not a valid date");
+        }
+    }
+
+    ValidationResult ParseTime(String text)
+    {
+        if (TimeSpan.TryParseExact(text, "c", null, out var result))
+        {
+            return Ok(result.ToString("c")[..pattern.Length]);
+        }
+        else
+        {
+            return Issue($"{text} is not a valid time");
+        }
     }
 }
 
@@ -201,7 +325,13 @@ public class TypeRegistry
 
             new GuidColumnType { Name = "uniqueidentifier" },
 
-            // missing: date, binary and specials
+            new DateOrTimeColumnType { Name = "time", WithTime = true },
+            new DateOrTimeColumnType { Name = "date", WithDate = true },
+            new DateOrTimeColumnType { Name = "datetime", WithDate = true, WithTime = true },
+            new DateOrTimeColumnType { Name = "datetime2", WithDate = true, WithTime = true },
+            new DateOrTimeColumnType { Name = "datetimeoffset", WithDate = true, WithTime = true, WithOffset = true },
+
+            // missing: binary and specials
         });
     }
 
@@ -209,6 +339,8 @@ public class TypeRegistry
     {
         foreach (var type in types)
         {
+            type.Init();
+
             this.types[type.Name] = type;
         }
     }
