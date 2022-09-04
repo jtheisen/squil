@@ -149,7 +149,7 @@ namespace Squil
                     MakeISTable("indexes",
                         new [] { "object_id", "index_id", "name", "type", "type_desc", "is_disabled", "is_unique", "is_primary_key", "has_filter", "is_hypothetical" }),
                     MakeISTable("index_columns",
-                        new [] { "object_id", "index_id", "index_column_id", "column_id" })
+                        new [] { "object_id", "index_id", "index_column_id", "column_id", "is_descending_key" })
                 }
             };
         }

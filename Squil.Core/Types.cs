@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.FileSystemGlobbing.Internal;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,9 +15,13 @@ public struct ValidationResult
 
     public String Value { get; set; }
 
-    public String SqlValue { get; set; }
+    public String SqlLowerValue { get; set; }
+
+    public String SqlUpperValue { get; set; }
 
     public Boolean IsKeyValue { get; set; }
+
+    public IndexDirection Direction { get; set; }
 
     public Boolean IsOk => Error == null;
 }
@@ -27,7 +32,12 @@ public struct ColumnTypePrecisions
 }
 
 public static class ColumnTypeExtensions
-{ 
+{
+    public static String GetSqlValue(this ValidationResult result) => result.Direction switch
+    {
+        IndexDirection.Desc => result.SqlUpperValue ?? result.SqlLowerValue,
+        _ => result.SqlLowerValue
+    };
 }
 
 public abstract class ColumnType
@@ -36,7 +46,7 @@ public abstract class ColumnType
 
     public virtual Boolean IsSupported => true;
 
-    public ValidationResult Validate(String keyValue, String searchValue, ColumnTypePrecisions precisions)
+    public ValidationResult Validate(String keyValue, String searchValue, IndexDirection direction, ColumnTypePrecisions precisions)
     {
         // We have decided that for now, SQuiL doesn't support nulls as key values. We probably do want
         // to support them as search values as that's far less unusual.
@@ -52,6 +62,7 @@ public abstract class ColumnType
 
         result.Value = value;
         result.IsKeyValue = keyValue != null;
+        result.Direction = direction;
 
         return result;
     }
@@ -71,9 +82,9 @@ public abstract class ColumnType
         return new ValidationResult { ColumnType = this, Error = error };
     }
 
-    protected ValidationResult Ok(String sqlValue)
+    protected ValidationResult Ok(String sqlValue, String upperSqlValue = null)
     {
-        return new ValidationResult { ColumnType = this, SqlValue = sqlValue };
+        return new ValidationResult { ColumnType = this, SqlLowerValue = sqlValue, SqlUpperValue = upperSqlValue };
     }
 }
 
@@ -107,7 +118,10 @@ public enum DateTimeEndPositions
 
 public class DateOrTimeColumnType : ColumnType
 {
-    String pattern;
+    static String LowerBasePattern = "0001-01-01 00:00:00";
+    static String UpperBasePattern = "9999-12-31 23:59:59";
+
+    String lpattern, upattern;
     String error;
 
     public Boolean WithDate { get; set; }
@@ -118,45 +132,65 @@ public class DateOrTimeColumnType : ColumnType
 
     public override void Init()
     {
+        var range = GetRange();
+
+        lpattern = LowerBasePattern[range];
+        upattern = UpperBasePattern[range];
+
+        error = $"text should be of the form {lpattern}";
+    }
+
+    Range GetRange()
+    {
         if (WithDate && WithTime)
         {
-            pattern = "0001-01-01 00:00:00";
+            return new Range(0, 19);
         }
         else if (WithDate)
         {
-            pattern = "0001-01-01";
+            return new Range(0, 10);
         }
         else if (WithTime)
         {
-            pattern = "00:00:00";
+            return new Range(11, 19);
         }
-
-        error = $"text should be of the form {pattern}";
+        else
+        {
+            throw new Exception("Neither date nor time was selected");
+        }
     }
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
-        if (text.Length > pattern.Length) return Issue(error);
+        if (text.Length > lpattern.Length) return Issue(error);
 
         for (var i = 0; i < text.Length; ++i)
         {
-            var pid = Char.GetUnicodeCategory(pattern[i]);
+            var pid = Char.GetUnicodeCategory(lpattern[i]);
             var tid = Char.GetUnicodeCategory(text[i]);
 
             var isMatchingClass = pid == UnicodeCategory.SpaceSeparator || pid == UnicodeCategory.DecimalDigitNumber;
 
-            if (pid != tid || (!isMatchingClass && (pattern[i] != text[i]))) return Issue(error);
+            if (pid != tid || (!isMatchingClass && (lpattern[i] != text[i]))) return Issue(error);
         }
 
         var result = Validate(text);
 
         if (WithOffset)
         {
-            result.SqlValue += " +00:00"; // FIXME
+            result.SqlLowerValue += " +00:00"; // FIXME
         }
 
         return result;
     }
+
+    DateTime? Beyond(DateTime source, Int32 offset) => offset switch
+    {
+        < 6 => source.AddYears(1),
+        < 9 => source.AddMonths(1),
+        < 12 => source.AddDays(1),
+        _ => null
+    };
 
     ValidationResult Validate(String text)
     {
@@ -164,38 +198,49 @@ public class DateOrTimeColumnType : ColumnType
         {
             if (text.Length < 6)
             {
-                return Ok(text + pattern[text.Length..]);
+                if (text.StartsWith("0000"))
+                {
+                    return Issue("there is no zero year");
+                }
+                else
+                {
+                    return Ok(text + lpattern[text.Length..], text + upattern[text.Length..]);
+                }
             }
-            else if (text.Length == 6 && text[5] == '0')
+            else if ((text.Length == 6 || text.Length == 9) && text.Last() == '0')
             {
-                return Ok(text + pattern[text.Length..]);
-            }
-            else if (text.Length == 9 && text[8] == '0')
-            {
-                return Ok(text + pattern[text.Length..]);
+                return ParseDateTime(text + "1", text.Length);
             }
             else if (text.Length <= 11)
             {
-                return ParseDateTime(text.TrimEnd('-'));
+                return ParseDateTime(text.TrimEnd('-'), text.Length);
             }
             else if (WithTime)
             {
-                return ParseDateTime(text + pattern[text.Length..]);
+                return ParseDateTime(text + lpattern[text.Length..], text.Length);
             }
         }
         else if (WithTime)
         {
-            return ParseTime(text + pattern[text.Length..]);
+            return ParseTime(text + lpattern[text.Length..]);
         }
 
         return Issue("internal validation error");
     }
 
-    ValidationResult ParseDateTime(String text)
+    String GetSqlValue(DateTime source) => source.ToString("o")[..lpattern.Length].Replace('T', ' ');
+
+    ValidationResult ParseDateTime(String text, Int32 length)
     {
         if (DateTime.TryParse(text, out var result))
         {
-            return Ok(result.ToString("o")[..pattern.Length].Replace('T', ' '));
+            var lowerResult = result.ToString("o")[..lpattern.Length].Replace('T', ' ');
+
+            var beyond = Beyond(result, length);
+
+            var upperResult = beyond != null ? GetSqlValue(beyond.Value.AddSeconds(-1)) : text[..length] + upattern[length..];
+
+            return Ok(lowerResult, upperResult);
         }
         else
         {
@@ -207,7 +252,7 @@ public class DateOrTimeColumnType : ColumnType
     {
         if (TimeSpan.TryParseExact(text, "c", null, out var result))
         {
-            return Ok(result.ToString("c")[..pattern.Length]);
+            return Ok(result.ToString("c")[..lpattern.Length]);
         }
         else
         {

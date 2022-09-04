@@ -16,7 +16,7 @@ namespace Squil
             this.totalLimit = totalLimit;
         }
 
-        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, String[] order = null, String[] values = null, Int32? keyValueCount = null)
+        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null)
         {
             if (table == table.Root.RootTable)
             {
@@ -56,12 +56,12 @@ namespace Squil
                 ;
         }
 
-        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, String[] order = null, String[] values = null, Int32 keyValueCount = 0)
+        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0)
         {
             if (order != null)
             {
                 foreach (var column in order) column.Assert(o => end.Table.Columns.ContainsKey(o),
-                    $"Extent order column '{column}' is not in table '{end.Table.Name.LastPart}'");
+                    $"Extent order column '{column.c}' is not in table '{end.Table.Name.LastPart}'");
             }
 
             var flavor = ReduceFlavor(parentFlavor, end);

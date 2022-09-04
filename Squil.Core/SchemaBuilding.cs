@@ -32,7 +32,7 @@ namespace Squil.Core
                         {
                             new Extent
                             {
-                                Order = new[] { "ORDINAL_POSITION" },
+                                Order = new DirectedColumnName[] { "ORDINAL_POSITION" },
                                 RelationName = "columns",
                                 Alias = "c"
                             },
@@ -45,7 +45,7 @@ namespace Squil.Core
                                 {
                                     new Extent
                                     {
-                                        Order = new[] { "ORDINAL_POSITION" },
+                                        Order = new DirectedColumnName[] { "ORDINAL_POSITION" },
                                         RelationName = "columns",
                                         Alias = "cc"
                                     },
@@ -94,14 +94,14 @@ namespace Squil.Core
                                     {
                                         new Extent
                                         {
-                                            Order = new[] { "index_id" },
+                                            Order = new DirectedColumnName[] { "index_id" },
                                             RelationName = "indexes",
                                             Alias = "i",
                                             Children = new[]
                                             {
                                                 new Extent
                                                 {
-                                                    Order = new[] { "index_column_id" },
+                                                    Order = new DirectedColumnName[] { "index_column_id" },
                                                     RelationName = "columns",
                                                     Alias = "ic"
                                                 }
@@ -109,7 +109,7 @@ namespace Squil.Core
                                         },
                                         new Extent
                                         {
-                                            Order = new[] { "column_id" },
+                                            Order = new DirectedColumnName[] { "column_id" },
                                             RelationName = "columns",
                                             Alias = "c"
                                         }

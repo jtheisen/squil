@@ -129,6 +129,8 @@ public static class SqlConnectionExtensions
         var matchCount = entities.List.Count(e => e.IsMatching == true);
         var afterCount = entities.List.Count(e => e.IsMatching == false);
 
+        var column = entities.Extent.Order[lastValueI];
+
         return new RelatedEntitiesListItemAnnotationInfo
         {
             wasSearch = entities.Extent.KeyValueCount < valueCount,
@@ -136,7 +138,9 @@ public static class SqlConnectionExtensions
             matchCount = entities.List.Count(e => e.IsMatching == true),
             afterCount = entities.List.Count(e => e.IsMatching == false),
 
-            column = entities.Extent.Order[lastValueI],
+            direction = column.d,
+
+            column = column,
             value = values[lastValueI],
         };
     }

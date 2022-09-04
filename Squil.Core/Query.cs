@@ -75,11 +75,19 @@ namespace Squil
 
             var valuesLength = extent.Values?.Length;
 
-            // We currently only allow the last value to be unequal as otherwise we need a convoluted filter
-            // predicate with uncertain performance characteristics.
-            var filterItems = extent.Values?.Select((v, i) => (column: extent.Order[i], value: v, op: i < valuesLength - 1 || i < extent.KeyValueCount ? "=" : ">="));
+            (DirectedColumnName column, String value, String op) MakeFilterItem(String value, Int32 i)
+            {
+                var column = extent.Order[i];
+                // We currently only allow the last value to be unequal as otherwise we need a convoluted filter
+                // predicate with uncertain performance characteristics.
+                var op = column.d.GetOperator(i < valuesLength - 1 || i < extent.KeyValueCount);
 
-            var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column} {i.op} '{i.value}'") ?? Enumerable.Empty<String>();
+                return (column, value, op);
+            }
+            
+            var filterItems = extent.Values?.Select(MakeFilterItem);
+
+            var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column.Sql} {i.op} '{i.value}'") ?? Enumerable.Empty<String>();
 
             var allPredicates = filterPredicates.Concat(joinPredicates).ToArray();
 
@@ -98,7 +106,7 @@ namespace Squil
 
             if (extent.Values?.Length > 0)
             {
-                var predicate = String.Join(" and ", from i in filterItems select $"{alias}.{i.column} = '{i.value}'");
+                var predicate = String.Join(" and ", from i in filterItems select $"{alias}.{i.column.Sql} = '{i.value}'");
 
                 selectables.Add($"case when {predicate} then 1 else 0 end [{IsMatchingAlias}]");
             }
@@ -112,7 +120,7 @@ namespace Squil
 
             var selectsClause = String.Join(",\n", selectables.Select(s => $"{ipspace}{s}"));
 
-            var orderLine = extent.Order?.Apply(o => $"{ipspace}order by {string.Join(", ", o)} {(extent.IsDescending ? "desc" : "asc")}\n") ?? "";
+            var orderLine = extent.Order?.Apply(o => $"{ipspace}order by {string.Join(", ", o.Select(c => $"{c.Sql}{c.d.GetSqlSuffix()}"))}\n") ?? "";
 
             var topClause = extent.Limit?.Apply(l => $" top {l}") ?? "";
 
@@ -274,17 +282,13 @@ namespace Squil
 
         public String Alias { get; set; }
 
-        public String Index { get; set; }
-
         public String[] Columns { get; set; }
 
-        public String[] Order { get; set; }
+        public DirectedColumnName[] Order { get; set; }
 
         public String[] Values { get; set; }
 
         public Int32 KeyValueCount { get; set; }
-
-        public Boolean IsDescending { get; set; }
 
         public Extent[] Children { get; set; }
 
@@ -352,6 +356,8 @@ namespace Squil
 
         public int matchCount;
         public int afterCount;
+
+        public IndexDirection direction;
 
         public string column;
         public string value;

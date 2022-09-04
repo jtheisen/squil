@@ -88,12 +88,14 @@
         var columns = (parentCollection?.Extent?.Columns ?? Enumerable.Empty<String>())
             .Select(cn => table.Columns[cn]).ToLookup(c => GetRenderClass(table, c));
 
+        var orderColumns = parentCollection?.Extent?.Order?.Apply(o => new HashSet<String>(o.Select(c => c.c)));
+
         var columnClasses = Enum.GetValues(typeof(ColumnRenderClass)) as ColumnRenderClass[];
 
         var groups =
             from cl in columnClasses
             from c in columns[cl]
-            where IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page)
+            where (orderColumns?.Contains(c.Name) ?? false) || IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page)
             group c by cl into g
             select new Fieldset { legend = g.Key.ToString().ToLower(), layout = "grid3", items = g.Select(c => new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = g.Key }) }
             ;

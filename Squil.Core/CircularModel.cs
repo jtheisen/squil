@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Data.Common;
 
 namespace Squil
 {
@@ -107,9 +108,9 @@ namespace Squil
                         from ci in i.Columns
                         from c in sysColumns[ci.ColumnId]
                         let cmc = table.Columns[c.Name]
-                        select (ci.IsDescendingKey ? CMDirection.Desc : CMDirection.Asc, cmc)
+                        select new CMDirectedColumn(cmc, ci.IsDescendingKey ? IndexDirection.Desc : IndexDirection.Asc)
                     ).ToArray()
-                    let support = i.CheckIntrinsicSupport() ?? CheckColumnSupport(columns.Select(c => c.cmc))
+                    let support = i.CheckIntrinsicSupport() ?? CheckColumnSupport(columns.Select(c => c.c))
                     where i.Name != null
                     select new CMIndexlike
                     {
@@ -135,7 +136,7 @@ namespace Squil
                         Name = c.Name,
                         IsPrimary = c.CONSTRAINT_TYPE == "PRIMARY KEY",
                         Table = table,
-                        Columns = c.Columns.Select(cc => (CMDirection.Unknown, table.Columns[cc.COLUMN_NAME])).ToArray()
+                        Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.COLUMN_NAME], IndexDirection.Unknown)).ToArray()
                     }
                 ).ToArray();
 
@@ -164,7 +165,7 @@ namespace Squil
                         Name = c.Name,
                         Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").GetName()],
                         Table = table,
-                        Columns = c.Columns.Select(cc => (CMDirection.Unknown, table.Columns[cc.COLUMN_NAME])).ToArray()
+                        Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.COLUMN_NAME], IndexDirection.Unknown)).ToArray()
                     })
                     .ToDictionary(c => c.Name, c => c);
 
@@ -220,7 +221,7 @@ namespace Squil
             rootTable.UniqueIndexlikes = new Dictionary<String, CMIndexlike>();
             rootTable.ForeignKeys = new Dictionary<String, CMForeignKey>();
 
-            var rootKey = rootTable.UniqueIndexlikes[""] = new CMIndexlike() { Name = "", IsPrimary = true, Columns = new (CMDirection, CMColumn)[0], Table = rootTable };
+            var rootKey = rootTable.UniqueIndexlikes[""] = new CMIndexlike() { Name = "", IsPrimary = true, Columns = new CMDirectedColumn[0], Table = rootTable };
 
             rootTable.ColumnTuples[""] = rootKey;
 
@@ -362,13 +363,6 @@ namespace Squil
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
     }
 
-    public enum CMDirection
-    {
-        Unknown,
-        Asc,
-        Desc
-    }
-
     [DebuggerDisplay("{Name}")]
     public abstract class CMColumnTuple
     {
@@ -378,7 +372,7 @@ namespace Squil
 
         public CMTable Table { get; set; }
 
-        public (CMDirection d, CMColumn c)[] Columns { get; set; }
+        public CMDirectedColumn[] Columns { get; set; }
 
         public Boolean ContainsKey { get; set; }
 

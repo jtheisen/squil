@@ -123,22 +123,22 @@ namespace Squil
 
             var cmIndex = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
-            ValidationResult GetColumnValue(CMColumn column)
+            ValidationResult GetColumnValue(CMDirectedColumn column)
             {
                 var keyValue = request.KeyValues[column.Name];
                 var searchValue = request.SearchValues[column.Name];
 
-                var validationResult = column.Type.Validate(keyValue, searchValue, default);
+                var validationResult = column.c.Type.Validate(keyValue, searchValue, column.d, default);
 
                 return validationResult;
             }
 
-            var columnValues = cmIndex?.Columns.Select(c => c.c).Select(GetColumnValue).ToArray();
+            var columnValues = cmIndex?.Columns.Select(GetColumnValue).ToArray();
 
             var keyValueCount = columnValues?.TakeWhile(cv => cv.IsKeyValue).Count();
 
-            var extentOrder = cmIndex?.Columns.Select(c => c.c.Name).ToArray();
-            var extentValues = columnValues?.TakeWhile(cv => cv.SqlValue != null).Select(cv => cv.SqlValue).ToArray();
+            var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
+            var extentValues = columnValues?.TakeWhile(cv => cv.SqlLowerValue != null).Select(cv => cv.GetSqlValue()).ToArray();
 
             var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
 
