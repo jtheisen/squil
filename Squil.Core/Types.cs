@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -178,86 +180,131 @@ public class DateOrTimeColumnType : ColumnType
 
         if (WithOffset)
         {
-            result.SqlLowerValue += " +00:00"; // FIXME
+            var suffix = DateTimeOffset.Now.Offset.ToString(@"\ \+hh\:mm");
+
+            result.SqlLowerValue += suffix;
+            result.SqlUpperValue += suffix;
         }
 
         return result;
     }
 
-    DateTime? Beyond(DateTime source, Int32 offset) => offset switch
-    {
-        < 6 => source.AddYears(1),
-        < 9 => source.AddMonths(1),
-        < 12 => source.AddDays(1),
-        _ => null
-    };
-
     ValidationResult Validate(String text)
     {
+        var lc = text.LastOrDefault();
+
         if (WithDate)
         {
-            if (text.Length < 6)
+            if (text.StartsWith("0000"))
             {
-                if (text.StartsWith("0000"))
+                return Issue("there is no zero year");
+            }
+            else if (text.Length < 6)
+            {
+                return Ok(text + lpattern[text.Length..], text + upattern[text.Length..]);
+            }
+            else if (text.Length == 6)
+            {
+                switch (lc)
                 {
-                    return Issue("there is no zero year");
+                    case '0': return Ok(text + lpattern[6..], text + "9-30" + upattern[10..]);
+                    case '1': return Ok(text + "0" + lpattern[7..], text + "2" + upattern[7..]);
+                    default: return Issue("invalid date");
+                }
+            }
+            else
+            {
+                var month = Int32.Parse(text[5..7]);
+
+                if (month == 0)
+                {
+                    return Issue("invalid date");
+                }
+                else if (month > 12)
+                {
+                    return Issue("invalid date");
+                }
+
+                var lastDay = DateTime.Parse(text[..7]).AddMonths(1).AddDays(-1).Day;
+
+                var ld = lastDay.ToString();
+
+                if (text.Length == 7)
+                {
+                    return Ok(text + "-" + lpattern[8..], text + "-" + ld + upattern[10..]);
+                }
+                else if (text.Length == 8)
+                {
+                    return Ok(text + lpattern[8..], text + ld + upattern[10..]);
+                }
+                else if (text.Length == 9)
+                {
+                    switch (lc)
+                    {
+                        case '0': return Ok(text + lpattern[9..], text + "9" + upattern[10..]);
+                        case '1': return Ok(text + "0" + lpattern[10..], text + "9" + upattern[10..]);
+                        case '2':
+                            if (ld[0] == '2')
+                            {
+                                return Ok(text + "0" + lpattern[10..], text + ld[1] + upattern[10..]);
+                            }
+                            else
+                            {
+                                return Ok(text + lpattern[9..], text + upattern[9..]);
+                            }
+                        case '3':
+                            if (ld[0] == '2')
+                            {
+                                return Issue("invalid date");
+                            }
+                            else
+                            {
+                                return Ok(text + "0" + lpattern[10..], text + ld[1] + upattern[10..]);
+                            }
+                        default:
+                            return Issue("invalid date");
+                    }
                 }
                 else
                 {
+                    var day = Int32.Parse(text[8..10]);
+
+                    if (day > lastDay)
+                    {
+                        return Issue("invalid date");
+                    }
+
+                    if (text.Length >= 11 && !ValidateTime(text[11..], out var issue))
+                    {
+                        return Issue(issue);
+                    }
+
                     return Ok(text + lpattern[text.Length..], text + upattern[text.Length..]);
                 }
-            }
-            else if ((text.Length == 6 || text.Length == 9) && text.Last() == '0')
-            {
-                return ParseDateTime(text + "1", text.Length);
-            }
-            else if (text.Length <= 11)
-            {
-                return ParseDateTime(text.TrimEnd('-'), text.Length);
-            }
-            else if (WithTime)
-            {
-                return ParseDateTime(text + lpattern[text.Length..], text.Length);
             }
         }
         else if (WithTime)
         {
-            return ParseTime(text + lpattern[text.Length..]);
+            return ValidateTime(text, out var issue) ? Ok(text + lpattern[text.Length..], text + upattern[text.Length..]) : Issue(issue);
         }
 
         return Issue("internal validation error");
     }
 
-    String GetSqlValue(DateTime source) => source.ToString("o")[..lpattern.Length].Replace('T', ' ');
-
-    ValidationResult ParseDateTime(String text, Int32 length)
+    Boolean ValidateTime(String text, out String issue)
     {
-        if (DateTime.TryParse(text, out var result))
+        var complete = text + LowerBasePattern[(11 + text.Length)..];
+
+        if (TimeSpan.TryParseExact(complete, "c", null, out var _))
         {
-            var lowerResult = result.ToString("o")[..lpattern.Length].Replace('T', ' ');
-
-            var beyond = Beyond(result, length);
-
-            var upperResult = beyond != null ? GetSqlValue(beyond.Value.AddSeconds(-1)) : text[..length] + upattern[length..];
-
-            return Ok(lowerResult, upperResult);
+            issue = null;
         }
         else
         {
-            return Issue($"{text} is not a valid date");
+            issue = $"{text} is not a valid time";
         }
-    }
 
-    ValidationResult ParseTime(String text)
-    {
-        if (TimeSpan.TryParseExact(text, "c", null, out var result))
-        {
-            return Ok(result.ToString("c")[..lpattern.Length]);
-        }
-        else
-        {
-            return Issue($"{text} is not a valid time");
-        }
+        return issue == null;
     }
 }
 

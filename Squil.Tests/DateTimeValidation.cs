@@ -14,6 +14,41 @@ public abstract class DateOrTimeValidationTestBase
 }
 
 [TestClass]
+public class TimeValidation : DateOrTimeValidationTestBase
+{
+    protected override DateOrTimeColumnType CreateColumnType()
+        => new DateOrTimeColumnType { Name = "time", WithTime = true };
+
+    [TestMethod]
+    public void TestBasicTimes()
+    {
+        ct.Validate("")
+            .AssertOk("00:00:00", "23:59:59");
+
+        ct.Validate("12")
+            .AssertOk("12:00:00", "12:59:59");
+
+        ct.Validate("12:30")
+            .AssertOk("12:30:00", "12:30:59");
+
+        ct.Validate("12:30:44")
+            .AssertOk("12:30:44", "12:30:44");
+    }
+
+    [TestMethod]
+    public void TestInvalid()
+    {
+        ct.Validate("3").AssertFail();
+        ct.Validate("24").AssertFail();
+        ct.Validate("00:6").AssertFail();
+        ct.Validate("00:60").AssertFail();
+        ct.Validate("00:00:6").AssertFail();
+        ct.Validate("00:00:60").AssertFail();
+        ct.Validate("00:00:00 ").AssertFail();
+    }
+}
+
+[TestClass]
 public class DateTimeValidation : DateOrTimeValidationTestBase
 {
     protected override DateOrTimeColumnType CreateColumnType()
@@ -92,29 +127,30 @@ public class DateValidation : DateOrTimeValidationTestBase
     public void TestIncompletes()
     {
         ct.Validate("2001-0")
-            .AssertOk("2001-01-01", "2001-01-31");
+            .AssertOk("2001-01-01", "2001-09-30");
 
         ct.Validate("2001-01-0")
-            .AssertOk("2001-01-01", "2001-01-01");
+            .AssertOk("2001-01-01", "2001-01-09");
 
         // not sure if we really want this semantic:
 
         ct.Validate("2001-1")
-            .AssertOk("2001-01-01", "2001-01-31");
+            .AssertOk("2001-10-01", "2001-12-31");
 
         ct.Validate("2001-2")
-            .AssertOk("2001-02-01", "2001-02-28");
+            .AssertFail();
 
         ct.Validate("2000-02-2")
-            .AssertOk("2000-02-02", "2000-02-02");
+            .AssertOk("2000-02-20", "2000-02-29");
     }
 
     [TestMethod]
     public void TestInvalid()
     {
+        ct.Validate("2001-02-30").AssertFail();
+
         ct.Validate("0000").AssertFail();
         ct.Validate("2001-13").AssertFail();
-        ct.Validate("2001-02-30").AssertFail();
 
         ct.Validate("-").AssertFail();
         ct.Validate("2-").AssertFail();
@@ -127,6 +163,8 @@ public class DateValidation : DateOrTimeValidationTestBase
         ct.Validate("2000-001").AssertFail();
         ct.Validate("2000-01-001").AssertFail();
         ct.Validate("2000-01-01-").AssertFail();
+
+        ct.Validate("2000-01-01 ").AssertFail();
     }
 
     [TestMethod]

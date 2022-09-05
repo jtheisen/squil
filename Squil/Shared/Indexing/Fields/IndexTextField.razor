@@ -60,7 +60,9 @@
 
     async Task HandleChange(ChangeEventArgs e)
     {
-        innerText = await js.InvokeAsync<String>("getInnerText", element);
+        var innerTextFromElement = await js.InvokeAsync<String>("getInnerText", element);
+
+        innerText = innerTextFromElement.Replace('\u00a0', ' ');
 
         var newValue = innerText == "" ? null : innerText;
 
