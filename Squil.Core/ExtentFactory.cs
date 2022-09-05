@@ -136,7 +136,7 @@ namespace Squil
                 case ExtentFlavorType.Page:
                     return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Inline, 1);
                 case ExtentFlavorType.Block:
-                    return end.IsMany ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline, 1);
+                    return (ExtentFlavorType.None, 0);
                 case ExtentFlavorType.Inline:
                     return end.IsMany || !end.IsUniquelyTyped ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline2, 1);
                 case ExtentFlavorType.Inline2:
