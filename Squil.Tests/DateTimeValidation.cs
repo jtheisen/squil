@@ -132,16 +132,31 @@ public class DateValidation : DateOrTimeValidationTestBase
         ct.Validate("2001-01-0")
             .AssertOk("2001-01-01", "2001-01-09");
 
-        // not sure if we really want this semantic:
-
         ct.Validate("2001-1")
             .AssertOk("2001-10-01", "2001-12-31");
 
         ct.Validate("2001-2")
             .AssertFail();
 
+        ct.Validate("2000-02-0")
+            .AssertOk("2000-02-01", "2000-02-09");
+
+        ct.Validate("2000-02-1")
+            .AssertOk("2000-02-10", "2000-02-19");
+
         ct.Validate("2000-02-2")
             .AssertOk("2000-02-20", "2000-02-29");
+
+        ct.Validate("2022-02-2")
+            .AssertOk("2022-02-20", "2022-02-28");
+
+        ct.Validate("2000-02-3").AssertFail();
+
+        ct.Validate("2000-09-3")
+            .AssertOk("2000-09-30", "2000-09-30");
+
+        ct.Validate("2000-12-3")
+            .AssertOk("2000-12-30", "2000-12-31");
     }
 
     [TestMethod]

@@ -201,14 +201,14 @@ public class DateOrTimeColumnType : ColumnType
             }
             else if (text.Length < 6)
             {
-                return Ok(text + lpattern[text.Length..], text + upattern[text.Length..]);
+                return OkWithPattern(text);
             }
             else if (text.Length == 6)
             {
                 switch (lc)
                 {
-                    case '0': return Ok(text + lpattern[6..], text + "9-30" + upattern[10..]);
-                    case '1': return Ok(text + "0" + lpattern[7..], text + "2" + upattern[7..]);
+                    case '0': return OkWithPattern(text, "", "9-30");
+                    case '1': return OkWithPattern(text, "0", "2");
                     default: return Issue("invalid date");
                 }
             }
@@ -231,26 +231,26 @@ public class DateOrTimeColumnType : ColumnType
 
                 if (text.Length == 7)
                 {
-                    return Ok(text + "-" + lpattern[8..], text + "-" + ld + upattern[10..]);
+                    return OkWithPattern(text, "-", "-" + ld);
                 }
                 else if (text.Length == 8)
                 {
-                    return Ok(text + lpattern[8..], text + ld + upattern[10..]);
+                    return OkWithPattern(text, "", ld);
                 }
                 else if (text.Length == 9)
                 {
                     switch (lc)
                     {
-                        case '0': return Ok(text + lpattern[9..], text + "9" + upattern[10..]);
-                        case '1': return Ok(text + "0" + lpattern[10..], text + "9" + upattern[10..]);
+                        case '0': return OkWithPattern(text, "", "9");
+                        case '1': return OkWithPattern(text, "0", "9");
                         case '2':
                             if (ld[0] == '2')
                             {
-                                return Ok(text + "0" + lpattern[10..], text + ld[1] + upattern[10..]);
+                                return OkWithPattern(text, "0", ld[1..2]);
                             }
                             else
                             {
-                                return Ok(text + lpattern[9..], text + upattern[9..]);
+                                return OkWithPattern(text);
                             }
                         case '3':
                             if (ld[0] == '2')
@@ -259,7 +259,7 @@ public class DateOrTimeColumnType : ColumnType
                             }
                             else
                             {
-                                return Ok(text + "0" + lpattern[10..], text + ld[1] + upattern[10..]);
+                                return OkWithPattern(text, "0", ld[1..2]);
                             }
                         default:
                             return Issue("invalid date");
@@ -279,16 +279,24 @@ public class DateOrTimeColumnType : ColumnType
                         return Issue(issue);
                     }
 
-                    return Ok(text + lpattern[text.Length..], text + upattern[text.Length..]);
+                    return OkWithPattern(text);
                 }
             }
         }
         else if (WithTime)
         {
-            return ValidateTime(text, out var issue) ? Ok(text + lpattern[text.Length..], text + upattern[text.Length..]) : Issue(issue);
+            return ValidateTime(text, out var issue) ? OkWithPattern(text) : Issue(issue);
         }
 
         return Issue("internal validation error");
+    }
+
+    ValidationResult OkWithPattern(String text, String l = "", String u = "")
+    {
+        var ls = text.Length + l.Length;
+        var us = text.Length + u.Length;
+
+        return Ok(text + l + lpattern[ls..], text + u + upattern[us..]);
     }
 
     Boolean ValidateTime(String text, out String issue)
