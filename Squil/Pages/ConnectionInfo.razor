@@ -21,26 +21,77 @@
         ).FirstOrDefault()
         where columns != null
         select t
-    ).FirstOrDefault();
+    ).ToArray();
 
     var indexes = cm.GetAllIndexes().ToArray();
 
+    var descendingIndexes = indexes.Where(i => i.Columns.Any(c => c.d == IndexDirection.Desc)).ToArray();
+
+    var nonCharNulls = indexes.Where(i => i.Columns.Any(c => c.c.Type is not CharacterColumnType && c.c.IsNullable)).ToArray();
+
+    // char nulls part of index - issue as null and empty string are hardly different semantically
+
     var dateIndexes = indexes.Where(i => i.Columns.Any(c => c.c.Type is DateOrTimeColumnType)).ToArray();
 
+    var bitIndexes = indexes.Where(i => i.Columns.Any(c => c.c.Type is IntegerColumnType ict && ict.Name == "bit")).ToArray();
+
+    var numberIndexes = indexes.Where(i => i.Columns.Any(c => c.c.Type is IntegerColumnType ict && ict.Name != "bit")).ToArray();
+
+    var longestIndex = indexes.GroupBy(i => i.Columns.Length).OrderByDescending(i => i.Key).FirstOrDefault();
+
+    // filtered indexes
+
+    RenderFragment<(String title, IEnumerable<String> items)> Entry = p => @<dl>
+        <dt>@p.title</dt>
+        @foreach (var item in p.items)
+        {
+            <dd>@item</dd>
+        }
+    </dl>;
 }
 
 @if (tableWithOverlappingIndexes != null)
 {
     <div>
-        Table with overlapping indexes: @tableWithOverlappingIndexes.Name.Simple
+        <h6>Tables with overlapping indexes</h6>
+
+        @String.Join(", ", tableWithOverlappingIndexes.Select(t => t.Name.Simple))
     </div>
 }
 
 <div>
-    <label>Date/time-featureing indexes:</label>
+    <h6>Date/time-featuring indexes</h6>
 
-    @String.Join(", ", dateIndexes.Select(i => i.Name));
+    @String.Join(", ", dateIndexes.Select(i => i.Name))
 </div>
+
+<div>
+    <h6>Nullables</h6>
+
+    @String.Join(", ", nonCharNulls.Select(i => i.Name))
+</div>
+
+<div>
+    <h6>Longest index</h6>
+
+    @String.Join(", ", longestIndex.Select(i => i.Name))
+</div>
+
+<div>
+    <h6>Bit indexes</h6>
+
+    @String.Join(", ", bitIndexes.Select(i => i.Name))
+</div>
+
+@Entry(("Descending indexes", descendingIndexes.Select(i => i.Name)))
+
+@Entry(("Number indexes", numberIndexes.Select(i => i.Name)))
+
+<ExpandableHeaderedList
+    Items="@indexes.Where(i => i.Columns.Any(c => c.c.Type is DateOrTimeColumnType)).ToArray()"
+>
+    <Header>Indexes with dates and times"</Header>
+</ExpandableHeaderedList>
 
 @code {
     [Parameter]

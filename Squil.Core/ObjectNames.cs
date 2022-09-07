@@ -87,7 +87,7 @@ namespace Squil
         public static bool operator ==(ObjectName lhs, ObjectName rhs) => lhs.Equals(rhs);
         public static bool operator !=(ObjectName lhs, ObjectName rhs) => !lhs.Equals(rhs);
 
-        public override string ToString() => throw new NotImplementedException("Use an explicit way to stringify an ObjectName");
+        public override string ToString() => $"--{simpleName}--";
     }
 
     public class ObjectNameParser

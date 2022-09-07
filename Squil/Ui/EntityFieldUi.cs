@@ -4,6 +4,7 @@
     {
         None,
         PrimaryName,
+        PrimaryKey,
         Data
     }
 

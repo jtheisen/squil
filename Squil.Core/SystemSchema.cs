@@ -11,7 +11,7 @@ namespace Squil
     [XmlRoot("root")]
     public class SysRoot
     {
-        [XmlArray("sys_schemas")]
+        [XmlArray("sys.schemas")]
         public SysSchema[] Schemas { get; set; }
     }
 

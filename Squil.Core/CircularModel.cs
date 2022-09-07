@@ -84,6 +84,7 @@ namespace Squil
                         Order = i,
                         Name = c.COLUMN_NAME,
                         SqlType = c.DATA_TYPE,
+                        IsNullable = c.IS_NULLABLE == "YES",
                         Type = TypeRegistry.Instance.GetTypeOrNull(c.DATA_TYPE),
                         IsString = c.DATA_TYPE.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
                     }).ToArray();
@@ -440,6 +441,8 @@ namespace Squil
         public String SqlType { get; set; }
 
         public String Escaped => Name.EscapeNamePart();
+
+        public Boolean IsNullable { get; set; }
 
         public ColumnType Type { get; set; }
 

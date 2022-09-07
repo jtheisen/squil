@@ -94,6 +94,13 @@
   font-size: 2em;
   font-weight: 200;
 }
+.entity-context ol[data-flavor=block] > li > fieldset[data-layout=grid3],
+.entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid3] {
+  display: grid;
+  column-gap: 0.25em;
+  row-gap: 0.25em;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
 .entity-context ol[data-flavor=page] > li > fieldset {
   margin-top: 1em;
 }
@@ -110,12 +117,6 @@
   .entity-context ol[data-flavor=page] > li > fieldset > legend {
     display: block;
   }
-}
-.entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid3] {
-  display: grid;
-  column-gap: 0.25em;
-  row-gap: 0.25em;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 .entity-context ol[data-flavor=page] > li > fieldset > .entity-relation.is-empty > ol:before {
   font-style: italic;

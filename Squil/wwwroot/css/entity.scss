@@ -168,6 +168,12 @@ $bg-light-2: #e7e5e4;
                 font-size: 2em;
                 font-weight: 200;
             }
+
+            > fieldset {
+                &[data-layout=grid3] {
+                    @include grid-3;
+                }
+            }
         }
     }
 
@@ -188,10 +194,6 @@ $bg-light-2: #e7e5e4;
                 text-align: right;
                 width: 5em;
                 margin-left: -5em;
-            }
-
-            &[data-layout=grid3] {
-                @include grid-3;
             }
         }
 

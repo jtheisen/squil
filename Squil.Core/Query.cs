@@ -47,9 +47,6 @@ namespace Squil
             return $"select\n{sql}\n for xml path ('root')";
         }
 
-        public String GetXmlRelationName(String name)
-            => name.Replace(".", "_");
-
         String I(Int32 indent) => new String(' ', indent);
 
         String GetSql(Extent extent, CMTable parentTable, String aliasPrefix, Int32 indent)
@@ -87,7 +84,7 @@ namespace Squil
             
             var filterItems = extent.Values?.Select(MakeFilterItem);
 
-            var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column.Sql} {i.op} '{i.value}'") ?? Enumerable.Empty<String>();
+            var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column.Sql} {i.op} {i.value.ToSqlServerStringLiteral()}") ?? Enumerable.Empty<String>();
 
             var allPredicates = filterPredicates.Concat(joinPredicates).ToArray();
 
@@ -106,7 +103,7 @@ namespace Squil
 
             if (extent.Values?.Length > 0)
             {
-                var predicate = String.Join(" and ", from i in filterItems select $"{alias}.{i.column.Sql} = '{i.value}'");
+                var predicate = String.Join(" and ", from i in filterItems select $"{alias}.{i.column.Sql} = {i.value.ToSqlServerStringLiteral()}");
 
                 selectables.Add($"case when {predicate} then 1 else 0 end [{IsMatchingAlias}]");
             }
@@ -130,7 +127,7 @@ namespace Squil
 {selectsClause}
 {ipspace}from {forwardEnd.Table.Name.Escaped} {alias}
 {whereLine}{orderLine}{ispace}for xml auto, type
-{ipspace}) {GetXmlRelationName(extent.RelationName)}";
+{ipspace}) [{extent.RelationName.EscapeSqlServerXmlName() /* further name part escaping not required, [ is already replaced */}]";
 
             return sql;
         }
@@ -145,7 +142,7 @@ namespace Squil
             {
                 IsMatching = data.GetOrDefault(IsMatchingAlias)?.Apply(im => im == "1"),
                 ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)) ?? Empties<String, String>.Dictionary,
-                Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(GetXmlRelationName(c.RelationName))))).ToArray()
+                Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(c.RelationName.EscapeSqlServerXmlName())))).ToArray()
             };
         }
 

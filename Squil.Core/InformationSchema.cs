@@ -11,7 +11,7 @@ namespace Squil
     [XmlRoot("root")]
     public class ISRoot
     {
-        [XmlArray("INFORMATION_SCHEMA_TABLES")]
+        [XmlArray("INFORMATION_SCHEMA.TABLES")]
         public ISTable[] Tables { get; set; }
     }
 
@@ -121,7 +121,7 @@ namespace Squil
                 Tables = new[]
                 {
                     MakeISTable("TABLES", GetKeyColumns("TABLE").Concat(new[] { "TABLE_TYPE" /* complete */ })),
-                    MakeISTable("COLUMNS", GetKeyColumns("TABLE").Concat(new [] { "COLUMN_NAME", "DATA_TYPE", "ORDINAL_POSITION" })),
+                    MakeISTable("COLUMNS", GetKeyColumns("TABLE").Concat(new [] { "COLUMN_NAME", "DATA_TYPE", "ORDINAL_POSITION", "IS_NULLABLE" })),
                     MakeISTable("TABLE_CONSTRAINTS",
                         GetKeyColumns("CONSTRAINT"),
                         GetKeyColumns("TABLE"),

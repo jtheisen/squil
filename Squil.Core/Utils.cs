@@ -64,11 +64,6 @@ public static partial class Extensions
         }
     }
 
-    static Regex sqlServerNameEscapePattern = new Regex("_x([0-9A-Fa-f]{4})_");
-
-    public static String UnescapeSqlServerXmlName(this String name)
-        => sqlServerNameEscapePattern.Replace(name, m => Char.ConvertFromUtf32(Int32.Parse(m.Groups[1].Value, NumberStyles.HexNumber)));
-
     public static IEnumerable<T> ToSingleton<T>(this T value)
     {
         return new[] { value };
@@ -111,6 +106,17 @@ public static partial class Extensions
         else
         {
             return default;
+        }
+    }
+
+    [DebuggerHidden]
+    public static void AddRange<T>(this ICollection<T> target, IEnumerable<T> source)
+    {
+        if (source == null) return;
+
+        foreach (var item in source)
+        {
+            target.Add(item);
         }
     }
 
