@@ -1,13 +1,10 @@
-using Squil.Core;
-using ColorHelper;
-using Humanizer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Data.Common;
+using Squil.SchemaBuilding;
 
 namespace Squil
 {
@@ -60,7 +57,7 @@ namespace Squil
             tables = isTables.Select(t => new CMTable
             {
                 Root = this,
-                Name = t.GetName(),
+                Name = t.GetTableName(),
             }
             ).ToDictionary(t => t.Name, t => t);
 
@@ -73,9 +70,9 @@ namespace Squil
 
             foreach (var isTable in isTables)
             {
-                var table = tables[isTable.GetName()];
+                var table = tables[isTable.GetTableName()];
 
-                var sysTable = sysTables?[(isTable.Schema, isTable.Name)].Single($"Can't find sys table for table {isTable.Schema}.{isTable.Name}");
+                var sysTable = sysTables?[(isTable.TableSchema, isTable.TableName)].Single($"Can't find sys table for table {isTable.TableSchema}.{isTable.TableName}");
 
                 table.ColumnsInOrder = isTable.Columns
                     .Where(c => c.DATA_TYPE != "varbinary" && c.DATA_TYPE != "geography")
@@ -116,7 +113,7 @@ namespace Squil
                     select new CMIndexlike
                     {
                         Name = i.Name,
-                        ObjectName = new ObjectName(isTable.Catalog, isTable.Schema, i.Name),
+                        ObjectName = new ObjectName(isTable.TableCatalog, isTable.TableSchema, i.Name),
                         IsUnique = i.IsUnique,
                         IsPrimary = i.IsPrimary,
                         Table = table,
@@ -129,13 +126,13 @@ namespace Squil
                 var keysUnknownFromIndexes = (
                     from c in isTable.Constraints
                     // When constraints appear as indexes, the index version has more complete information
-                    where !table.Indexes.ContainsKey(c.Name)
-                    where c.CONSTRAINT_TYPE == "PRIMARY KEY" || c.CONSTRAINT_TYPE == "UNIQUE KEY"
+                    where !table.Indexes.ContainsKey(c.ConstraintName)
+                    where c.ConstraintType == "PRIMARY KEY" || c.ConstraintType == "UNIQUE KEY"
                     select new CMIndexlike
                     {
-                        ObjectName = c.GetName(),
-                        Name = c.Name,
-                        IsPrimary = c.CONSTRAINT_TYPE == "PRIMARY KEY",
+                        ObjectName = c.GetConstraintName(),
+                        Name = c.ConstraintName,
+                        IsPrimary = c.ConstraintType == "PRIMARY KEY",
                         Table = table,
                         Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.COLUMN_NAME], IndexDirection.Unknown)).ToArray()
                     }
@@ -157,14 +154,14 @@ namespace Squil
 
             foreach (var isTable in isTables)
             {
-                var table = tables[isTable.GetName()];
+                var table = tables[isTable.GetTableName()];
 
                 table.ForeignKeys = isTable.Constraints
-                    .Where(c => c.CONSTRAINT_TYPE == "FOREIGN KEY")
+                    .Where(c => c.ConstraintType == "FOREIGN KEY")
                     .Select(c => new CMForeignKey
                     {
-                        Name = c.Name,
-                        Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").GetName()],
+                        Name = c.ConstraintName,
+                        Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").GetReferentialContraintName()],
                         Table = table,
                         Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.COLUMN_NAME], IndexDirection.Unknown)).ToArray()
                     })

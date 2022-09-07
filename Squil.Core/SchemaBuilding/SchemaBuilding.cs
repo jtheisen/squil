@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
+using Squil.SchemaBuilding;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 
-namespace Squil.Core
+namespace Squil
 {
     public static class SchemaBuildingExtensions
     {
@@ -96,14 +94,14 @@ namespace Squil.Core
                                         {
                                             Order = new DirectedColumnName[] { "index_id" },
                                             RelationName = "indexes",
-                                            Alias = "i",
+                                            Alias = "ix",
                                             Children = new[]
                                             {
                                                 new Extent
                                                 {
                                                     Order = new DirectedColumnName[] { "index_column_id" },
                                                     RelationName = "columns",
-                                                    Alias = "ic"
+                                                    Alias = "ix_c"
                                                 }
                                             }
                                         },

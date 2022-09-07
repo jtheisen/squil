@@ -1,6 +1,3 @@
-using Squil.Core;
-using Microsoft.Extensions.Configuration;
-using System;
 using System.Data.SqlClient;
 
 namespace Squil

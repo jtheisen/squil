@@ -1,12 +1,10 @@
-using Squil.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 
-namespace Squil
+namespace Squil.SchemaBuilding
 {
     [XmlRoot("root")]
     public class SysRoot
@@ -29,9 +27,9 @@ namespace Squil
         public SysTable[] Tables { get; set; } = Empties<SysTable>.Array;
     }
 
-    [XmlType("t")]
-    [DebuggerDisplay("{Name} ({ObjectId})")]
-    public class SysTable
+    [XmlType("o")]
+    [DebuggerDisplay("{Name}")]
+    public class SysObject
     {
         [XmlAttribute("object_id")]
         public Int32 ObjectId { get; set; }
@@ -42,6 +40,20 @@ namespace Squil
         [XmlAttribute("name")]
         public String Name { get; set; }
 
+        [XmlAttribute("type")]
+        public Int32 Type { get; set; }
+
+        [XmlAttribute("type_desc")]
+        public String TypeDesc { get; set; }
+
+        [XmlAttribute("modify_date")]
+        public DateTime ModifiedDate { get; set; }
+    }
+
+    [XmlType("t")]
+    [DebuggerDisplay("{Name} ({ObjectId})")]
+    public class SysTable : SysObject
+    {
         [XmlArray("columns")]
         public SysColumn[] Columns { get; set; } = Empties<SysColumn>.Array;
 
@@ -49,25 +61,26 @@ namespace Squil
         public SysIndex[] Indexes { get; set; } = Empties<SysIndex>.Array;
     }
 
-    [XmlType("i")]
+    [XmlType("c")]
     [DebuggerDisplay("{Name}")]
-    public class SysIndex
+    public class SysColumn
     {
         [XmlAttribute("object_id")]
         public Int32 ObjectId { get; set; }
 
-        [XmlAttribute("index_id")]
-        public Int32 IndexId { get; set; }
+        [XmlAttribute("column_id")]
+        public Int32 ColumnId { get; set; }
 
         [XmlAttribute("name")]
         public String Name { get; set; }
+    }
 
-        [XmlAttribute("type")]
-        public Int32 Type { get; set; }
-
-        [XmlAttribute("type_desc")]
-        public String TypeDesc { get; set; }
-
+    [XmlType("ix")]
+    [DebuggerDisplay("{Name}")]
+    public class SysIndex : SysObject
+    {
+        [XmlAttribute("index_id")]
+        public Int32 IndexId { get; set; }
 
         [XmlAttribute("is_disabled")]
         public Boolean IsDisabled { get; set; }
@@ -101,7 +114,7 @@ namespace Squil
 
     }
 
-    [XmlType("ic")]
+    [XmlType("ix_c")]
     [DebuggerDisplay("{Name}")]
     public class SysIndexColumn
     {
@@ -119,20 +132,60 @@ namespace Squil
 
         [XmlAttribute("is_descending_key")]
         public Boolean IsDescendingKey { get; set; }
+
+        [XmlAttribute("is_included_column")]
+        public Boolean IsIncludedColumn { get; set; }
     }
 
-    [XmlType("c")]
+    [XmlType("key")]
     [DebuggerDisplay("{Name}")]
-    public class SysColumn
+    public class SysKeyConstraint : SysObject
     {
-        [XmlAttribute("object_id")]
-        public Int32 ObjectId { get; set; }
+        [XmlAttribute("index_id")]
+        public Int32 UniqueIndexId { get; set; }
 
-        [XmlAttribute("column_id")]
-        public Int32 ColumnId { get; set; }
+        [XmlAttribute("is_system_named")]
+        public Boolean IsSystemNamed { get; set; }
+    }
 
-        [XmlAttribute("name")]
-        public String Name { get; set; }
+    [XmlType("fk")]
+    [DebuggerDisplay("{Name}")]
+    public class SysForeignKey : SysObject
+    {
+        [XmlAttribute("referenced_object_id")]
+        public Int32 ReferencedObjectId { get; set; }
+
+        [XmlAttribute("key_index_id")]
+        public Int32 ReferencedIndexlikeId { get; set; }
+
+        [XmlAttribute("is_disabled")]
+        public Boolean IsDisabled { get; set; }
+
+        [XmlAttribute("is_system_named")]
+        public Boolean IsSystemNamed { get; set; }
+    }
+
+    [XmlType("fk_c")]
+    [DebuggerDisplay("{Name}")]
+    public class SysForeignKeyColumn
+    {
+        [XmlAttribute("constraint_object_id")]
+        public Int32 ConstraintObjectId { get; set; }
+
+        [XmlAttribute("constraint_column_id")]
+        public Int32 ConstraintColumnId { get; set; }
+
+        [XmlAttribute("parent_object_id")]
+        public Int32 ParentObjectId { get; set; }
+
+        [XmlAttribute("parent_column_id")]
+        public Int32 ParentColumnId { get; set; }
+
+        [XmlAttribute("referenced_object_id")]
+        public Int32 ReferencedObjectId { get; set; }
+
+        [XmlAttribute("referenced_column_id")]
+        public Int32 ReferencedColumnId { get; set; }
     }
 
     public static class SystemSchema
@@ -169,7 +222,7 @@ namespace Squil
                 Columns = columns.Select(n => new ISColumn { COLUMN_NAME = n, DATA_TYPE = "varchar" }).ToArray()
             };
 
-            table.SetName(GetTableName(name));
+            table.SetTableName(GetTableName(name));
 
             return table;
         }
@@ -207,7 +260,5 @@ namespace Squil
 
         static ObjectName GetTableName(String name)
             => new ObjectName("sys", name);
-
-        static String[] ISBaseKeyNames = new[] { "CATALOG", "SCHEMA", "NAME" };
     }
 }

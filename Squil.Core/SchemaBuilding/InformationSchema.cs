@@ -1,12 +1,10 @@
-using Squil.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 
-namespace Squil
+namespace Squil.SchemaBuilding
 {
     [XmlRoot("root")]
     public class ISRoot
@@ -15,31 +13,44 @@ namespace Squil
         public ISTable[] Tables { get; set; }
     }
 
-    public interface IISObjectNamable
+    public class ISWithTable
     {
-        public String Catalog { get; set; }
+        [XmlAttribute("TABLE_CATALOG")]
+        public String TableCatalog { get; set; }
 
-        public String Schema { get; set; }
+        [XmlAttribute("TABLE_SCHEMA")]
+        public String TableSchema { get; set; }
 
-        public String Name { get; set; }
+        [XmlAttribute("TABLE_NAME")]
+        public String TableName { get; set; }
+
+        public void SetTableName(ObjectName name) => (TableCatalog, TableSchema, TableName) = name;
+        public ObjectName GetTableName() => new ObjectName(TableCatalog, TableSchema, TableName);
+    }
+
+    public class ISWithConstraint : ISWithTable
+    {
+        [XmlAttribute("CONSTRAINT_CATALOG")]
+        public String ConstraintCatalog { get; set; }
+
+        [XmlAttribute("CONSTRAINT_SCHEMA")]
+        public String ConstraintSchema { get; set; }
+
+        [XmlAttribute("CONSTRAINT_NAME")]
+        public String ConstraintName { get; set; }
+
+        public void SetConstraintName(ObjectName name) => (ConstraintCatalog, ConstraintSchema, ConstraintName) = name;
+        public ObjectName GetConstraintName() => new ObjectName(ConstraintCatalog, ConstraintSchema, ConstraintName);
     }
 
     [XmlType("t")]
+    [XmlTable("TABLES")]
     [DebuggerDisplay("{Name}")]
-    public class ISTable : IISObjectNamable
+    public class ISTable : ISWithTable
     {
         static ISColumn[] emptyColumns = new ISColumn[0];
 
         static ISConstraint[] emptyConstraints = new ISConstraint[0];
-
-        [XmlAttribute("TABLE_CATALOG")]
-        public String Catalog { get; set; }
-
-        [XmlAttribute("TABLE_SCHEMA")]
-        public String Schema { get; set; }
-
-        [XmlAttribute("TABLE_NAME")]
-        public String Name { get; set; }
 
         [XmlAttribute("TABLE_TYPE")]
         public String Type { get; set; }
@@ -52,8 +63,9 @@ namespace Squil
     }
 
     [XmlType("c")]
+    [XmlTable("COLUMNS")]
     [DebuggerDisplay("{COLUMN_NAME}")]
-    public class ISColumn
+    public class ISColumn : ISWithTable
     {
         [XmlAttribute]
         public String COLUMN_NAME { get; set; }
@@ -69,20 +81,12 @@ namespace Squil
     }
 
     [XmlType("cnstrnt")]
+    [XmlTable("TABLE_CONSTRAINTS")]
     [DebuggerDisplay("{Name}")]
-    public class ISConstraint : IISObjectNamable
+    public class ISConstraint : ISWithConstraint
     {
-        [XmlAttribute("CONSTRAINT_CATALOG")]
-        public String Catalog { get; set; }
-
-        [XmlAttribute("CONSTRAINT_SCHEMA")]
-        public String Schema { get; set; }
-
-        [XmlAttribute("CONSTRAINT_NAME")]
-        public String Name { get; set; }
-
-        [XmlAttribute]
-        public String CONSTRAINT_TYPE { get; set; }
+        [XmlAttribute("CONSTRAINT_TYPE")]
+        public String ConstraintType { get; set; }
 
         [XmlArray("columns")]
         public ISConstraintColumn[] Columns { get; set; }
@@ -92,21 +96,26 @@ namespace Squil
     }
 
     [XmlType("referential")]
-    public class ISConstraintReferetial : IISObjectNamable
+    [XmlTable("REFERENTIAL_CONSTRAINTS")]
+    public class ISConstraintReferetial : ISWithConstraint
     {
         [XmlAttribute("UNIQUE_CONSTRAINT_CATALOG")]
-        public String Catalog { get; set; }
+        public String UniqueConstraintCatalog { get; set; }
 
         [XmlAttribute("UNIQUE_CONSTRAINT_SCHEMA")]
-        public String Schema { get; set; }
+        public String UniqueConstraintSchema { get; set; }
 
         [XmlAttribute("UNIQUE_CONSTRAINT_NAME")]
-        public String Name { get; set; }
+        public String UniqueConstraintName { get; set; }
+
+        public void SetReferentialContraintName(ObjectName name) => (UniqueConstraintCatalog, UniqueConstraintSchema, UniqueConstraintName) = name;
+        public ObjectName GetReferentialContraintName() => new ObjectName(UniqueConstraintCatalog, UniqueConstraintSchema, UniqueConstraintName);
     }
 
     [XmlType("cc")]
+    [XmlTable("KEY_COLUMN_USAGE")]
     [DebuggerDisplay("{COLUMN_NAME}")]
-    public class ISConstraintColumn
+    public class ISConstraintColumn : ISWithConstraint
     {
         [XmlAttribute]
         public String COLUMN_NAME { get; set; }
@@ -120,22 +129,21 @@ namespace Squil
             {
                 Tables = new[]
                 {
-                    MakeISTable("TABLES", GetKeyColumns("TABLE").Concat(new[] { "TABLE_TYPE" /* complete */ })),
-                    MakeISTable("COLUMNS", GetKeyColumns("TABLE").Concat(new [] { "COLUMN_NAME", "DATA_TYPE", "ORDINAL_POSITION", "IS_NULLABLE" })),
-                    MakeISTable("TABLE_CONSTRAINTS",
-                        GetKeyColumns("CONSTRAINT"),
-                        GetKeyColumns("TABLE"),
-                        new [] { "CONSTRAINT_TYPE" }),
-                    MakeISTable("REFERENTIAL_CONSTRAINTS",
-                        GetKeyColumns("CONSTRAINT"),
-                        GetKeyColumns("UNIQUE_CONSTRAINT"),
-                        new [] { "MATCH_OPTION", "UPDATE_RULE", "DELETE_RULE" }),
-                    MakeISTable("KEY_COLUMN_USAGE",
-                        GetKeyColumns("TABLE"),
-                        GetKeyColumns("CONSTRAINT"),
-                        new [] { "COLUMN_NAME", "ORDINAL_POSITION" })
+                    MakeISTable<ISTable>(),
+                    MakeISTable<ISColumn>(),
+                    MakeISTable<ISConstraint>(),
+                    MakeISTable<ISConstraintReferetial>(),
+                    MakeISTable<ISConstraintColumn>()
                 }
             };
+        }
+
+        public static ISTable MakeISTable<T>()
+            where T : class
+        {
+            var md = XmlEntitiyMetata<T>.Instance;
+
+            return MakeISTable(md.TableName, md.ColumnNames);
         }
 
         public static ISTable MakeISTable(String name, params IEnumerable<String>[] columns)
@@ -150,7 +158,7 @@ namespace Squil
                 Columns = columns.Select(n => new ISColumn { COLUMN_NAME = n, DATA_TYPE = "varchar" }).ToArray()
             };
 
-            table.SetName(GetISTableName(name));
+            table.SetTableName(GetISTableName(name));
 
             return table;
         }

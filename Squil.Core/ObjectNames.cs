@@ -1,3 +1,4 @@
+using Squil.SchemaBuilding;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,6 +29,32 @@ namespace Squil
 
         public static ObjectName RootName = new ObjectName();
 
+        public void Deconstruct(out string catalog, out string schema, out string name)
+        {
+            if (parts.Length == 2)
+            {
+                catalog = null;
+
+                Deconstruct(out schema, out name);
+            }
+            else
+            {
+                if (parts.Length != 3) throw new Exception($"3-deconstruction on {parts.Length}-part name");
+
+                catalog = parts[0];
+                schema = parts[1];
+                name = parts[2];
+            }
+        }
+
+        public void Deconstruct(out string schema, out string name)
+        {
+            if (parts.Length != 2) throw new Exception($"2-deconstruction on {parts.Length}-part name");
+
+            schema = parts[0];
+            name = parts[1];
+        }
+
         private ObjectName()
         {
             parts = new[] { "" };
@@ -37,6 +64,11 @@ namespace Squil
 
         public ObjectName(params String[] parts)
         {
+            if (parts.Any(p => p == null))
+            {
+                parts = parts.Where(p => p != null).ToArray();
+            }
+
             if (parts.Length == 0) throw new Exception("Object names must have at least one part");
 
             foreach (var part in parts)
@@ -111,20 +143,6 @@ namespace Squil
         public static String EscapeNamePart(this String p)
         {
             return $"[{p.Replace("]", "]]")}]";
-        }
-
-        public static ObjectName GetName(this IISObjectNamable namable)
-        {
-            return new ObjectName(new[] { namable.Catalog, namable.Schema, namable.Name }.Where(n => n != null).ToArray());
-        }
-
-        public static void SetName(this IISObjectNamable namable, ObjectName name)
-        {
-            var parts = name.ReversedParts;
-
-            namable.Name = parts.First();
-            namable.Schema = parts.Skip(1).FirstOrDefault();
-            namable.Catalog = parts.Skip(2).FirstOrDefault();
         }
     }
 }
