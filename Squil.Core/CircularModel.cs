@@ -39,25 +39,19 @@ namespace Squil
             return sha1.ComputeHash(Encoding.UTF8.GetBytes(name))[0] * 360.0 / 255.0;
         }
 
-        public void Populate(ISRoot isRoot, SysRoot sysRoot = null, Boolean includeViews = false)
+        public void Populate(CsdRoot root, Boolean includeViews = false)
         {
-            var sysTables = sysRoot?.Apply(r => (
-                from s in r.Schemas
-                from t in s.Tables
-                select (s, t)
-            ).ToLookup(p => (p.s.Name, p.t.Name), p => p.t));
-
-            var isTables = isRoot.Tables.ToArray();
+            var csdTables = root.Tables;
 
             if (!includeViews)
             {
-                isTables = isTables.Where(t => t.Type != "VIEW").ToArray();
+                csdTables = csdTables.Where(t => t.Type != CsdTableType.View).ToArray();
             }
 
-            tables = isTables.Select(t => new CMTable
+            tables = csdTables.Select(t => new CMTable
             {
                 Root = this,
-                Name = t.GetTableName(),
+                Name = t.Name,
             }
             ).ToDictionary(t => t.Name, t => t);
 
@@ -68,27 +62,23 @@ namespace Squil
                 table.Hue = GetHueForName(a.Value);
             }
 
-            foreach (var isTable in isTables)
+            foreach (var csdTable in csdTables)
             {
-                var table = tables[isTable.GetTableName()];
+                var table = tables[csdTable.Name];
 
-                var sysTable = sysTables?[(isTable.TableSchema, isTable.TableName)].Single($"Can't find sys table for table {isTable.TableSchema}.{isTable.TableName}");
-
-                table.ColumnsInOrder = isTable.Columns
-                    .Where(c => c.DATA_TYPE != "varbinary" && c.DATA_TYPE != "geography")
+                table.ColumnsInOrder = csdTable.Columns
+                    .Where(c => c.DataType != "varbinary" && c.DataType != "geography")
                     .Select((c, i) => new CMColumn
                     {
                         Order = i,
-                        Name = c.COLUMN_NAME,
-                        SqlType = c.DATA_TYPE,
-                        IsNullable = c.IS_NULLABLE == "YES",
-                        Type = TypeRegistry.Instance.GetTypeOrNull(c.DATA_TYPE),
-                        IsString = c.DATA_TYPE.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
+                        Name = c.Name,
+                        SqlType = c.DataType,
+                        IsNullable = c.IsNullable,
+                        Type = TypeRegistry.Instance.GetTypeOrNull(c.DataType),
+                        IsString = c.DataType.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
                     }).ToArray();
 
                 table.Columns = table.ColumnsInOrder.ToDictionary(c => c.Name, c => c);
-
-                var sysColumns = sysTable?.Columns.ToLookup(c => c.ColumnId, c => c);
 
                 (String tag, String reason)? CheckColumnSupport(IEnumerable<CMColumn> columns)
                 {
@@ -100,48 +90,30 @@ namespace Squil
                     return null;
                 }
 
-                table.Indexes = (sysTable?.Indexes ?? Empties<SysIndex>.Array).Apply(indexes =>
-                    from i in indexes
+                table.Indexes = (
+                    from i in csdTable.Keyishs.OfType<CsdIndexlike>()
                     let columns = (
-                        from ci in i.Columns
-                        from c in sysColumns[ci.ColumnId]
-                        let cmc = table.Columns[c.Name]
-                        select new CMDirectedColumn(cmc, ci.IsDescendingKey ? IndexDirection.Desc : IndexDirection.Asc)
+                        from csdColumn in i.Columns
+                        let cmc = table.Columns[csdColumn.c]
+                        select new CMDirectedColumn(cmc, csdColumn.d)
                     ).ToArray()
-                    let support = i.CheckIntrinsicSupport() ?? CheckColumnSupport(columns.Select(c => c.c))
+                    let support = i.UnsupportedReason ?? CheckColumnSupport(columns.Select(c => c.c))
                     where i.Name != null
                     select new CMIndexlike
                     {
-                        Name = i.Name,
-                        ObjectName = new ObjectName(isTable.TableCatalog, isTable.TableSchema, i.Name),
+                        Name = i.Name.LastPart,
+                        ObjectName = i.Name,
                         IsUnique = i.IsUnique,
-                        IsPrimary = i.IsPrimary,
+                        IsPrimary = i.Type == CsdKeyishType.Pk,
                         Table = table,
-                        UnsupportedTag = support?.tag,
-                        UnsupportedReason = support?.reason,
+                        UnsupportedTag = support?.Tag,
+                        UnsupportedReason = support?.Reason,
                         Columns = columns
                     }
                 ).ToDictionary(i => i.Name, i => i);
 
-                var keysUnknownFromIndexes = (
-                    from c in isTable.Constraints
-                    // When constraints appear as indexes, the index version has more complete information
-                    where !table.Indexes.ContainsKey(c.ConstraintName)
-                    where c.ConstraintType == "PRIMARY KEY" || c.ConstraintType == "UNIQUE KEY"
-                    select new CMIndexlike
-                    {
-                        ObjectName = c.GetConstraintName(),
-                        Name = c.ConstraintName,
-                        IsPrimary = c.ConstraintType == "PRIMARY KEY",
-                        Table = table,
-                        Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.COLUMN_NAME], IndexDirection.Unknown)).ToArray()
-                    }
-                ).ToArray();
-
                 table.UniqueIndexlikes = table.Indexes.Values
-                    .Cast<CMIndexlike>()
                     .Where(i => i.IsUnique)
-                    .Concat(keysUnknownFromIndexes)
                     .ToDictionary(t => t.Name, t => t);
 
                 table.PrimaryKey = table.UniqueIndexlikes.Values.FirstOrDefault(i => i.IsPrimary);
@@ -152,18 +124,18 @@ namespace Squil
                 }
             }
 
-            foreach (var isTable in isTables)
+            foreach (var csdTable in csdTables)
             {
-                var table = tables[isTable.GetTableName()];
+                var table = tables[csdTable.Name];
 
-                table.ForeignKeys = isTable.Constraints
-                    .Where(c => c.ConstraintType == "FOREIGN KEY")
+                table.ForeignKeys = csdTable.Keyishs.OfType<CsdForeignKey>()
                     .Select(c => new CMForeignKey
                     {
-                        Name = c.ConstraintName,
-                        Principal = keys[c.Referentials.Single("Unexpectedly no unique referential entry in foreign key constraint").GetReferentialContraintName()],
+                        Name = c.Name.LastPart,
+                        ObjectName = c.Name,
+                        Principal = keys[c.ReferencedIndexlike],
                         Table = table,
-                        Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.COLUMN_NAME], IndexDirection.Unknown)).ToArray()
+                        Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.c], IndexDirection.Unknown)).ToArray()
                     })
                     .ToDictionary(c => c.Name, c => c);
 

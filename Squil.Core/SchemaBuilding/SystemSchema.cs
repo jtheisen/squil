@@ -50,6 +50,23 @@ namespace Squil.SchemaBuilding
         public DateTime ModifiedDate { get; set; }
     }
 
+    [XmlType("or")]
+    [DebuggerDisplay("{Name}")]
+    public class SysObjectReference
+    {
+        [XmlAttribute("object_id")]
+        public Int32 ObjectId { get; set; }
+
+        [XmlAttribute("schema_id")]
+        public Int32 SchemaId { get; set; }
+
+        [XmlAttribute("name")]
+        public String Name { get; set; }
+
+        [XmlAttribute("schema")]
+        public SysSchema Schema { get; set; }
+    }
+
     [XmlType("t")]
     [DebuggerDisplay("{Name} ({ObjectId})")]
     public class SysTable : SysObject
@@ -59,6 +76,9 @@ namespace Squil.SchemaBuilding
 
         [XmlArray("indexes")]
         public SysIndex[] Indexes { get; set; } = Empties<SysIndex>.Array;
+
+        [XmlArray("foreign_keys")]
+        public SysForeignKey[] ForeignKeys { get; set; } = Empties<SysForeignKey>.Array;
     }
 
     [XmlType("c")]
@@ -73,14 +93,54 @@ namespace Squil.SchemaBuilding
 
         [XmlAttribute("name")]
         public String Name { get; set; }
+
+        [XmlAttribute("is_nullable")]
+        public Boolean IsNullable { get; set; }
+
+        [XmlArray("type")]
+        public SysType[] Types { get; set; }
+    }
+
+    [XmlType("tp")]
+    [XmlTable("types")]
+    public class SysType
+    {
+        [XmlAttribute("name")]
+        public String Name { get; set; }
+
+        [XmlAttribute("is_assembly_type")]
+        public Boolean IsAssemblyType { get; set; }
+    }
+
+    [XmlType("ixr")]
+    [DebuggerDisplay("{Name}")]
+    public class SysIndexReference
+    {
+        [XmlAttribute("name")]
+        public String Name { get; set; }
+
+        [XmlAttribute("object_id")]
+        public Int32 TableObjectId { get; set; }
     }
 
     [XmlType("ix")]
     [DebuggerDisplay("{Name}")]
-    public class SysIndex : SysObject
+    public class SysIndex
     {
+        [XmlAttribute("name")]
+        public String Name { get; set; }
+
+        [XmlAttribute("object_id")]
+        public Int32 TableObjectId { get; set; }
+
         [XmlAttribute("index_id")]
         public Int32 IndexId { get; set; }
+
+        [XmlAttribute("type")]
+        public Int32 Type { get; set; }
+
+        [XmlAttribute("type_desc")]
+        public String TypeDesc { get; set; }
 
         [XmlAttribute("is_disabled")]
         public Boolean IsDisabled { get; set; }
@@ -111,7 +171,6 @@ namespace Squil.SchemaBuilding
             if (Type != 1 && Type != 2) return (TypeDesc, "Only b-tree indexes are supported");
             return null;
         }
-
     }
 
     [XmlType("ix_c")]
@@ -119,7 +178,7 @@ namespace Squil.SchemaBuilding
     public class SysIndexColumn
     {
         [XmlAttribute("object_id")]
-        public Int32 ObjectId { get; set; }
+        public Int32 TableObjectId { get; set; }
 
         [XmlAttribute("index_id")]
         public Int32 IndexId { get; set; }
@@ -152,6 +211,9 @@ namespace Squil.SchemaBuilding
     [DebuggerDisplay("{Name}")]
     public class SysForeignKey : SysObject
     {
+        [XmlAttribute("parent_object_id")]
+        public Int32 ParentObjectId { get; set; }
+
         [XmlAttribute("referenced_object_id")]
         public Int32 ReferencedObjectId { get; set; }
 
@@ -163,7 +225,18 @@ namespace Squil.SchemaBuilding
 
         [XmlAttribute("is_system_named")]
         public Boolean IsSystemNamed { get; set; }
+
+        [XmlAttribute("columns")]
+        public SysForeignKeyColumn[] Columns { get; set; } = Empties<SysForeignKeyColumn>.Array;
+
+        [XmlAttribute("referenced_table")]
+        public SysObjectReference ReferencedTable { get; set; }
+
+        [XmlAttribute("referenced_index")]
+        public SysIndexReference ReferencedIndex { get; set; }
     }
+
+
 
     [XmlType("fk_c")]
     [DebuggerDisplay("{Name}")]
