@@ -31,7 +31,7 @@ public static class SqlConnectionExtensions
         return reader.GetString(0);
     }
 
-    static X Parse<X>(String xml)
+    public static X Parse<X>(String xml)
         where X : class
     {
         using var _ = GetCurrentLedger().TimedScope("parsing-and-binding");

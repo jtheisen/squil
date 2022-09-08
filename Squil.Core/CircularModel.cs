@@ -67,7 +67,7 @@ namespace Squil
                 var table = tables[csdTable.Name];
 
                 table.ColumnsInOrder = csdTable.Columns
-                    .Where(c => c.DataType != "varbinary" && c.DataType != "geography")
+                    .Where(c => c.DataType != "varbinary" && c.DataType != "geography") // FIXME
                     .Select((c, i) => new CMColumn
                     {
                         Order = i,

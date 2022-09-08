@@ -74,8 +74,6 @@ namespace Squil
             foreach (var part in parts)
             {
                 if (part.Length == 0) throw new Exception("Object name parts can't be empty");
-
-                part.Assert(NameHarmlessness);
             }
 
             this.parts = parts;

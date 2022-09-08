@@ -87,7 +87,7 @@ public class CsdForeignKey : CsdKeyish
     public ObjectName ReferencedIndexlike { get; set; }
 }
 
-public static class X
+public static class CsdExtensions
 {
     public static CsdKeyishType GetCsdType(this SysIndex index)
     {
@@ -105,7 +105,7 @@ public static class X
         }
     }
 
-    public static CsdRoot Create(SysRoot root)
+    public static CsdRoot CreateCsd(this SysRoot root)
     {
         var csdTables = new List<CsdTable>();
 
@@ -140,7 +140,7 @@ public static class X
 
                     var isKey = index.IsPrimary || index.IsUniqueConstraint;
 
-                    var name = isKey ? new ObjectName(schema.Name, index.Name) : new ObjectName(schema.Name, table.Name, index.Name);
+                    var name = new ObjectName(schema.Name, table.Name, index.Name);
 
                     var intrinsicallyUnsupported = index.CheckIntrinsicSupport()?.Apply(t => new CsdUnsupportedReason(t.tag, t.reason));
 
@@ -164,9 +164,13 @@ public static class X
 
                     var name = new ObjectName(schema.Name, fk.Name);
 
-                    var referencedTable = fk.ReferencedTable;
+                    var referencedTable = fk.ReferencedTables.Single("Unexpectedly not unambiguously having a referenced table");
 
-                    var referencedIndexlike = new ObjectName(referencedTable.Schema.Name, referencedTable.Name, fk.ReferencedIndex.Name);
+                    var referencedSchema = referencedTable.Schemas.Single("Unexpectedly not unambiguously having a referenced table schema");
+
+                    var referencedIndex = fk.ReferencedIndexes.Single("Unexpectedly not unambiguously having a referenced index");
+
+                    var referencedIndexlike = new ObjectName(referencedSchema.Name, referencedTable.Name, referencedIndex.Name);
 
                     csdKeyishs.Add(new CsdForeignKey
                     {
@@ -190,7 +194,7 @@ public static class X
         return new CsdRoot { Tables = csdTables.ToArray() };
     }
 
-    public static CsdRoot Create(ISRoot root)
+    public static CsdRoot CreateCsd(this ISRoot root)
     {
         var csdTables = new List<CsdTable>();
 
@@ -214,12 +218,15 @@ public static class X
             {
                 var directedColumnNames = c.Columns.Select(c2 => new DirectedColumnName(c2.COLUMN_NAME)).ToArray();
 
+                var name = new ObjectName(c.ConstraintCatalog, c.ConstraintSchema, c.ConstraintName);
+
                 switch (c.ConstraintType)
                 {
                     case "PRIMARY KEY":
                     case "UNIQUE KEY":
                         csdKeyishs.Add(new CsdIndexlike
                         {
+                            Name = name,
                             Columns = directedColumnNames,
                             IsUnique = true,
                             Type = c.ConstraintType == "PRIMARY KEY" ? CsdKeyishType.Pk : CsdKeyishType.Ak
@@ -231,6 +238,8 @@ public static class X
 
                         csdKeyishs.Add(new CsdForeignKey
                         {
+                            Name = name,
+                            Type = CsdKeyishType.Fk,
                             Columns = directedColumnNames,
                             ReferencedIndexlike = referential.GetReferentialContraintName()
                         });

@@ -14,6 +14,7 @@ namespace Squil.SchemaBuilding
     }
 
     [XmlType("s")]
+    [XmlTable("schemas")]
     [DebuggerDisplay("{Name}")]
     public class SysSchema
     {
@@ -28,6 +29,7 @@ namespace Squil.SchemaBuilding
     }
 
     [XmlType("o")]
+    [XmlTable("objects")]
     [DebuggerDisplay("{Name}")]
     public class SysObject
     {
@@ -41,7 +43,7 @@ namespace Squil.SchemaBuilding
         public String Name { get; set; }
 
         [XmlAttribute("type")]
-        public Int32 Type { get; set; }
+        public String Type { get; set; }
 
         [XmlAttribute("type_desc")]
         public String TypeDesc { get; set; }
@@ -50,7 +52,8 @@ namespace Squil.SchemaBuilding
         public DateTime ModifiedDate { get; set; }
     }
 
-    [XmlType("or")]
+    [XmlType("o_r")]
+    [XmlTable("objects")]
     [DebuggerDisplay("{Name}")]
     public class SysObjectReference
     {
@@ -63,11 +66,12 @@ namespace Squil.SchemaBuilding
         [XmlAttribute("name")]
         public String Name { get; set; }
 
-        [XmlAttribute("schema")]
-        public SysSchema Schema { get; set; }
+        [XmlArray("schema")]
+        public SysSchema[] Schemas { get; set; } = Empties<SysSchema>.Array;
     }
 
     [XmlType("t")]
+    [XmlTable("tables")]
     [DebuggerDisplay("{Name} ({ObjectId})")]
     public class SysTable : SysObject
     {
@@ -82,6 +86,7 @@ namespace Squil.SchemaBuilding
     }
 
     [XmlType("c")]
+    [XmlTable("columns")]
     [DebuggerDisplay("{Name}")]
     public class SysColumn
     {
@@ -91,6 +96,9 @@ namespace Squil.SchemaBuilding
         [XmlAttribute("column_id")]
         public Int32 ColumnId { get; set; }
 
+        [XmlAttribute("user_type_id")]
+        public Int32 UserTypeId { get; set; }
+
         [XmlAttribute("name")]
         public String Name { get; set; }
 
@@ -98,13 +106,17 @@ namespace Squil.SchemaBuilding
         public Boolean IsNullable { get; set; }
 
         [XmlArray("type")]
-        public SysType[] Types { get; set; }
+        public SysType[] Types { get; set; } = Empties<SysType>.Array;
     }
 
     [XmlType("tp")]
     [XmlTable("types")]
+    [DebuggerDisplay("{Name}")]
     public class SysType
     {
+        [XmlAttribute("user_type_id")]
+        public Int32 UserTypeId { get; set; }
+
         [XmlAttribute("name")]
         public String Name { get; set; }
 
@@ -112,7 +124,8 @@ namespace Squil.SchemaBuilding
         public Boolean IsAssemblyType { get; set; }
     }
 
-    [XmlType("ixr")]
+    [XmlType("ix_r")]
+    [XmlTable("indexes")]
     [DebuggerDisplay("{Name}")]
     public class SysIndexReference
     {
@@ -124,6 +137,7 @@ namespace Squil.SchemaBuilding
     }
 
     [XmlType("ix")]
+    [XmlTable("indexes")]
     [DebuggerDisplay("{Name}")]
     public class SysIndex
     {
@@ -174,6 +188,7 @@ namespace Squil.SchemaBuilding
     }
 
     [XmlType("ix_c")]
+    [XmlTable("index_columns")]
     [DebuggerDisplay("{Name}")]
     public class SysIndexColumn
     {
@@ -197,6 +212,7 @@ namespace Squil.SchemaBuilding
     }
 
     [XmlType("key")]
+    [XmlTable("key_constraints")]
     [DebuggerDisplay("{Name}")]
     public class SysKeyConstraint : SysObject
     {
@@ -208,6 +224,7 @@ namespace Squil.SchemaBuilding
     }
 
     [XmlType("fk")]
+    [XmlTable("foreign_keys")]
     [DebuggerDisplay("{Name}")]
     public class SysForeignKey : SysObject
     {
@@ -226,19 +243,20 @@ namespace Squil.SchemaBuilding
         [XmlAttribute("is_system_named")]
         public Boolean IsSystemNamed { get; set; }
 
-        [XmlAttribute("columns")]
+        [XmlArray("columns")]
         public SysForeignKeyColumn[] Columns { get; set; } = Empties<SysForeignKeyColumn>.Array;
 
-        [XmlAttribute("referenced_table")]
-        public SysObjectReference ReferencedTable { get; set; }
+        [XmlArray("referenced_table")]
+        public SysObjectReference[] ReferencedTables { get; set; } = Empties<SysObjectReference>.Array;
 
-        [XmlAttribute("referenced_index")]
-        public SysIndexReference ReferencedIndex { get; set; }
+        [XmlArray("referenced_index")]
+        public SysIndexReference[] ReferencedIndexes { get; set; } = Empties<SysIndexReference>.Array;
     }
 
 
 
     [XmlType("fk_c")]
+    [XmlTable("foreign_key_columns")]
     [DebuggerDisplay("{Name}")]
     public class SysForeignKeyColumn
     {
@@ -269,18 +287,26 @@ namespace Squil.SchemaBuilding
             {
                 Tables = new[]
                 {
-                    MakeISTable("schemas",
-                        new [] { "name", "schema_id" }),
-                    MakeISTable("tables",
-                        new [] { "object_id", "schema_id", "name" }),
-                    MakeISTable("columns",
-                        new [] { "object_id", "column_id", "name" }),
-                    MakeISTable("indexes",
-                        new [] { "object_id", "index_id", "name", "type", "type_desc", "is_disabled", "is_unique", "is_primary_key", "is_unique_constraint", "has_filter", "is_hypothetical" }),
-                    MakeISTable("index_columns",
-                        new [] { "object_id", "index_id", "index_column_id", "column_id", "is_descending_key" })
+                    MakeISTable<SysObjectReference>(),
+                    MakeISTable<SysSchema>(),
+                    MakeISTable<SysType>(),
+
+                    MakeISTable<SysTable>(),
+                    MakeISTable<SysColumn>(),
+                    MakeISTable<SysIndex>(),
+                    MakeISTable<SysIndexColumn>(),
+                    MakeISTable<SysForeignKey>(),
+                    MakeISTable<SysForeignKeyColumn>()
                 }
             };
+        }
+
+        public static ISTable MakeISTable<T>()
+            where T : class
+        {
+            var md = XmlEntitiyMetata<T>.Instance;
+
+            return MakeISTable(md.TableName, md.ColumnNames);
         }
 
         public static ISTable MakeISTable(String name, params IEnumerable<String>[] columns)
@@ -304,6 +330,7 @@ namespace Squil.SchemaBuilding
         {
             var sysSchemaIdNames = new[] { "schema_id" };
             var sysObjectIdNames = new[] { "object_id" };
+            var sysUserTypeIdNames = new[] { "user_type_id" };
             var sysObjectIdAndIndexIdNames = new[] { "object_id", "index_id" };
 
             yield return new Relation
@@ -320,6 +347,12 @@ namespace Squil.SchemaBuilding
 
             yield return new Relation
             {
+                Principal = new RelationEnd { TableName = GetTableName("columns"), Name = "type", ColumnNames = sysUserTypeIdNames },
+                Dependent = new RelationEnd { TableName = GetTableName("types"), Name = "referencing_columns", ColumnNames = sysUserTypeIdNames }
+            };
+
+            yield return new Relation
+            {
                 Principal = new RelationEnd { TableName = GetTableName("tables"), Name = "indexes", ColumnNames = sysObjectIdNames },
                 Dependent = new RelationEnd { TableName = GetTableName("indexes"), Name = "table", ColumnNames = sysObjectIdNames }
             };
@@ -328,6 +361,36 @@ namespace Squil.SchemaBuilding
             {
                 Principal = new RelationEnd { TableName = GetTableName("indexes"), Name = "columns", ColumnNames = sysObjectIdAndIndexIdNames },
                 Dependent = new RelationEnd { TableName = GetTableName("index_columns"), Name = "index", ColumnNames = sysObjectIdAndIndexIdNames }
+            };
+
+            yield return new Relation
+            {
+                Principal = new RelationEnd { TableName = GetTableName("tables"), Name = "foreign_keys", ColumnNames = new[] { "object_id" } },
+                Dependent = new RelationEnd { TableName = GetTableName("foreign_keys"), Name = "table", ColumnNames = new[] { "parent_object_id" } }
+            };
+
+            yield return new Relation
+            {
+                Principal = new RelationEnd { TableName = GetTableName("foreign_keys"), Name = "columns", ColumnNames = new[] { "object_id" } },
+                Dependent = new RelationEnd { TableName = GetTableName("foreign_key_columns"), Name = "foreign_key", ColumnNames = new[] { "constraint_object_id" } }
+            };
+
+            yield return new Relation
+            {
+                Principal = new RelationEnd { TableName = GetTableName("foreign_keys"), Name = "referenced_table", ColumnNames = new[] { "referenced_object_id" } },
+                Dependent = new RelationEnd { TableName = GetTableName("objects"), Name = "referencing_foreign_keys", ColumnNames = new[] { "object_id" } }
+            };
+
+            yield return new Relation
+            {
+                Principal = new RelationEnd { TableName = GetTableName("foreign_keys"), Name = "referenced_index", ColumnNames = new[] { "referenced_object_id", "key_index_id" } },
+                Dependent = new RelationEnd { TableName = GetTableName("indexes"), Name = "referencing_foreign_keys", ColumnNames = new[] { "object_id", "index_id" } }
+            };
+
+            yield return new Relation
+            {
+                Principal = new RelationEnd { TableName = GetTableName("objects"), Name = "schema", ColumnNames = sysSchemaIdNames },
+                Dependent = new RelationEnd { TableName = GetTableName("schemas"), Name = "objects", ColumnNames = sysSchemaIdNames }
             };
         }
 

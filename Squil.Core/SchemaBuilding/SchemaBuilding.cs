@@ -11,7 +11,7 @@ namespace Squil
             using var _ = GetCurrentLedger().GroupingScope(nameof(GetISSchema));
 
             var cmRootForInfSch = new CMRoot("INFORMATION_SCHEMA");
-            cmRootForInfSch.Populate(InformationSchemaSchema.GetSchema());
+            cmRootForInfSch.Populate(InformationSchemaSchema.GetSchema().CreateCsd());
             cmRootForInfSch.PopulateRoot();
             cmRootForInfSch.Populate(InformationSchemaSchema.GetRelations().ToArray());
 
@@ -67,7 +67,7 @@ namespace Squil
             using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
 
             var cmRootForSys = new CMRoot("sys");
-            cmRootForSys.Populate(SystemSchema.GetSchema());
+            cmRootForSys.Populate(SystemSchema.GetSchema().CreateCsd());
             cmRootForSys.PopulateRoot();
             cmRootForSys.Populate(SystemSchema.GetRelations().ToArray());
 
@@ -92,6 +92,20 @@ namespace Squil
                                     {
                                         new Extent
                                         {
+                                            Order = new DirectedColumnName[] { "column_id" },
+                                            RelationName = "columns",
+                                            Alias = "c",
+                                            Children = new[]
+                                            {
+                                                new Extent
+                                                {
+                                                    RelationName = "type",
+                                                    Alias = "tp"
+                                                }
+                                            }
+                                        },
+                                        new Extent
+                                        {
                                             Order = new DirectedColumnName[] { "index_id" },
                                             RelationName = "indexes",
                                             Alias = "ix",
@@ -107,9 +121,35 @@ namespace Squil
                                         },
                                         new Extent
                                         {
-                                            Order = new DirectedColumnName[] { "column_id" },
-                                            RelationName = "columns",
-                                            Alias = "c"
+                                            RelationName = "foreign_keys",
+                                            Alias = "fk",
+                                            Children = new[]
+                                            {
+                                                new Extent
+                                                {
+                                                    Order = new DirectedColumnName[] { "constraint_column_id" },
+                                                    RelationName = "columns",
+                                                    Alias = "fk_c"
+                                                },
+                                                new Extent
+                                                {
+                                                    RelationName = "referenced_table",
+                                                    Alias = "o_r",
+                                                    Children = new[]
+                                                    {
+                                                        new Extent
+                                                        {
+                                                            RelationName = "schema",
+                                                            Alias = "s"
+                                                        }
+                                                    }
+                                                },
+                                                new Extent
+                                                {
+                                                    RelationName = "referenced_index",
+                                                    Alias = "ix_r"
+                                                },
+                                            }
                                         }
                                     }
                                 }
@@ -125,13 +165,13 @@ namespace Squil
         {
             using var _ = GetCurrentLedger().GroupingScope(nameof(GetCircularModel));
 
-            var isSchema = connection.GetISSchema();
+            //var isSchema = connection.GetISSchema();
             var sysSchema = connection.GetSysSchema();
 
             // populate from sysschema
 
             var cmRootForCs = new CMRoot("business model");
-            cmRootForCs.Populate(isSchema, sysSchema);
+            cmRootForCs.Populate(sysSchema.CreateCsd());
             cmRootForCs.PopulateRoot();
             cmRootForCs.PopulateRelationsFromForeignKeys();
             cmRootForCs.Closeup();
