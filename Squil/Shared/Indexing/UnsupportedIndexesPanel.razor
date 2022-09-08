@@ -1,0 +1,25 @@
+﻿@{
+    var groups = from i in Indexes
+                 where !i.Index.IsSupported
+                 group i by i.Index.UnsupportedReason.Tag into g
+                 select g;
+}
+
+<dl>
+    @foreach (var g in groups)
+    {
+        <dt>@g.Key</dt>
+        <dd>
+            @foreach (var i in g)
+            {
+                <div>@i.Index.Name</div>
+                <div>@i.Index.UnsupportedReason.Reason</div>
+            }
+        </dd>
+    }
+</dl>
+
+@code {
+    [Parameter]
+    public IndexVm[] Indexes { get; set; }
+}

@@ -84,6 +84,19 @@ public static partial class Extensions
     }
 
     [DebuggerHidden]
+    public static T SingleOrDefault<T>(this IEnumerable<T> source, String error)
+    {
+        try
+        {
+            return source.SingleOrDefault();
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new MultipleElementsException(error, ex);
+        }
+    }
+
+    [DebuggerHidden]
     public static T Get<K, T>(this IDictionary<K, T> dict, K key, String error)
     {
         try

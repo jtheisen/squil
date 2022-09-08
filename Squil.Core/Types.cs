@@ -318,6 +318,8 @@ public class DateOrTimeColumnType : ColumnType
 
 public class IntegerColumnType : ColumnType
 {
+    public Boolean IsBit => Name.Equals("bit", StringComparison.InvariantCultureIgnoreCase);
+
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
         if (Int64.TryParse(text, out var number))
@@ -411,7 +413,7 @@ public class TypeRegistry
 
             new IntegerColumnType { Name = "bigint" },
             new IntegerColumnType { Name = "bit" },
-            new IntegerColumnType { Name = "smallintl" },
+            new IntegerColumnType { Name = "smallint" },
             new IntegerColumnType { Name = "int" },
             new IntegerColumnType { Name = "tinyint" },
 

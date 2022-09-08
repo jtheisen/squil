@@ -45,7 +45,11 @@ public class CsdColumn : CsdBase
 {
     public String Name { get; set; }
 
+    public String DataTypeAlias { get; set; }
+
     public String DataType { get; set; }
+
+    public Boolean IsSystemType { get; set; }
 
     public Boolean IsNullable { get; set; }
 
@@ -117,11 +121,14 @@ public static class CsdExtensions
 
                 var csdColumns = (
                     from c in table.Columns
-                    let type = c.Types.Single("Unexpectedly no unique type at column")
+                    let usertype = c.UserTypes.Single("Unexpectedly no unique usertype at column")
+                    let systemtype = c.SystemTypes.SingleOrDefault("Unexpectedly no unique systemtype at column")
                     select new CsdColumn
                     {
                         Name = c.Name,
-                        DataType = type.Name,
+                        DataTypeAlias = usertype.Name,
+                        DataType = (systemtype ?? usertype).Name,
+                        IsSystemType = systemtype != null,
                         IsNullable = c.IsNullable,
                         ColumnId = c.ColumnId
                     }

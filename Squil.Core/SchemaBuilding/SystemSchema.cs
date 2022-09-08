@@ -99,14 +99,20 @@ namespace Squil.SchemaBuilding
         [XmlAttribute("user_type_id")]
         public Int32 UserTypeId { get; set; }
 
+        [XmlAttribute("system_type_id")]
+        public Int32 SystemTypeId { get; set; }
+
         [XmlAttribute("name")]
         public String Name { get; set; }
 
         [XmlAttribute("is_nullable")]
         public Boolean IsNullable { get; set; }
 
-        [XmlArray("type")]
-        public SysType[] Types { get; set; } = Empties<SysType>.Array;
+        [XmlArray("systemtype")]
+        public SysType[] SystemTypes { get; set; } = Empties<SysType>.Array;
+
+        [XmlArray("usertype")]
+        public SysType[] UserTypes { get; set; } = Empties<SysType>.Array;
     }
 
     [XmlType("tp")]
@@ -330,7 +336,6 @@ namespace Squil.SchemaBuilding
         {
             var sysSchemaIdNames = new[] { "schema_id" };
             var sysObjectIdNames = new[] { "object_id" };
-            var sysUserTypeIdNames = new[] { "user_type_id" };
             var sysObjectIdAndIndexIdNames = new[] { "object_id", "index_id" };
 
             yield return new Relation
@@ -347,8 +352,14 @@ namespace Squil.SchemaBuilding
 
             yield return new Relation
             {
-                Principal = new RelationEnd { TableName = GetTableName("columns"), Name = "type", ColumnNames = sysUserTypeIdNames },
-                Dependent = new RelationEnd { TableName = GetTableName("types"), Name = "referencing_columns", ColumnNames = sysUserTypeIdNames }
+                Principal = new RelationEnd { TableName = GetTableName("columns"), Name = "systemtype", ColumnNames = new[] { "system_type_id" } },
+                Dependent = new RelationEnd { TableName = GetTableName("types"), Name = "referencing_columns_as_systemtype", ColumnNames = new[] { "user_type_id" } }
+            };
+
+            yield return new Relation
+            {
+                Principal = new RelationEnd { TableName = GetTableName("columns"), Name = "usertype", ColumnNames = new[] { "user_type_id" } },
+                Dependent = new RelationEnd { TableName = GetTableName("types"), Name = "referencing_columns_as_usertype", ColumnNames = new[] { "user_type_id" } }
             };
 
             yield return new Relation

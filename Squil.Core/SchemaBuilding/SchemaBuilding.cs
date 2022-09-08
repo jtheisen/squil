@@ -99,7 +99,12 @@ namespace Squil
                                             {
                                                 new Extent
                                                 {
-                                                    RelationName = "type",
+                                                    RelationName = "systemtype",
+                                                    Alias = "tp"
+                                                },
+                                                new Extent
+                                                {
+                                                    RelationName = "usertype",
                                                     Alias = "tp"
                                                 }
                                             }

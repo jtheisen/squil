@@ -84,7 +84,7 @@ namespace Squil
                 {
                     foreach (var column in columns)
                     {
-                        if (!column.Type.IsSupported) return ("column", $"unsupported column data type");
+                        if (!column.Type.IsSupported) return ("column", $"unsupported column data type '{column.Type.Name}'");
                     }
 
                     return null;
@@ -106,8 +106,7 @@ namespace Squil
                         IsUnique = i.IsUnique,
                         IsPrimary = i.Type == CsdKeyishType.Pk,
                         Table = table,
-                        UnsupportedTag = support?.Tag,
-                        UnsupportedReason = support?.Reason,
+                        UnsupportedReason = support,
                         Columns = columns
                     }
                 ).ToDictionary(i => i.Name, i => i);
@@ -357,10 +356,9 @@ namespace Squil
 
         public Boolean IsUnique { get; set; }
 
-        public Boolean IsSupported => UnsupportedTag == null;
+        public Boolean IsSupported => UnsupportedReason == null;
 
-        public String UnsupportedTag { get; set; }
-        public String UnsupportedReason { get; set; }
+        public CsdUnsupportedReason UnsupportedReason { get; set; }
     }
 
     public class CMForeignKey : CMColumnTuple

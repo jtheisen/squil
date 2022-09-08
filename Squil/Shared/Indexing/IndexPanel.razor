@@ -22,7 +22,14 @@
             <IndexLine Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" />
         </a>
     }
+
+    @foreach (var index in Vm.Indexes)
+    {
+        if (index.Index.IsSupported) continue;
+    }
 </div>
+
+<UnsupportedIndexesPanel Indexes="Vm.Indexes" />
 
 @code {
     [CascadingParameter]
