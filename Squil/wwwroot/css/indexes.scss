@@ -37,10 +37,13 @@ $border-color: #eee;
     }
 
     .index {
-/*        font-size: .75rem;
-        line-height: 1rem;
-*/        overflow-x: auto;
-          margin-top: -1px;
+        /* font-size: .75rem;
+        line-height: 1rem; */
+        margin-top: -1px;
+    }
+
+    fieldset {
+        overflow-x: auto;
     }
 
     .index-column {
@@ -77,5 +80,38 @@ $border-color: #eee;
 
     .index-column-value:not(:empty) + .index-column-name {
         opacity: 0;
+    }
+    /* Validation */
+
+    .validation-display {
+        position: absolute;
+        left: 1px;
+        right: 1px;
+        text-align: right;
+        font-size: .75em;
+        padding: 0 1em;
+        font-weight: bold;
+        background: white;
+    }
+    /* Mobile support */
+    position: absolute;
+    visibility: hidden;
+
+    .index.current {
+        position: fixed;
+        visibility: visible;
+        top: 49px;
+        left: -1px;
+        right: -1px;
+    }
+
+    @media (min-width: 768px) {
+        /* relative for validation display positioning */
+        position: relative;
+        visibility: visible;
+
+        .index.current {
+            position: static;
+        }
     }
 }

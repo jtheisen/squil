@@ -19,7 +19,7 @@
         var url = index.IsCurrent ? null : QueryContext.RenderIndexUrl(index.Index, Vm.Result.Entity.ColumnValues);
 
         <a href="@url">
-            <IndexLine Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" />
+            <IndexLine Vm="@Vm" Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" />
         </a>
     }
 

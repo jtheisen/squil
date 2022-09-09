@@ -40,8 +40,11 @@ namespace Squil
     public class LocationQueryVm
     {
         public LocationQueryRequest Request { get; }
+        
         public LocationQueryResult Result { get; }
         public LocationQueryResult LastResult { get; private set; }
+
+        public Entity Entity { get; private set; }
 
         public Int32 KeyValuesCount { get; }
 
@@ -75,6 +78,11 @@ namespace Squil
         public void Update(LocationQueryResult result)
         {
             LastResult = result;
+
+            if (LastResult.IsValidationOk)
+            {
+                Entity = LastResult.Entity;
+            }
 
             if (CurrentIndex != null)
             {

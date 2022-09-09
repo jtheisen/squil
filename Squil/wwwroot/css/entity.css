@@ -3,6 +3,9 @@
   --entity-bg-prev: white;
   /* old inline */
 }
+.entity-context.entity-invalid {
+  opacity: 0.5;
+}
 .entity-context li.list-marker {
   display: none;
 }

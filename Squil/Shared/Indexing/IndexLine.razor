@@ -6,23 +6,40 @@
     var validation = Index.ValidatedValues?.Skip(HiddenPrefixLength).ToArray();
 }
 
-<fieldset class="index">
-    <div class="index-columns d-flex">
-        @for (var i = 0; i < columns.Length; ++i)
-        {
-            var c = columns[i];
-            var isOk = validation?[i].IsOk ?? true;
+<div class="@ClassNames("index", "current".If(Index.IsCurrent))">
+    <fieldset>
+        <div class="index-columns d-flex">
+            @for (var i = 0; i < columns.Length; ++i)
+            {
+                var c = columns[i];
+                var isOk = validation?[i].IsOk ?? true;
 
-            var first = i == 0;
+                var first = i == 0;
 
-            <IndexTextField Name="@c.c.Name" HasIssue="@(!isOk)" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c.Name]" />
-        }
-    </div>
-</fieldset>
+                <IndexTextField Name="@c.c.Name" HasIssue="@(!isOk)" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c.Name]" />
+            }
+        </div>
+    </fieldset>
+
+    @if (Index.IsCurrent && !Vm.LastResult.IsValidationOk)
+    {
+        <div class="validation-display">
+            @foreach (var c in Vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
+            {
+                <div>
+                    @c.Error
+                </div>
+            }
+        </div>
+    }
+</div>
 
 @code {
     [CascadingParameter]
     public QueryContext Context { get; set; }
+
+    [Parameter]
+    public LocationQueryVm Vm { get; set; }
 
     [Parameter]
     public IndexVm Index { get; set; }

@@ -54,23 +54,27 @@
                 <ChildContent>
                     <p><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
 
-                    @if (vm.LastResult.Entity != null)
+                    @if (vm.Entity != null)
                     {
-                        <div class="entity-context">
-                            <EntityContentView Entity="vm.LastResult.Entity" />
+                        <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsValidationOk))">
+                            <EntityContentView Entity="vm.Entity" />
                         </div>
                     }
                     else
                     {
                         <h4>No entity</h4>
-                        <p>
+                    }
+
+                    @if (!vm.LastResult.IsValidationOk)
+                    {
+                        <div class="validation-display">
                             @foreach (var c in vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
                             {
                                 <div>
                                     @c.Error
                                 </div>
                             }
-                        </p>
+                        </div>
                     }
 
                     <Modal OnClose="SqlModalSubscription">

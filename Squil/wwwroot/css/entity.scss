@@ -68,6 +68,10 @@ $bg-light-2: #e7e5e4;
 .entity-context {
     --entity-bg-prev: white;
 
+    &.entity-invalid {
+        opacity: .5;
+    }
+
     li.list-marker {
         display: none;
     }

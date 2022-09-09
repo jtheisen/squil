@@ -15,12 +15,10 @@
 
 .left {
     flex: 3 0 0;
+    position: absolute;
 }
 
-    .left,
-    .right,
-    .left > div,
-    .right > div {
+    .right {
         display: none;
     }
 
@@ -40,12 +38,8 @@
         width: 540px /*720px*/;
     }
 
-    .left > div {
-        display: block;
-    }
-
     .left {
-        display: block;
+        position: static;
     }
 }
 
@@ -68,10 +62,6 @@
 @media (min-width: 1400px) {
     .middle {
         width: 720px /*1320px*/;
-    }
-
-    .right > div {
-        display: block;
     }
 
     .left {

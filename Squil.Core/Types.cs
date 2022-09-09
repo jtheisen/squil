@@ -180,15 +180,53 @@ public class DateOrTimeColumnType : ColumnType
 
         var result = Validate(text);
 
-        if (WithOffset)
+        if (result.IsOk && WithOffset)
         {
-            var suffix = DateTimeOffset.Now.Offset.ToString(@"\ \+hh\:mm");
+            var offset = DateTimeOffset.Now.Offset;
 
-            result.SqlLowerValue += suffix;
-            result.SqlUpperValue += suffix;
+            result.SqlLowerValue = GetWithOffset(result.SqlLowerValue, offset);
+            result.SqlUpperValue = GetWithOffset(result.SqlUpperValue, offset);
         }
 
         return result;
+    }
+
+    static readonly Int64 minTicks = DateTime.MinValue.Ticks;
+    static readonly Int64 maxTicks = DateTime.MaxValue.Ticks;
+
+    String GetWithOffset(String source, TimeSpan offset)
+    {
+        var parsed = DateTime.Parse(source);
+
+        return ToOffset(parsed, offset).ToString("yyyy-MM-dd HH:mm:ss K");
+    }
+
+    DateTimeOffset ToOffset(DateTime datetime, TimeSpan offset)
+    {
+        var ticks = Math.Clamp(datetime.Ticks - offset.Ticks, minTicks, maxTicks);
+
+        return new DateTimeOffset(ticks + offset.Ticks, offset);
+    }
+
+    String AddSuffix(String text, String suffix)
+    {
+        // For the boundary years we're using UTC to avoid offset-related
+        // out-of-range issues. A bit sloppy, but good enough for now.
+
+        if (text.StartsWith(LowerBasePattern[..10]))
+        {
+            text += " Z";
+        }
+        else if (text.StartsWith(UpperBasePattern[..10]))
+        {
+            text += " Z";
+        }
+        else
+        {
+            text += suffix;
+        }
+
+        return text;
     }
 
     ValidationResult Validate(String text)
@@ -227,7 +265,7 @@ public class DateOrTimeColumnType : ColumnType
                     return Issue("invalid date");
                 }
 
-                var lastDay = DateTime.Parse(text[..7]).AddMonths(1).AddDays(-1).Day;
+                var lastDay = text.StartsWith("9999-12") ? 31 : DateTime.Parse(text[..7]).AddMonths(1).AddDays(-1).Day;
 
                 var ld = lastDay.ToString();
 
