@@ -148,6 +148,9 @@
   font-size: 0.8em;
   margin-bottom: -0.5em;
 }
+.entity-context .entity-column[data-css-type=guid] > div {
+  font-size: 0.7em;
+}
 .entity-context .entity-column > div {
   white-space: nowrap;
   overflow: hidden;

@@ -237,6 +237,10 @@ $bg-light-2: #e7e5e4;
             margin-bottom: -.5em;
         }
 
+        &[data-css-type=guid] > div {
+            font-size: .7em;
+        }
+
         > div {
             @include text-ellipsis;
         }

@@ -1,4 +1,24 @@
-﻿.indexes-form .outline-none,
+﻿.indexes-unsupported {
+  font-size: 1em;
+  margin-top: 1em;
+}
+.indexes-unsupported .index-name {
+  color: #666;
+  font-variant: small-caps;
+  font-weight: bold;
+  text-transform: lowercase;
+  line-height: 1em;
+}
+.indexes-unsupported .unsupported-tag {
+  color: #666;
+  font-weight: bold;
+}
+.indexes-unsupported .unsupported-reason {
+  font-size: 0.8em;
+  margin-bottom: 0.5em;
+}
+
+.indexes-form .outline-none,
 .indexes-form .outline-none:focus {
   outline: none;
 }

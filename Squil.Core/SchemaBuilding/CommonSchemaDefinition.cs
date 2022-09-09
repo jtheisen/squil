@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace Squil.SchemaBuilding;
 
-public record CsdUnsupportedReason(String Tag, String Reason)
+public record CsdUnsupportedReason(String Tag, String Reason, String Specific)
 {
-    public static implicit operator CsdUnsupportedReason((String tag, String reason) tuple)
+    public static implicit operator CsdUnsupportedReason((String tag, String reason, String specific) tuple)
     {
-        return new CsdUnsupportedReason(tuple.tag, tuple.reason);
+        return new CsdUnsupportedReason(tuple.tag, tuple.reason, tuple.specific);
     }
 }
 
@@ -138,6 +138,12 @@ public static class CsdExtensions
 
                 foreach (var index in table.Indexes)
                 {
+                    if (index.Type == 0)
+                    {
+                        // Heaps appear as indexes, but that makes no sense for Squil to deal with.
+                        continue;
+                    }
+
                     var directedColumnNames = (
                         from ic in index.Columns
                         let c = table.Columns.Single(c2 => c2.ColumnId == ic.ColumnId)
@@ -149,7 +155,7 @@ public static class CsdExtensions
 
                     var name = new ObjectName(schema.Name, table.Name, index.Name);
 
-                    var intrinsicallyUnsupported = index.CheckIntrinsicSupport()?.Apply(t => new CsdUnsupportedReason(t.tag, t.reason));
+                    var intrinsicallyUnsupported = index.CheckIntrinsicSupport()?.Apply(t => new CsdUnsupportedReason(t.tag, t.reason, t.specific));
 
                     csdKeyishs.Add(new CsdIndexlike
                     {

@@ -183,12 +183,12 @@ namespace Squil.SchemaBuilding
         [XmlArray("columns")]
         public SysIndexColumn[] Columns { get; set; } = Empties<SysIndexColumn>.Array;
 
-        public (String tag, String reason)? CheckIntrinsicSupport()
+        public (String tag, String reason, String specific)? CheckIntrinsicSupport()
         {
-            if (IsDisabled) return ("disabled", "Disabled indexes can't be used");
-            if (IsHypothetical) return ("hypothetical", "Hypothetical indexes can't be searched");
-            if (HasFilter) return ("filtered", "Filtered indexes are not yet supported");
-            if (Type != 1 && Type != 2) return (TypeDesc, "Only b-tree indexes are supported");
+            if (IsDisabled) return ("Disabled", "Disabled indexes can't be used", null);
+            if (IsHypothetical) return ("Hypothetical", "Hypothetical indexes can't be searched", null);
+            if (HasFilter) return ("Filtered", "Filtered indexes are not yet supported", null);
+            if (Type != 1 && Type != 2) return ("Exotic", "Only classical b-tree indexes are supported", $"This index is of type '{TypeDesc}'");
             return null;
         }
     }

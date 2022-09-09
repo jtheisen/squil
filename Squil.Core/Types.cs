@@ -46,6 +46,8 @@ public abstract class ColumnType
 {
     public String Name { get; set; }
 
+    public virtual String CssType => null;
+
     public virtual Boolean IsSupported => true;
 
     public ValidationResult Validate(String keyValue, String searchValue, IndexDirection direction, ColumnTypePrecisions precisions)
@@ -96,7 +98,7 @@ public class UnknownColumnType : ColumnType
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
-        return Issue("the data type of this column is unsupported");
+        return Ok(text);
     }
 }
 
@@ -359,6 +361,8 @@ public class FloatColumnType : ColumnType
 
 public class GuidColumnType : ColumnType
 {
+    public override String CssType => "guid";
+
     static readonly Char[] ValidChars = "-0123456789abcdefABCDEF".ToArray();
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)

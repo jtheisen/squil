@@ -80,11 +80,15 @@ namespace Squil
 
                 table.Columns = table.ColumnsInOrder.ToDictionary(c => c.Name, c => c);
 
-                (String tag, String reason)? CheckColumnSupport(IEnumerable<CMColumn> columns)
+                (String tag, String reason, String specific)? CheckColumnSupport(IEnumerable<CMColumn> columns)
                 {
                     foreach (var column in columns)
                     {
-                        if (!column.Type.IsSupported) return ("column", $"unsupported column data type '{column.Type.Name}'");
+                        if (!column.Type.IsSupported) return (
+                            "Unsupported column data type",
+                            "One ore more columns are not supported for data entry yet",
+                            $"The unsupported column data type is '{column.Type.Name}' of column '{column.Name}'"
+                        );
                     }
 
                     return null;

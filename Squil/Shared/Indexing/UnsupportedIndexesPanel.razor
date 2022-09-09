@@ -1,23 +1,23 @@
 ﻿@{
     var groups = from i in Indexes
                  where !i.Index.IsSupported
-                 group i by i.Index.UnsupportedReason.Tag into g
+                 group i by i.Index.UnsupportedReason into g
                  select g;
 }
 
-<dl>
+<div class="indexes-unsupported">
     @foreach (var g in groups)
     {
-        <dt>@g.Key</dt>
-        <dd>
+        <div class="unsupported-index">
+            <div class="unsupported-tag">@g.Key.Tag</div>
+            <div class="unsupported-reason">@g.Key.Reason</div>
             @foreach (var i in g)
             {
-                <div>@i.Index.Name</div>
-                <div>@i.Index.UnsupportedReason.Reason</div>
+                <div class="index-name">@i.Index.Name</div>
             }
-        </dd>
+        </div>
     }
-</dl>
+</div>
 
 @code {
     [Parameter]

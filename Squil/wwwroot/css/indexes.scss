@@ -3,6 +3,33 @@
 
 $border-color: #eee;
 
+.indexes-unsupported {
+    font-size: 1em;
+    margin-top: 1em;
+
+    .unsupported-index {
+    }
+
+    .index-name {
+        color: #666;
+        font-variant: small-caps;
+        font-weight: bold;
+        text-transform: lowercase;
+        line-height: 1em;
+    }
+
+    .unsupported-tag {
+        color: #666;
+        font-weight: bold;
+    }
+
+    .unsupported-reason {
+        font-size: .8em;
+
+        margin-bottom: .5em;
+    }
+}
+
 .indexes-form {
     .outline-none,
     .outline-none:focus {
