@@ -15,7 +15,6 @@
     </NavItems>
 
     <ActionItems>
-        <span>@queryCount / @renderCount</span>
         <a class="btn btn-outline-dark text-muted" href="/info/@ConnectionName">schema</a>
         <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
     </ActionItems>
@@ -28,6 +27,9 @@
                 <RightContent>
                     @if (vm.LastResult?.LedgerEntries != null)
                     {
+                        <div>
+                            <span>@queryCount / @renderCount</span>
+                        </div>
                         <div class="common-lead-spacer">&nbsp;</div>
                         <div class="">
                             <dl>
@@ -58,7 +60,7 @@
                     <div class="search-panel-spacer">&nbsp;</div>
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    <p><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
+                    <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
 
                     @if (vm.Entity != null)
                     {

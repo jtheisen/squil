@@ -1,4 +1,5 @@
-﻿using System.Collections.Specialized;
+﻿using Squil.SchemaBuilding;
+using System.Collections.Specialized;
 using System.Dynamic;
 using System.Web;
 using TaskLedgering;
@@ -55,7 +56,7 @@ namespace Squil
 
             var relation = Result.RootRelation;
 
-            if (relation != null)
+            if (relation?.Extent.Flavor.type == ExtentFlavorType.Block)
             {
                 var table = relation.RelationEnd.Table;
 
@@ -63,11 +64,40 @@ namespace Squil
 
                 KeyValuesCount = keyValuesArray.Length;
 
+                var accountedIndexes = new HashSet<ObjectName>();
+
                 Indexes = table.Indexes.Values
+                    .Where(i => i.IsSupported)
                     .StartsWith(keyValuesArray)
                     .Where(i => i.Columns.Length > keyValuesArray.Length)
                     .Select(i => new IndexVm { Index = i, IsCurrent = request.Index == i.Name })
                     .ToArray();
+
+                accountedIndexes.AddRange(Indexes.Select(i => i.Index.ObjectName));
+
+                var unsupportedGroups = (
+                    from i in table.Indexes.Values
+                    where !i.IsSupported
+                    group i by i.UnsupportedReason into g
+                    select new UnsuitableIndexesVm(g.Key, from i in g select new IndexVm { Index = i, UnsupportedReason = g.Key })
+                ).ToList();
+
+                accountedIndexes.AddRange(from i in table.Indexes.Values where !i.IsSupported select i.ObjectName);
+
+                var unsuitableReason = new CsdUnsupportedReason("Prefix mismatch", "Although this index is supported on the table, you can't use it to search within the subset you're looking at.", "");
+
+                var unsuitableIndexes = (
+                    from i in table.Indexes.Values
+                    where !accountedIndexes.Contains(i.ObjectName)
+                    select new IndexVm { Index = i, UnsupportedReason = unsuitableReason }
+                ).ToArray();
+
+                if (unsuitableIndexes.Any())
+                {
+                    unsupportedGroups.Insert(0, new UnsuitableIndexesVm(unsuitableReason, unsuitableIndexes));
+                }
+
+                UnsuitableIndexes = unsupportedGroups.ToArray();
 
                 CurrentIndex = Indexes.FirstOrDefault(i => i.IsCurrent);
             }
@@ -93,7 +123,11 @@ namespace Squil
         public IndexVm CurrentIndex { get; }
 
         public IndexVm[] Indexes { get; }
+
+        public UnsuitableIndexesVm[] UnsuitableIndexes { get; set; }
     }
+
+    public record UnsuitableIndexesVm(CsdUnsupportedReason Reason, IEnumerable<IndexVm> Indexes);
 
     public class IndexVm
     {
@@ -102,6 +136,8 @@ namespace Squil
         public CMIndexlike Index { get; set; }
 
         public Boolean IsCurrent { get; set; }
+
+        public CsdUnsupportedReason UnsupportedReason { get; set; }
     }
 
     public class LocationQueryRunner

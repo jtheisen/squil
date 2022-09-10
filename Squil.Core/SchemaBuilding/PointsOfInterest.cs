@@ -124,6 +124,26 @@ namespace Squil.PointsOfInterest
                 select t.Name.Escaped;
         }
     }
+
+    public class TablesWithIndexesWithKeyPrefix : PointsOfInterestFinder
+    {
+        public override IEnumerable<String> Find(CMRoot root)
+        {
+            var tables = root.RootTable.Relations.Values.Select(r => r.Table);
+
+            return
+                from t in tables
+                let matchingIndexes = (
+                    from k in t.ForeignKeys.Values
+                    where k.Columns.Length > 0
+                    from i in t.Indexes.Values.StartsWith(k.Columns.Select(c => c.Name.c), isPrefix: true)
+                    select i
+                )
+                let m = matchingIndexes.FirstOrDefault()
+                where m != null
+                select t.Name.Escaped + "/" + m.Name;
+        }
+    }
 }
 
 namespace Squil
@@ -148,6 +168,7 @@ namespace Squil
             Add<FloatIndexes>();
             Add<LongestIndex>();
             Add<TablesWithOverlappingIndexes>();
+            Add<TablesWithIndexesWithKeyPrefix>();
         }
 
         public IEnumerable<PointOfInterest> GetReport(CMRoot root)

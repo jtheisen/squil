@@ -1,12 +1,11 @@
-﻿@using System.Diagnostics
-@using Squil.Shared.Indexing.Fields
+﻿@inject NavigationManager Nav
 
 @{
     var columns = Index.Index.Columns.Skip(HiddenPrefixLength).ToArray();
     var validation = Index.ValidatedValues?.Skip(HiddenPrefixLength).ToArray();
 }
 
-<div class="@ClassNames("index", "current".If(Index.IsCurrent))">
+<a class="@ClassNames("index", "current".If(Index.IsCurrent))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
     <fieldset>
         <div class="index-columns d-flex">
             @for (var i = 0; i < columns.Length; ++i)
@@ -16,7 +15,15 @@
 
                 var first = i == 0;
 
-                <IndexTextField Name="@c.c.Name" HasIssue="@(!isOk)" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c.Name]" />
+                <span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(!isOk))">
+
+                    <span class="index-column-name" type="text">@c.c.Name</span>
+
+                    @if (Index.IsCurrent)
+                    {
+                        <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c.Name]" />
+                    }
+                </span>
             }
         </div>
     </fieldset>
@@ -43,7 +50,7 @@
             }
         </div>
     }
-</div>
+</a>
 
 @code {
     [CascadingParameter]
@@ -63,4 +70,13 @@
 
     [Parameter]
     public Action ShowSearchOptions { get; set; }
+
+    String Url => Index.IsCurrent ? null : Context.RenderIndexUrl(Index.Index, Vm.Result.Entity.ColumnValues);
+
+    void HandleClick()
+    {
+        if (Index.IsCurrent) return;
+
+        Nav.NavigateTo(Url, replace: true);
+    }
 }

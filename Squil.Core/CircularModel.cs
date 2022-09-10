@@ -440,7 +440,7 @@ namespace Squil
             }
         }
 
-        public static IEnumerable<CMIndexlike> StartsWith(this IEnumerable<CMIndexlike> indexes, IEnumerable<String> columns)
+        public static IEnumerable<CMIndexlike> StartsWith(this IEnumerable<CMIndexlike> indexes, IEnumerable<String> columns, Boolean isPrefix = false)
         {
             var prefixColumns = columns.OrderBy(c => c).ToArray();
 
@@ -451,7 +451,7 @@ namespace Squil
                     .Select(c => c.c.Name)
                     .OrderBy(c => c);
 
-                return ixColumns.SequenceEqual(prefixColumns);
+                return ixColumns.SequenceEqual(prefixColumns) && (!isPrefix || index.Columns.Length > prefixColumns.Length);
             }
 
             return indexes.Where(HasIndexMatchingPrefix);

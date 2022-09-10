@@ -1,25 +1,31 @@
-﻿@{
-    var groups = from i in Indexes
-                 where !i.Index.IsSupported
-                 group i by i.Index.UnsupportedReason into g
-                 select g;
-}
+﻿@if (Indexes.Any())
+{
+    <div style="height: 3em">&nbsp;</div>
+    <ExpandableHeaderedContent>
+        <Header>Missing an index?</Header>
+        <Body>
+            <p class="small" style="max-width: 25em">
+                Here you see all indexes declared on the table that are not available for seeking grouped by the reason why.
+            </p>
 
-<div class="indexes-unsupported">
-    @foreach (var g in groups)
-    {
-        <div class="unsupported-index">
-            <div class="unsupported-tag">@g.Key.Tag</div>
-            <div class="unsupported-reason">@g.Key.Reason</div>
-            @foreach (var i in g)
-            {
-                <div class="index-name">@i.Index.Name</div>
-            }
-        </div>
-    }
-</div>
+            <div class="indexes-unsupported">
+                @foreach (var group in Indexes)
+                {
+                    <div class="unsupported-index">
+                        <div class="unsupported-tag">@group.Reason.Tag</div>
+                        <div class="unsupported-reason">@group.Reason.Reason; concerns</div>
+                        @foreach (var i in group.Indexes)
+                        {
+                            <div class="index-name">@i.Index.Name</div>
+                        }
+                    </div>
+                }
+            </div>
+        </Body>
+    </ExpandableHeaderedContent>
+}
 
 @code {
     [Parameter]
-    public IndexVm[] Indexes { get; set; }
+    public UnsuitableIndexesVm[] Indexes { get; set; }
 }

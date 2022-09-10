@@ -153,6 +153,7 @@
 }
 .entity-context .entity-column[data-css-type=guid] > div {
   font-size: 0.7em;
+  margin-top: 0.3em;
 }
 .entity-context .entity-column > div {
   white-space: nowrap;

@@ -24,6 +24,10 @@ $border-color: #eee;
         z-index: 3;
         padding: .5em 0;
         margin: 0 -1px;
+        
+        > *:not(.indexes-form) {
+            padding: 0 15px;
+        }
     }
 
     .search-panel-close-button {
@@ -56,6 +60,15 @@ $border-color: #eee;
         .search-panel-close-button {
             display: none;
         }
+
+        > *:not(.indexes-form) {
+            visibility: hidden;
+
+            @media (min-width: 768px) {
+                visibility: visible;
+            }
+        }
+
 
         .indexes-form {
             position: absolute;
@@ -126,11 +139,16 @@ $border-color: #eee;
     .index {
         /* font-size: .75rem;
         line-height: 1rem; */
+        display: block;
         margin-top: -1px;
     }
 
     fieldset {
         overflow-x: auto;
+
+        .index-columns {
+            min-height: 2em;
+        }
     }
 
     .index-column {
