@@ -3,6 +3,94 @@
 
 $border-color: #eee;
 
+.search-panel-spacer {
+    height: calc(var(--search-height) + var(--validation-height));
+}
+
+@media (min-width: 768px) {
+    .search-panel-spacer {
+        height: 0;
+    }
+}
+
+.search-panel {
+    &.show {
+        position: fixed;
+        background: white;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 3;
+        padding: .5em 0;
+        margin: 0 -1px;
+    }
+
+    .search-panel-close-button {
+        position: absolute;
+        right: .75em;
+        top: .5em;
+    }
+
+    .validation-area {
+        position: absolute;
+        left: 1px;
+        right: 1px;
+        background: white;
+        padding: 0 1em;
+        text-align: right;
+    }
+
+    .validation-display {
+        font-size: .75em;
+        font-weight: bold;
+    }
+
+    .more-search-options-button {
+        display: none;
+        text-align: right;
+        cursor: pointer;
+    }
+
+    &:not(.show) {
+        .search-panel-close-button {
+            display: none;
+        }
+
+        .indexes-form {
+            position: absolute;
+            visibility: hidden;
+
+            .index.current {
+                position: fixed;
+                visibility: visible;
+                top: var(--header-height);
+                z-index: 2;
+                left: -1px;
+                right: -1px;
+            }
+
+            .more-search-options-button {
+                display: block;
+            }
+
+            @media (min-width: 768px) {
+                /* relative for validation display positioning */
+                position: relative;
+                visibility: visible;
+
+                .index.current {
+                    position: static;
+                }
+
+                .more-search-options-button {
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
 .indexes-unsupported {
     font-size: 1em;
     margin-top: 1em;
@@ -25,7 +113,6 @@ $border-color: #eee;
 
     .unsupported-reason {
         font-size: .8em;
-
         margin-bottom: .5em;
     }
 }
@@ -63,6 +150,7 @@ $border-color: #eee;
     }
 
     .index-column-name {
+        height: 17px;
         pointer-events: none;
         padding: 0 .5rem;
         font-variant: small-caps;
@@ -80,38 +168,5 @@ $border-color: #eee;
 
     .index-column-value:not(:empty) + .index-column-name {
         opacity: 0;
-    }
-    /* Validation */
-
-    .validation-display {
-        position: absolute;
-        left: 1px;
-        right: 1px;
-        text-align: right;
-        font-size: .75em;
-        padding: 0 1em;
-        font-weight: bold;
-        background: white;
-    }
-    /* Mobile support */
-    position: absolute;
-    visibility: hidden;
-
-    .index.current {
-        position: fixed;
-        visibility: visible;
-        top: 49px;
-        left: -1px;
-        right: -1px;
-    }
-
-    @media (min-width: 768px) {
-        /* relative for validation display positioning */
-        position: relative;
-        visibility: visible;
-
-        .index.current {
-            position: static;
-        }
     }
 }

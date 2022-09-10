@@ -1,4 +1,78 @@
-﻿.indexes-unsupported {
+﻿.search-panel-spacer {
+  height: calc(var(--search-height) + var(--validation-height));
+}
+
+@media (min-width: 768px) {
+  .search-panel-spacer {
+    height: 0;
+  }
+}
+.search-panel.show {
+  position: fixed;
+  background: white;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  padding: 0.5em 0;
+  margin: 0 -1px;
+}
+.search-panel .search-panel-close-button {
+  position: absolute;
+  right: 0.75em;
+  top: 0.5em;
+}
+.search-panel .validation-area {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  background: white;
+  padding: 0 1em;
+  text-align: right;
+}
+.search-panel .validation-display {
+  font-size: 0.75em;
+  font-weight: bold;
+}
+.search-panel .more-search-options-button {
+  display: none;
+  text-align: right;
+  cursor: pointer;
+}
+.search-panel:not(.show) .search-panel-close-button {
+  display: none;
+}
+.search-panel:not(.show) .indexes-form {
+  position: absolute;
+  visibility: hidden;
+}
+.search-panel:not(.show) .indexes-form .index.current {
+  position: fixed;
+  visibility: visible;
+  top: var(--header-height);
+  z-index: 2;
+  left: -1px;
+  right: -1px;
+}
+.search-panel:not(.show) .indexes-form .more-search-options-button {
+  display: block;
+}
+@media (min-width: 768px) {
+  .search-panel:not(.show) .indexes-form {
+    /* relative for validation display positioning */
+    position: relative;
+    visibility: visible;
+  }
+  .search-panel:not(.show) .indexes-form .index.current {
+    position: static;
+  }
+  .search-panel:not(.show) .indexes-form .more-search-options-button {
+    display: none;
+  }
+}
+
+.indexes-unsupported {
   font-size: 1em;
   margin-top: 1em;
 }
@@ -18,12 +92,6 @@
   margin-bottom: 0.5em;
 }
 
-.indexes-form {
-  /* Validation */
-  /* Mobile support */
-  position: absolute;
-  visibility: hidden;
-}
 .indexes-form .outline-none,
 .indexes-form .outline-none:focus {
   outline: none;
@@ -50,6 +118,7 @@
   border-left: 0 !important;
 }
 .indexes-form .index-column-name {
+  height: 17px;
   pointer-events: none;
   padding: 0 0.5rem;
   font-variant: small-caps;
@@ -65,31 +134,4 @@
 }
 .indexes-form .index-column-value:not(:empty) + .index-column-name {
   opacity: 0;
-}
-.indexes-form .validation-display {
-  position: absolute;
-  left: 1px;
-  right: 1px;
-  text-align: right;
-  font-size: 0.75em;
-  padding: 0 1em;
-  font-weight: bold;
-  background: white;
-}
-.indexes-form .index.current {
-  position: fixed;
-  visibility: visible;
-  top: 49px;
-  left: -1px;
-  right: -1px;
-}
-@media (min-width: 768px) {
-  .indexes-form {
-    /* relative for validation display positioning */
-    position: relative;
-    visibility: visible;
-  }
-  .indexes-form .index.current {
-    position: static;
-  }
 }

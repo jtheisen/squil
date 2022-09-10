@@ -1,37 +1,47 @@
 ﻿@using System.Diagnostics
 @using Squil.Shared.Indexing.Fields
 
-<div class="indexes-form">
+<div class="@ClassNames("search-panel", "show".If(showSearchOptions))">
+    <button type="button" class="close search-panel-close-button" @onclick="@HideSearchOptions" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 
-    <p>
-        You can search by the following indexes on this table.
-    </p>
+    <div class="indexes-form">
+        <p>
+            You can search by the following indexes on this table.
+        </p>
 
-    @if (!Vm.Result.IsValidationOk)
-    {
-        
-    }
+        @if (!Vm.Result.IsValidationOk)
+        {
 
-    @foreach (var index in Vm.Indexes)
-    {
-        if (!index.Index.IsSupported) continue;
+        }
 
-        var url = index.IsCurrent ? null : QueryContext.RenderIndexUrl(index.Index, Vm.Result.Entity.ColumnValues);
+        @foreach (var index in Vm.Indexes)
+        {
+            if (!index.Index.IsSupported) continue;
 
-        <a href="@url">
-            <IndexLine Vm="@Vm" Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" />
-        </a>
-    }
+            var url = index.IsCurrent ? null : QueryContext.RenderIndexUrl(index.Index, Vm.Result.Entity.ColumnValues);
 
-    @foreach (var index in Vm.Indexes)
-    {
-        if (index.Index.IsSupported) continue;
-    }
+            <a href="@url">
+                <IndexLine Vm="@Vm" Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            </a>
+        }
+
+        @foreach (var index in Vm.Indexes)
+        {
+            if (index.Index.IsSupported) continue;
+        }
+    </div>
+
+    <UnsupportedIndexesPanel Indexes="Vm.Indexes" />
 </div>
 
-<UnsupportedIndexesPanel Indexes="Vm.Indexes" />
-
 @code {
+    Boolean showSearchOptions;
+
+    Action ShowSearchOptions => () => showSearchOptions = true;
+    Action HideSearchOptions => () => showSearchOptions = false;
+
     [CascadingParameter]
     public QueryContext QueryContext { get; set; }
 

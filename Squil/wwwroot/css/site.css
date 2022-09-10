@@ -1,6 +1,9 @@
 
 html {
     font-size: 14px;
+    --header-height: 56px;
+    --search-height: 47px;
+    --validation-height: 23px;
 }
 
 @media (min-width: 768px) {
@@ -46,10 +49,36 @@ body {
         content: "An error has occurred."
     }
 
+/* Sticky header styles
+-------------------------------------------------- */
+
+header.header {
+    position: fixed;
+    overflow: hidden;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+}
+
+    header.header > nav {
+        height: 56px;
+    }
+
+.navbar-expand .navbar-nav {
+    flex-wrap: nowrap;
+}
+
+main.main {
+    margin-top: var(--header-height);
+}
+
+.common-lead-spacer {
+    height: 1em;
+}
 
 /* Sticky footer styles
 -------------------------------------------------- */
-
 .border-top {
     border-top: 1px solid #e5e5e5;
 }

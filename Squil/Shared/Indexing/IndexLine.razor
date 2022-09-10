@@ -21,13 +21,24 @@
         </div>
     </fieldset>
 
-    @if (Index.IsCurrent && !Vm.LastResult.IsValidationOk)
+    @if (Index.IsCurrent)
     {
-        <div class="validation-display">
-            @foreach (var c in Vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
+        <div class="validation-area">
+            @if (!Vm.LastResult.IsValidationOk)
             {
-                <div>
-                    @c.Error
+                <div class="validation-display">
+                    @foreach (var c in Vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
+                    {
+                        <div>
+                            @c.Error
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="more-search-options-button" @onclick="ShowSearchOptions">
+                    › more search options
                 </div>
             }
         </div>
@@ -49,4 +60,7 @@
 
     [Parameter]
     public IMap<String, String> SearchValues { get; set; }
+
+    [Parameter]
+    public Action ShowSearchOptions { get; set; }
 }
