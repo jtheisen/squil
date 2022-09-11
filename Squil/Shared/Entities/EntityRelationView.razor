@@ -35,8 +35,8 @@
         {
             if (ai.wasSearch)
             {
-                <li class="list-marker">
-                    No results could be found with @ai.column @ai.direction.GetPrettyOperator() @ai.value.
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>@ai.direction.GetPrettyOperator()</span> <span>@ai.value</span>
                 </li>
             }
             else
@@ -51,14 +51,14 @@
         {
             if (ai.afterCount == 0)
             {
-                <li class="list-marker">
-                    All @ai.matchCount loaded results are exact matches with @ai.column = @ai.value.
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>=</span> <span>@ai.value</span>
                 </li>
             }
             else
             {
-                <li class="list-marker">
-                    The first @ai.matchCount results are exact matches with @ai.column = @ai.value.
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>=</span> <span>@ai.value</span>
                 </li>
             }
         }
@@ -73,8 +73,8 @@
             {
                 hadOnlyMatching = false;
 
-                <li class="list-marker">
-                    The following items are not exact matches and come after the search value with @ai.column @ai.direction.GetPrettyOperator() @ai.value.
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>@ai.direction.GetStrictPrettyOperator()</span> <span>@ai.value</span>
                 </li>
             }
 

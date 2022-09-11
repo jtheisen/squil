@@ -144,6 +144,32 @@ $bg-light-2: #e7e5e4;
         position: relative;
     }
 
+    ol[data-flavor=block] {
+        > li.list-marker.list-marker-border {
+
+            padding-top: 0;
+            padding-bottom: 0;
+
+            span:nth-child(1) {
+                display: block;
+                border-bottom: 1px solid black;
+                font-variant: small-caps;
+                text-transform: lowercase;
+                font-weight: bold;
+                color: #ccc;
+                margin: 0 -25px;
+                padding: 0 25px;
+            }
+
+            @media (min-width: 768px) {
+                span:nth-child(1) {
+                    margin: 0 -5px;
+                    padding: 0 5px;
+                }
+            }
+        }
+    }
+
     ol[data-flavor=block],
     ol[data-flavor=page] {
         > li.list-marker {

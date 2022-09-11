@@ -69,6 +69,26 @@
 .entity-context ol {
   position: relative;
 }
+.entity-context ol[data-flavor=block] > li.list-marker.list-marker-border {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.entity-context ol[data-flavor=block] > li.list-marker.list-marker-border span:nth-child(1) {
+  display: block;
+  border-bottom: 1px solid black;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  font-weight: bold;
+  color: #ccc;
+  margin: 0 -25px;
+  padding: 0 25px;
+}
+@media (min-width: 768px) {
+  .entity-context ol[data-flavor=block] > li.list-marker.list-marker-border span:nth-child(1) {
+    margin: 0 -5px;
+    padding: 0 5px;
+  }
+}
 .entity-context ol[data-flavor=block] > li.list-marker,
 .entity-context ol[data-flavor=page] > li.list-marker {
   display: block;

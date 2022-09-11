@@ -43,7 +43,14 @@ public static class IndexDirectionExtensions
     {
         IndexDirection.Asc => "≥",
         IndexDirection.Desc => "≤",
-        _ => ">="
+        _ => "≥"
+    };
+
+    public static String GetStrictPrettyOperator(this IndexDirection direction) => direction switch
+    {
+        IndexDirection.Asc => ">",
+        IndexDirection.Desc => "<",
+        _ => ">"
     };
 
     public static String GetOperator(this IndexDirection direction, Boolean useEquality)
