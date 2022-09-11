@@ -4,6 +4,7 @@ html {
     --header-height: 56px;
     --search-height: 47px;
     --validation-height: 23px;
+    --footer-height: 57px;
 }
 
 @media (min-width: 768px) {
@@ -15,7 +16,19 @@ html {
 body {
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
 }
-    
+
+/* Utility
+-------------------------------------------------- */
+
+.scroll-panel {
+    overflow-y: auto;
+}
+
+.flex-1 {
+    flex: 1 0 0;
+}
+
+
 /* Blazor
 -------------------------------------------------- */
 #blazor-error-ui {
@@ -47,7 +60,7 @@ body {
         content: "An error has occurred."
     }
 
-/* Sticky header styles
+/* Sticky header and footer styles
 -------------------------------------------------- */
 
 header.header {
@@ -67,6 +80,10 @@ header.header {
     flex-wrap: nowrap;
 }
 
+.header-height {
+    height: var(--header-height);
+}
+
 main.main {
     margin-top: var(--header-height);
 }
@@ -75,8 +92,6 @@ main.main {
     height: 1em;
 }
 
-/* Sticky footer styles
--------------------------------------------------- */
 .border-top {
     border-top: 1px solid #e5e5e5;
 }
@@ -87,16 +102,6 @@ main.main {
 
 .box-shadow {
     box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
-}
-
-html {
-    position: relative;
-    min-height: 100%;
-}
-
-body {
-    /* Margin bottom by footer height */
-    margin-bottom: 60px;
 }
 
 .footer {

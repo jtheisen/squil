@@ -13,18 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Shared\SidebarLayout.razor.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Shared\SidebarLayout.razor.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="compilerconfig.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Blazor-Analytics" Version="3.11.0" />
   </ItemGroup>
 

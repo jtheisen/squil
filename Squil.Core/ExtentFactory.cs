@@ -74,7 +74,7 @@ namespace Squil
             {
                 return new Extent
                 {
-                    IndexName = (index ?? end.Table.Indexes.Values.FirstOrDefault())?.Name,
+                    IndexName = (index ?? end.Table.Indexes.Values.FirstOrDefault())?.Name, // this is wrong!
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
                     Limit = GetLimitInFlavor(flavor.type),
