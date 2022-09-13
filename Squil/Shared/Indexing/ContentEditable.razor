@@ -1,4 +1,4 @@
-﻿@inject IJSRuntime js
+﻿@inject IJSRuntime Js
 
 <span @ref="element" class="@Class" contenteditable="@IsActive" @oninput="HandleChange">&nbsp;</span>
 
@@ -43,7 +43,7 @@
         {
             //await js.InvokeVoidAsync("console.info", $"server: set value of '{element}' to '{DesiredInnerText}' in {firstRender}");
 
-            await js.InvokeVoidAsync("setInnerText", element, DesiredInnerText);
+            await Js.InvokeVoidAsync("setInnerText", element, DesiredInnerText);
 
             innerText = DesiredInnerText;
         }
@@ -51,7 +51,7 @@
 
     async Task HandleChange(ChangeEventArgs e)
     {
-        var innerTextFromElement = await js.InvokeAsync<String>("getInnerText", element);
+        var innerTextFromElement = await Js.InvokeAsync<String>("getInnerText", element);
 
         innerText = innerTextFromElement.Replace('\u00a0', ' ');
 

@@ -54,6 +54,15 @@ namespace Squil
                 .Select(e => CreateExtent(e, parentFlavor))
                 .Where(e => e != null)
                 ;
+
+            //return
+            //    from end in parentTable.Relations.Values
+            //    where !path.Contains(end)
+            //    let index = end.GetIndex()
+            //    where index != null
+            //    let extent = CreateExtent(end, parentFlavor, index)
+            //    where extent != null
+            //    select extent;
         }
 
         Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0)
@@ -74,7 +83,7 @@ namespace Squil
             {
                 return new Extent
                 {
-                    IndexName = (index ?? end.Table.Indexes.Values.FirstOrDefault())?.Name, // this is wrong!
+                    IndexName = index?.Name,
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
                     Limit = GetLimitInFlavor(flavor.type),

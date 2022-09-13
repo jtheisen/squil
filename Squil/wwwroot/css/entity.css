@@ -1,4 +1,12 @@
 ﻿/* unused, height issue */
+.relation-debug-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.relation-debug-info > div:nth-child(2n+1) {
+  text-align: right;
+}
+
 .entity-context {
   --entity-bg-prev: white;
   /* old inline */

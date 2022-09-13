@@ -80,7 +80,7 @@ namespace Squil
 
                 return (column, value, op);
             }
-            
+
             var filterItems = extent.Values?.Select(MakeFilterItem);
 
             var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column.Sql} {i.op} {i.value.ToSqlServerStringLiteral()}") ?? Enumerable.Empty<String>();
@@ -177,8 +177,6 @@ namespace Squil
                 $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
             );
 
-            var table = forwardEnd.OtherEnd.Table;
-
             return new RelatedEntities
             {
                 Extent = extent,
@@ -248,6 +246,7 @@ namespace Squil
         public RelatedEntities[] Related { get; set; }
     }
 
+    [DebuggerDisplay("{RelationName}")]
     public class RelatedEntities
     {
         public String RelationName { get; set; }

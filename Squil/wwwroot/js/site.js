@@ -33,3 +33,18 @@ function setInnerText(element, text) {
         element.innerText = text;
     }
 }
+
+function initBootstrapContent() {
+    $('[data-toggle="tooltip"]').each(function () {
+        const content = $('.tooltip-content', this)[0]
+
+        if (content) {
+            console.info(content.innerHTML);
+            this.title = content.innerHTML;
+            $(this).tooltip({ html: true });
+        }
+        else {
+            $(this).tooltip();
+        }
+    })
+}

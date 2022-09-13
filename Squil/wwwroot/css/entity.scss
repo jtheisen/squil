@@ -65,6 +65,15 @@ $bg-light-2: #e7e5e4;
     }
 }
 
+.relation-debug-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    > div:nth-child(2n+1) {
+        text-align: right;
+    }
+}
+
 .entity-context {
     --entity-bg-prev: white;
 
@@ -146,7 +155,6 @@ $bg-light-2: #e7e5e4;
 
     ol[data-flavor=block] {
         > li.list-marker.list-marker-border {
-
             padding-top: 0;
             padding-bottom: 0;
 

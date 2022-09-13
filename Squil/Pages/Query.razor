@@ -1,6 +1,7 @@
 ﻿@page "/query/{connectionName}/{table?}/{index?}"
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
+@inject IJSRuntime Js
 @implements IDisposable
 
 @{
@@ -189,6 +190,11 @@
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += LocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(Boolean firstRender)
+    {
+        await Js.InvokeVoidAsync("initBootstrapContent");
     }
 
     void LocationChanged(object sender, LocationChangedEventArgs e)

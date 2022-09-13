@@ -26,8 +26,11 @@
 
 <div class="@String.Join(' ', classes)" style="@styleForHue">
     <label>
-        <a href="@Context.RenderEntitiesUrl(parentEntity, entities)">
-            <EntityRelationNameView RelatedEntities="entities" />
+        <a href="@Context.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
+            <span class="tooltip-content">
+                <RelationInfoView End0="@entities.RelationEnd" />
+            </span>
+            <EntityRelationNameView RelatedEntities="@entities" />
         </a>
     </label>
     <ol data-flavor="@flavor">

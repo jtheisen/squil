@@ -28,6 +28,9 @@ body {
     flex: 1 0 0;
 }
 
+.tooltip-content {
+    display: none;
+}
 
 /* Blazor
 -------------------------------------------------- */

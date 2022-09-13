@@ -369,7 +369,7 @@ namespace Squil
     {
         public override Boolean IsDomestic => false;
 
-        public CMIndexlike[] BackingIndexes { get; set; }
+        public CMIndexlike[] BackingIndexes { get; set; } = Empties<CMIndexlike>.Array;
 
         public CMIndexlike Principal { get; set; }
 
@@ -393,6 +393,8 @@ namespace Squil
         public Boolean IsUniquelyTyped => AmbiguouslyTypedWitness == null;
 
         public CMRelationEnd AmbiguouslyTypedWitness => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => !r.IsMany && r != this).FirstOrDefault();
+
+        public CMIndexlike GetIndex() => Key is CMForeignKey fk ? fk.GetIndexes().FirstOrDefault() : Key as CMIndexlike;
 
         public CMColumnTuple Key { get; set; }
 
