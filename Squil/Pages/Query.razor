@@ -147,11 +147,17 @@
 
         var queryParams = HttpUtility.ParseQueryString(query);
 
+        var keyValues = (
+            from key in queryParams.AllKeys
+            where key?.StartsWith('$') ?? false
+            select (key[1..], queryParams[key])
+        ).ToMap();
+
         var request = new LocationQueryRequest()
         {
             Table = Table,
             Index = Index,
-            KeyValues = queryParams,
+            KeyValues = keyValues.ToNameValueCollection(),
             SearchValues = SearchValues.ToNameValueCollection()
         };
 
@@ -164,6 +170,8 @@
             vm = new LocationQueryVm(request, result);
 
             QueryContext = new QueryContext(rest => $"/query/{ConnectionName}/{rest}");
+
+            QueryContext.InDebug = queryParams["debug"] != null;
         }
         else
         {

@@ -4,6 +4,8 @@ namespace Squil
 {
     public class QueryContext
     {
+        public Boolean InDebug { get; set; }
+
         public UrlRenderer RenderUrl { get; }
 
         public QueryContext(UrlRenderer renderUrl)
@@ -21,7 +23,7 @@ namespace Squil
         public String RenderEntityUrl(Entity entity, CMIndexlike key)
         {
             var keyPart = entity != null && key != null
-                ? $"/{key.Name}?" + String.Join("&", key.Columns.Select(c => $"{c.c.Name}={entity.ColumnValues[c.c.Name]}"))
+                ? $"/{key.Name}?" + String.Join("&", key.Columns.Select(c => $"${c.c.Name}={entity.ColumnValues[c.c.Name]}"))
                 : "";
 
             var url = RenderUrl($"{key.Table.Name.Escaped}{keyPart.TrimEnd('?')}");
@@ -46,7 +48,7 @@ namespace Squil
             if (columnValues.Any())
             {
                 queryPart = "?" + String.Join("&", columnsOnTarget.Columns
-                    .Zip(columnValues, (ic, cv) => $"{UrlEncode(ic.c.Name)}={UrlEncode(cv)}")
+                    .Zip(columnValues, (ic, cv) => $"${UrlEncode(ic.c.Name)}={UrlEncode(cv)}")
                 );
             }
 

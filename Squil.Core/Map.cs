@@ -16,6 +16,15 @@ public interface IMap<K, V> : IEnumerable<KeyValuePair<K, V>>
 
 public static class Map
 {
+    public static IMap<K, T> ToMap<K, T>(this IEnumerable<(K key, T value)> pairs)
+        => new Dictionary<K, T>(from p in pairs select new KeyValuePair<K, T>(p.key, p.value)).AsMap();
+
+    public static IMap<K, T> ToMap<K, T>(this IEnumerable<KeyValuePair<K, T>> pairs)
+        => new Dictionary<K, T>(pairs).AsMap();
+
+    public static Dictionary<K, T> ToDictionary<K, T>(this IEnumerable<KeyValuePair<K, T>> pairs)
+        => new Dictionary<K, T>(pairs);
+
     public static IMap<K, T> AsMap<K, T>(this IDictionary<K, T> source, Boolean withDefaults = false)
         => new FromDictionaryMap<K, T>(source, withDefaults);
 
