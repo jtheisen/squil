@@ -67,10 +67,24 @@ $bg-light-2: #e7e5e4;
 
 .relation-debug-info {
     display: grid;
+    gap: .25em 1.5em;
     grid-template-columns: 1fr 1fr;
+
+    > * {
+        white-space: nowrap;
+    }
 
     > div:nth-child(2n+1) {
         text-align: right;
+    }
+
+    ul {
+        list-style: none;
+        font-size: .75em;
+
+        > li.selected {
+            font-weight: bold;
+        }
     }
 }
 
@@ -248,11 +262,12 @@ $bg-light-2: #e7e5e4;
 
     label {
         display: block; /* labels are inline by default */
+        margin-bottom: 0;
+
         font-variant: small-caps;
         text-transform: lowercase;
         color: #ccc;
         font-weight: bold;
-        margin-bottom: 0;
     }
 
     .entity-relation > label {

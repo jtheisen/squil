@@ -49,20 +49,14 @@ namespace Squil
 
         IEnumerable<Extent> CreateSubExtents(CMTable parentTable, ExtentFlavor parentFlavor)
         {
-            return parentTable.Relations.Values
-                .Where(e => !path.Contains(e))
-                .Select(e => CreateExtent(e, parentFlavor))
-                .Where(e => e != null)
-                ;
-
-            //return
-            //    from end in parentTable.Relations.Values
-            //    where !path.Contains(end)
-            //    let index = end.GetIndex()
-            //    where index != null
-            //    let extent = CreateExtent(end, parentFlavor, index)
-            //    where extent != null
-            //    select extent;
+            return
+                from end in parentTable.Relations.Values
+                where !path.Contains(end)
+                let index = end.GetIndex()
+                where index != null
+                let extent = CreateExtent(end, parentFlavor, index)
+                where extent != null
+                select extent;
         }
 
         Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0)

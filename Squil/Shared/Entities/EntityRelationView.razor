@@ -27,12 +27,12 @@
 <div class="@String.Join(' ', classes)" style="@styleForHue">
     <label>
         <a href="@Context.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
-            <span class="tooltip-content">
-                <RelationInfoView End0="@entities.RelationEnd" />
-            </span>
             <EntityRelationNameView RelatedEntities="@entities" />
         </a>
     </label>
+    <DebugTooltip IsOpen="true">
+        <RelationInfoView End0="@entities.RelationEnd" Index="@entities.Extent.IndexName" />
+    </DebugTooltip>
     <ol data-flavor="@flavor">
         @if (entities.List.Length == 0)
         {

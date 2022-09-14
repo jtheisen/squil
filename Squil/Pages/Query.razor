@@ -1,7 +1,6 @@
 ﻿@page "/query/{connectionName}/{table?}/{index?}"
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
-@inject IJSRuntime Js
 @implements IDisposable
 
 @{
@@ -80,6 +79,7 @@
                         <div class="validation-display">
                             @foreach (var c in vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
                             {
+                                <div>@(new object())</div>
                                 <div>
                                     @c.Error
                                 </div>
@@ -194,14 +194,13 @@
 
     protected override async Task OnAfterRenderAsync(Boolean firstRender)
     {
-        await Js.InvokeVoidAsync("initBootstrapContent");
     }
 
     void LocationChanged(object sender, LocationChangedEventArgs e)
     {
         RunQuery(true);
     }
-    
+
     void IDisposable.Dispose()
     {
         NavigationManager.LocationChanged -= LocationChanged;

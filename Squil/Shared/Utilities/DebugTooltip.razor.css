@@ -1,0 +1,19 @@
+﻿.debug-tooltip {
+    display: inline;
+    position: relative;
+}
+
+.face {
+    display: inline;
+}
+
+.content {
+    position: fixed;
+    background: white;
+    padding: 1em;
+    border: 1px solid black;
+    border-radius: 2px;
+    position: relative;
+    z-index: 1;
+}
+

@@ -31,25 +31,26 @@ namespace Squil
 
         String RenderColumnTupleUrl(
             CMTable table,
-            CMColumnTuple columnTuple,
-            CMColumnTuple columns,
-            IDictionary<String, String> columnValueSource
+            CMColumnTuple columnsOnTarget,
+            CMColumnTuple columnsOnSource,
+            IDictionary<String, String> columnValueSource,
+            CMIndexlike index = null
         )
         {
             var queryPart = "";
 
-            var columnValues = columns.Columns
+            var columnValues = columnsOnSource.Columns
                 .Select(c => columnValueSource.GetOrDefault(c.c.Name))
                 .TakeWhile(c => c != null);
 
             if (columnValues.Any())
             {
-                queryPart = "?" + String.Join("&", columns.Columns
+                queryPart = "?" + String.Join("&", columnsOnTarget.Columns
                     .Zip(columnValues, (ic, cv) => $"{UrlEncode(ic.c.Name)}={UrlEncode(cv)}")
                 );
             }
 
-            var subNamePart = columnTuple != null ? $"/{UrlEncode(columnTuple.Name)}" : "";
+            var subNamePart = index != null ? $"/{UrlEncode(index.Name)}" : "";
 
             var url = RenderUrl($"{table.Name.Escaped}{subNamePart}{queryPart}");
 
@@ -67,12 +68,12 @@ namespace Squil
             // We're allowing no index if we're looking at an entire table
             if (end.Key.Name != "" && index == null) return null;
 
-            return RenderColumnTupleUrl(end.Table, index, end.Key, parentEntity.ColumnValues);
+            return RenderColumnTupleUrl(end.Table, end.Key, end.OtherEnd.Key, parentEntity.ColumnValues, index);
         }
 
         public String RenderIndexUrl(CMIndexlike index, IDictionary<String, String> columnValueSource)
         {
-            return RenderColumnTupleUrl(index.Table, index, index, columnValueSource);
+            return RenderColumnTupleUrl(index.Table, index, index, columnValueSource, index);
         }
     }
 }

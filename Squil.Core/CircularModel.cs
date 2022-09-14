@@ -205,7 +205,8 @@ namespace Squil
                     Name = "",
                     Principal = rootKey,
                     Table = table,
-                    Columns = rootKey.Columns
+                    Columns = rootKey.Columns,
+                    BackingIndexes = table.Indexes.Values.Where(i => i.IsSupported).ToArray()
                 });
             }
 
@@ -330,7 +331,7 @@ namespace Squil
 
         public CMIndexlike PrimaryKey { get; set; }
 
-        public Dictionary<String, CMIndexlike> Indexes { get; set; }
+        public Dictionary<String, CMIndexlike> Indexes { get; set; } = Empties<String, CMIndexlike>.Dictionary;
         public Dictionary<String, CMColumnTuple> ColumnTuples { get; set; }
         public Dictionary<String, CMIndexlike> UniqueIndexlikes { get; set; }
         public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
@@ -372,9 +373,6 @@ namespace Squil
         public CMIndexlike[] BackingIndexes { get; set; } = Empties<CMIndexlike>.Array;
 
         public CMIndexlike Principal { get; set; }
-
-
-        public IEnumerable<CMIndexlike> GetIndexes() => Table.Name.IsRootName ? Table.Indexes.Values : BackingIndexes;
     }
 
     [DebuggerDisplay("{OtherEnd.Name}->{Table.Name}")]
@@ -394,7 +392,7 @@ namespace Squil
 
         public CMRelationEnd AmbiguouslyTypedWitness => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => !r.IsMany && r != this).FirstOrDefault();
 
-        public CMIndexlike GetIndex() => Key is CMForeignKey fk ? fk.GetIndexes().FirstOrDefault() : Key as CMIndexlike;
+        public CMIndexlike GetIndex() => Key is CMForeignKey fk ? fk.BackingIndexes.FirstOrDefault() : Key as CMIndexlike;
 
         public CMColumnTuple Key { get; set; }
 

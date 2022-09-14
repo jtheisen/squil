@@ -103,7 +103,7 @@ public static class SqlConnectionExtensions
 
         if (key is CMForeignKey fk)
         {
-            return fk.GetIndexes()?.FirstOrDefault();
+            return fk.BackingIndexes.FirstOrDefault();
         }
 
         if (key is CMIndexlike ix)
