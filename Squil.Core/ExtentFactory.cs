@@ -115,7 +115,7 @@ namespace Squil
                 case ExtentFlavorType.Inline2:
                     return 2;
                 case ExtentFlavorType.Inline:
-                    return 3;
+                    return 4;
                 case ExtentFlavorType.Block:
                 case ExtentFlavorType.Page:
                     return 4;

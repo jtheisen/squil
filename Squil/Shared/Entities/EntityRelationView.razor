@@ -73,7 +73,7 @@
         {
             var entity = entities.List[i];
 
-            var itemClasses = i == lastIndex ? "potentially-last" : null;
+            var isLast = i == lastIndex;
 
             if (ai.wasSearch && hadOnlyMatching && entity.IsMatching == false)
             {
@@ -84,14 +84,16 @@
                 </li>
             }
 
-            <li class="@itemClasses">
-                <EntityContentView Entity="entity" ParentCollection="entities" />
-            </li>
-        }
-
-        @if (entities.List.Length == entities.Extent.Limit)
-        {
-            <li class="list-marker list-marker-ellipsis" />
+            if (isLast && entities.List.Length == entities.Extent.Limit)
+            {
+                <li class="list-marker list-marker-ellipsis" />
+            }
+            else
+            {
+                <li>
+                    <EntityContentView Entity="entity" ParentCollection="entities" />
+                </li>
+            }
         }
     </ol>
 </div>
