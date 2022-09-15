@@ -19,6 +19,9 @@ public static class Map
     public static IMap<K, T> ToMap<K, T>(this IEnumerable<(K key, T value)> pairs)
         => new Dictionary<K, T>(from p in pairs select new KeyValuePair<K, T>(p.key, p.value)).AsMap();
 
+    public static IEnumerable<KeyValuePair<K, T>> ToPairs<K, T>(this IEnumerable<(K key, T value)> pairs)
+        => from p in pairs select new KeyValuePair<K, T>(p.key, p.value);
+
     public static IMap<K, T> ToMap<K, T>(this IEnumerable<KeyValuePair<K, T>> pairs)
         => new Dictionary<K, T>(pairs).AsMap();
 

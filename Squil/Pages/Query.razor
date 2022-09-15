@@ -68,6 +68,26 @@
                         <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsValidationOk))">
                             <EntityContentView Entity="vm.Entity" />
                         </div>
+
+                        @switch (vm.CanLoadMore())
+                        {
+                            case CanLoadMoreStatus.Can:
+                                <div>
+                                    <button @onclick="HandleLoadMoreClick">Load more</button>
+                                </div>
+                                break;
+                            case CanLoadMoreStatus.Did:
+                                <div>
+                                    That's enough.
+                                </div>
+                                break;
+                            case CanLoadMoreStatus.Complete:
+                                <div>
+                                    No more items.
+                                </div>
+                                break;
+                        }
+
                     }
                     else
                     {
@@ -140,25 +160,17 @@
 
     Action SqlModalSubscription { get; set; }
 
-
-    void RunQuery(Boolean isLocationChange = true)
+    void RunQuery(Boolean isLocationChange = true, Int32? listLimit = null)
     {
         var query = new Uri(NavigationManager.Uri).Query;
 
         var queryParams = HttpUtility.ParseQueryString(query);
 
-        var keyValues = (
-            from key in queryParams.AllKeys
-            where key?.StartsWith('$') ?? false
-            select (key[1..], queryParams[key])
-        ).ToMap();
-
-        var request = new LocationQueryRequest()
+        var request = new LocationQueryRequest(queryParams, SearchValues.ToNameValueCollection())
         {
             Table = Table,
             Index = Index,
-            KeyValues = keyValues.ToNameValueCollection(),
-            SearchValues = SearchValues.ToNameValueCollection()
+            ListLimit = listLimit
         };
 
         var result = Runner.Query(ConnectionName, request);
@@ -175,7 +187,7 @@
         }
         else
         {
-            vm.Update(result);
+            vm.Update(request, result);
         }
 
         StateHasChanged();
@@ -186,6 +198,11 @@
         StateHasChanged();
 
         RunQuery(false);
+    }
+
+    void HandleLoadMoreClick()
+    {
+        RunQuery(false, LocationQueryVm.LoadMoreLimit);
     }
 
     protected override void OnParametersSet()

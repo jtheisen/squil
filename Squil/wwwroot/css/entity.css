@@ -222,7 +222,7 @@
 }
 .entity-context ol[data-flavor=block] > li.list-marker-ellipsis:after {
   font-style: italic;
-  content: "...and more (load more not implemented yet)";
+  content: "...and more";
 }
 .entity-context ol[data-flavor=inline] {
   display: grid;

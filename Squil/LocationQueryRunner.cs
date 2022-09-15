@@ -20,8 +20,42 @@ namespace Squil
 
         public String Index { get; set; }
 
-        public NameValueCollection KeyValues { get; set; }
-        public NameValueCollection SearchValues { get; set; }
+        public Int32? ListLimit { get; set; }
+
+        public NameValueCollection KeyParams { get; }
+        public NameValueCollection RestParams { get; }
+        public NameValueCollection SearchValues { get; }
+
+        public LocationQueryRequest(NameValueCollection queryParams, NameValueCollection searchValues)
+        {
+            (var keyParams, var restParams) = SplitParams(queryParams);
+
+            KeyParams = keyParams;
+            RestParams = restParams;
+            SearchValues = searchValues;
+        }
+
+        static (NameValueCollection keyParams, NameValueCollection restParams) SplitParams(NameValueCollection queryParams)
+        {
+            var groups =
+                from key in queryParams.AllKeys
+                group key by key?.StartsWith('$') ?? false into g
+                select g;
+
+            var keyParams = (
+                from g in groups.Where(g => g.Key == true)
+                from key in g
+                select (key[1..], queryParams[key])
+            ).ToMap().ToNameValueCollection();
+
+            var restParams = (
+                from g in groups.Where(g => g.Key == false)
+                from key in g
+                select (key, queryParams[key])
+            ).ToMap().ToNameValueCollection();
+
+            return (keyParams, restParams);
+        }
     }
 
     public class LocationQueryResult
@@ -38,9 +72,17 @@ namespace Squil
         public IEnumerable<LedgerEntry> LedgerEntries { get; set; }
     }
 
+    public enum CanLoadMoreStatus
+    {
+        Unavailable,
+        Can,
+        Did,
+        Complete
+    }
+
     public class LocationQueryVm
     {
-        public LocationQueryRequest Request { get; }
+        public LocationQueryRequest LastRequest { get; private set; }
         
         public LocationQueryResult Result { get; }
         public LocationQueryResult LastResult { get; private set; }
@@ -51,7 +93,7 @@ namespace Squil
 
         public LocationQueryVm(LocationQueryRequest request, LocationQueryResult result)
         {
-            Request = request;
+            LastRequest = request;
             Result = result;
 
             var relation = Result.RootRelation;
@@ -60,16 +102,16 @@ namespace Squil
             {
                 var table = relation.RelationEnd.Table;
 
-                var keyValuesArray = Request.KeyValues.Cast<String>().ToArray();
+                var keyKeysArray = request.KeyParams.Cast<String>().ToArray();
 
-                KeyValuesCount = keyValuesArray.Length;
+                KeyValuesCount = keyKeysArray.Length;
 
                 var accountedIndexes = new HashSet<ObjectName>();
 
                 Indexes = table.Indexes.Values
                     .Where(i => i.IsSupported)
-                    .StartsWith(keyValuesArray)
-                    .Where(i => i.Columns.Length > keyValuesArray.Length)
+                    .StartsWith(keyKeysArray)
+                    .Where(i => i.Columns.Length > keyKeysArray.Length)
                     .Select(i => new IndexVm { Index = i, IsCurrent = request.Index == i.Name })
                     .ToArray();
 
@@ -102,11 +144,12 @@ namespace Squil
                 CurrentIndex = Indexes.FirstOrDefault(i => i.IsCurrent);
             }
 
-            Update(result);
+            Update(request, result);
         }
 
-        public void Update(LocationQueryResult result)
+        public void Update(LocationQueryRequest request, LocationQueryResult result)
         {
+            LastRequest = request;
             LastResult = result;
 
             if (LastResult.IsValidationOk)
@@ -118,6 +161,21 @@ namespace Squil
             {
                 CurrentIndex.ValidatedValues = result.ValidatedColumns;
             }
+        }
+
+        public static readonly Int32 LoadMoreLimit = 10;
+
+        public CanLoadMoreStatus CanLoadMore()
+        {
+            var r = LastResult.RootRelation;
+
+            if (r == null) return CanLoadMoreStatus.Unavailable;
+
+            if (r.Extent.Flavor.type != ExtentFlavorType.Block) return CanLoadMoreStatus.Unavailable;
+
+            if (LastRequest.ListLimit.HasValue) return CanLoadMoreStatus.Did;
+
+            return r.Extent.Limit == r.List.Length ? CanLoadMoreStatus.Can : CanLoadMoreStatus.Complete;
         }
 
         public IndexVm CurrentIndex { get; }
@@ -169,7 +227,7 @@ namespace Squil
 
             ValidationResult GetColumnValue(CMDirectedColumn column)
             {
-                var keyValue = request.KeyValues[column.Name];
+                var keyValue = request.KeyParams[column.Name];
                 var searchValue = request.SearchValues[column.Name];
 
                 var validationResult = column.c.Type.Validate(keyValue, searchValue, column.d, default);
@@ -189,7 +247,7 @@ namespace Squil
             var extent = extentFactory.CreateRootExtent(
                 cmTable,
                 isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
-                cmIndex, extentOrder, extentValues, keyValueCount
+                cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit
                 );
 
             var result = new LocationQueryResult

@@ -16,7 +16,7 @@ namespace Squil
             this.totalLimit = totalLimit;
         }
 
-        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null)
+        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null, Int32? listLimit = null)
         {
             if (table == table.Root.RootTable)
             {
@@ -32,7 +32,7 @@ namespace Squil
                 {
                     Limit = 2,
                     Flavor = (type, 2),
-                    Children = new[] { CreateExtent(rootRelation, (type, 2), index, order, values, keyValueCount ?? 0) }
+                    Children = new[] { CreateExtent(rootRelation, (type, 2), index, order, values, keyValueCount ?? 0, listLimit) }
                 };
             }
         }
@@ -59,7 +59,7 @@ namespace Squil
                 select extent;
         }
 
-        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0)
+        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0, Int32? listLimit = null)
         {
             if (order != null)
             {
@@ -80,7 +80,7 @@ namespace Squil
                     IndexName = index?.Name,
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
-                    Limit = GetLimitInFlavor(flavor.type),
+                    Limit = listLimit ?? GetLimitInFlavor(flavor.type),
                     Children = CreateSubExtents(end.Table, flavor).ToArray(),
                     Columns = SelectColumns(flavor, end.Table).Select(c => c.Name).ToArray(),
                     Order = order,
