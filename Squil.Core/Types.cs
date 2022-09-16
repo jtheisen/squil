@@ -444,6 +444,16 @@ public class GuidColumnType : ColumnType
     }
 }
 
+public class BinaryColumnType : ColumnType
+{
+    public override Boolean IsSupported => false;
+
+    protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class TypeRegistry
 {
     public static readonly TypeRegistry Instance = new TypeRegistry();
@@ -462,6 +472,10 @@ public class TypeRegistry
             new CharacterColumnType { Name = "nchar" },
             new CharacterColumnType { Name = "nvarchar" },
             new CharacterColumnType { Name = "ntext" },
+
+            new BinaryColumnType { Name = "binary" },
+            new BinaryColumnType { Name = "varbinary" },
+            new BinaryColumnType { Name = "image" },
 
             new IntegerColumnType { Name = "bigint" },
             new IntegerColumnType { Name = "bit" },
@@ -485,7 +499,7 @@ public class TypeRegistry
             new DateOrTimeColumnType { Name = "datetime2", WithDate = true, WithTime = true },
             new DateOrTimeColumnType { Name = "datetimeoffset", WithDate = true, WithTime = true, WithOffset = true },
 
-            // missing: binary and specials
+            // missing: specials
         });
     }
 

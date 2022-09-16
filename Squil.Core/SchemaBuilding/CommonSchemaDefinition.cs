@@ -51,6 +51,8 @@ public class CsdColumn : CsdBase
 
     public Boolean IsSystemType { get; set; }
 
+    public Boolean IsAssemblyType { get; set; }
+
     public Boolean IsNullable { get; set; }
 
     public Int32 ColumnId { get; set; }
@@ -129,6 +131,7 @@ public static class CsdExtensions
                         DataTypeAlias = usertype.Name,
                         DataType = (systemtype ?? usertype).Name,
                         IsSystemType = systemtype != null,
+                        IsAssemblyType = usertype.IsAssemblyType,
                         IsNullable = c.IsNullable,
                         ColumnId = c.ColumnId
                     }

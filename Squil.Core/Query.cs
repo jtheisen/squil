@@ -48,6 +48,18 @@ namespace Squil
 
         String I(Int32 indent) => new String(' ', indent);
 
+        String GetColumnSelectable(CMColumn column)
+        {
+            if (column.IsAssemblyType)
+            {
+                return $"cast({column.Escaped} as varchar(2000)) {column.Escaped}";
+            }
+            else
+            {
+                return $"{column.Escaped}";
+            }
+        }
+
         String GetSql(Extent extent, CMTable parentTable, String aliasPrefix, Int32 indent)
         {
             var ispace = I(indent);
@@ -91,13 +103,15 @@ namespace Squil
 
             var selectables = new List<String>();
 
+            var columns = forwardEnd.Table.ColumnsInOrder;
+
             if (selectAllColumns)
             {
                 selectables.Add("*");
             }
             else
             {
-                selectables.AddRange(forwardEnd.Table.ColumnsInOrder.Select(c => c.Escaped));
+                selectables.AddRange(columns.Select(GetColumnSelectable));
             }
 
             if (extent.Values?.Length > 0)
@@ -122,10 +136,12 @@ namespace Squil
 
             var comment = makePrettyQueries ? $" -- {extent.RelationName}" : "";
 
+            var base64Option = columns.Any(c => c.Type is BinaryColumnType) ? ", binary base64" : "";
+
             var sql = @$"(select{topClause}{comment}
 {selectsClause}
 {ipspace}from {forwardEnd.Table.Name.Escaped} {alias}
-{whereLine}{orderLine}{ispace}for xml auto, type
+{whereLine}{orderLine}{ispace}for xml auto{base64Option}, type
 {ipspace}) [{extent.RelationName.EscapeSqlServerXmlName() /* further name part escaping not required, [ is already replaced */}]";
 
             return sql;

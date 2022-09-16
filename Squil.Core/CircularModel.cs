@@ -67,13 +67,13 @@ namespace Squil
                 var table = tables[csdTable.Name];
 
                 table.ColumnsInOrder = csdTable.Columns
-                    .Where(c => c.DataType != "varbinary" && c.DataType != "geography") // FIXME
                     .Select((c, i) => new CMColumn
                     {
                         Order = i,
                         Name = c.Name,
                         SqlType = c.DataType,
                         IsNullable = c.IsNullable,
+                        IsAssemblyType = c.IsAssemblyType,
                         Type = TypeRegistry.Instance.GetTypeOrNull(c.DataType),
                         IsString = c.DataType.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
                     }).ToArray();
@@ -414,6 +414,8 @@ namespace Squil
         public String Escaped => Name.EscapeNamePart();
 
         public Boolean IsNullable { get; set; }
+
+        public Boolean IsAssemblyType { get; set; }
 
         public ColumnType Type { get; set; }
 
