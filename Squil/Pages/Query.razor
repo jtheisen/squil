@@ -1,4 +1,4 @@
-﻿@page "/query/{connectionName}/{table?}/{index?}"
+﻿@page "/query/{ConnectionName}/{*Path}"
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
 @implements IDisposable
@@ -143,10 +143,11 @@
     public String ConnectionName { get; set; }
 
     [Parameter]
-    public String Table { get; set; }
+    public String Path { get; set; }
 
-    [Parameter]
-    public String Index { get; set; }
+    //public String Table { get; set; }
+
+    //public String Index { get; set; }
 
     Int32 renderCount, queryCount;
 
@@ -166,10 +167,8 @@
 
         var queryParams = HttpUtility.ParseQueryString(query);
 
-        var request = new LocationQueryRequest(queryParams, SearchValues.ToNameValueCollection())
+        var request = new LocationQueryRequest(Path, queryParams, SearchValues.ToNameValueCollection())
         {
-            Table = Table,
-            Index = Index,
             ListLimit = listLimit
         };
 
@@ -181,7 +180,7 @@
         {
             vm = new LocationQueryVm(request, result);
 
-            QueryContext = new QueryContext(rest => $"/query/{ConnectionName}/{rest}");
+            QueryContext = new QueryContext(new UrlRenderer($"/query/{ConnectionName}"));
 
             QueryContext.InDebug = queryParams["debug"] != null;
         }

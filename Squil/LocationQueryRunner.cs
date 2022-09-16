@@ -1,4 +1,5 @@
-﻿using Squil.SchemaBuilding;
+﻿using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Squil.SchemaBuilding;
 using System.Collections.Specialized;
 using System.Dynamic;
 using System.Web;
@@ -16,9 +17,9 @@ namespace Squil
 
     public class LocationQueryRequest
     {
-        public String Table { get; set; }
+        public String Table { get; }
 
-        public String Index { get; set; }
+        public String Index { get; }
 
         public Int32? ListLimit { get; set; }
 
@@ -26,8 +27,15 @@ namespace Squil
         public NameValueCollection RestParams { get; }
         public NameValueCollection SearchValues { get; }
 
-        public LocationQueryRequest(NameValueCollection queryParams, NameValueCollection searchValues)
+        public LocationQueryRequest(String path, NameValueCollection queryParams, NameValueCollection searchValues)
         {
+            var segments = new Uri("https://host/" + path, UriKind.Absolute).Segments;
+
+            System.Diagnostics.Debug.Assert(segments.GetOrDefault(0) == "/");
+
+            Table = segments.GetOrDefault(1)?.TrimEnd('/');
+            Index = segments.GetOrDefault(2)?.TrimEnd('/');
+
             (var keyParams, var restParams) = SplitParams(queryParams);
 
             KeyParams = keyParams;
@@ -126,7 +134,7 @@ namespace Squil
 
                 accountedIndexes.AddRange(from i in table.Indexes.Values where !i.IsSupported select i.ObjectName);
 
-                var unsuitableReason = new CsdUnsupportedReason("Prefix mismatch", "Although this index is supported on the table, you can't use it to search within the subset you're looking at.", "");
+                var unsuitableReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
 
                 var unsuitableIndexes = (
                     from i in table.Indexes.Values
@@ -173,9 +181,11 @@ namespace Squil
 
             if (r.Extent.Flavor.type != ExtentFlavorType.Block) return CanLoadMoreStatus.Unavailable;
 
+            if (r.Extent.Limit > r.List.Length) return CanLoadMoreStatus.Complete;
+
             if (LastRequest.ListLimit.HasValue) return CanLoadMoreStatus.Did;
 
-            return r.Extent.Limit == r.List.Length ? CanLoadMoreStatus.Can : CanLoadMoreStatus.Complete;
+            return CanLoadMoreStatus.Can;
         }
 
         public IndexVm CurrentIndex { get; }

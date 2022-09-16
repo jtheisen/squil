@@ -6,11 +6,11 @@ namespace Squil
     {
         public Boolean InDebug { get; set; }
 
-        public UrlRenderer RenderUrl { get; }
+        public UrlRenderer UrlRenderer { get; }
 
-        public QueryContext(UrlRenderer renderUrl)
+        public QueryContext(UrlRenderer urlRenderer)
         {
-            RenderUrl = renderUrl;
+            UrlRenderer = urlRenderer;
         }
 
         public String RenderEntityUrl(CMTable table, Entity entity)
@@ -22,11 +22,10 @@ namespace Squil
 
         public String RenderEntityUrl(Entity entity, CMIndexlike key)
         {
-            var keyPart = entity != null && key != null
-                ? $"/{key.Name}?" + String.Join("&", key.Columns.Select(c => $"${c.c.Name}={entity.ColumnValues[c.c.Name]}"))
-                : "";
-
-            var url = RenderUrl($"{key.Table.Name.Escaped}{keyPart.TrimEnd('?')}");
+            var url = UrlRenderer.RenderUrl(
+                new[] { key.Table.Name.Escaped, key.Name },
+                from c in key.Columns select ("$", c.c.Name, entity.ColumnValues[c.c.Name])
+            );
 
             return url;
         }
@@ -39,22 +38,15 @@ namespace Squil
             CMIndexlike index = null
         )
         {
-            var queryPart = "";
-
             var columnValues = columnsOnSource.Columns
                 .Select(c => columnValueSource.GetOrDefault(c.c.Name))
                 .TakeWhile(c => c != null);
 
-            if (columnValues.Any())
-            {
-                queryPart = "?" + String.Join("&", columnsOnTarget.Columns
-                    .Zip(columnValues, (ic, cv) => $"${UrlEncode(ic.c.Name)}={UrlEncode(cv)}")
-                );
-            }
-
-            var subNamePart = index != null ? $"/{UrlEncode(index.Name)}" : "";
-
-            var url = RenderUrl($"{table.Name.Escaped}{subNamePart}{queryPart}");
+            var url = UrlRenderer.RenderUrl(
+                new[] { table.Name.Escaped, index?.Name },
+                columnsOnTarget.Columns
+                    .Zip(columnValues, (ic, cv) => ("$", ic.c.Name, cv))
+            );
 
             return url;
         }

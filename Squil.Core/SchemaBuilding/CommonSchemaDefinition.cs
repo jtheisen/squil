@@ -146,6 +146,7 @@ public static class CsdExtensions
 
                     var directedColumnNames = (
                         from ic in index.Columns
+                        where !ic.IsIncludedColumn
                         let c = table.Columns.Single(c2 => c2.ColumnId == ic.ColumnId)
                         let d = ic.IsDescendingKey ? IndexDirection.Desc : IndexDirection.Asc
                         select new DirectedColumnName(c.Name, d)

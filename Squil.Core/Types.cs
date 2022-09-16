@@ -62,7 +62,17 @@ public abstract class ColumnType
             return Ok(null);
         }
 
-        var result = Validate(value, precisions);
+        ValidationResult result = default;
+
+        if (keyValue != null)
+        {
+            result.SqlUpperValue = result.SqlLowerValue = value;
+            result.Direction = direction;
+        }
+        else
+        {
+            result = Validate(value, precisions);
+        }
 
         result.Value = value;
         result.IsKeyValue = keyValue != null;
