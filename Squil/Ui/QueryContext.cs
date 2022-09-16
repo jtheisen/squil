@@ -1,4 +1,5 @@
-﻿using static System.Web.HttpUtility;
+﻿using System.Linq;
+using static System.Web.HttpUtility;
 
 namespace Squil
 {
@@ -35,18 +36,22 @@ namespace Squil
             CMColumnTuple columnsOnTarget,
             CMColumnTuple columnsOnSource,
             IDictionary<String, String> columnValueSource,
-            CMIndexlike index = null
+            CMIndexlike index = null,
+            String backRelation = null
         )
         {
             var columnValues = columnsOnSource.Columns
                 .Select(c => columnValueSource.GetOrDefault(c.c.Name))
                 .TakeWhile(c => c != null);
 
-            var url = UrlRenderer.RenderUrl(
-                new[] { table.Name.Escaped, index?.Name },
-                columnsOnTarget.Columns
-                    .Zip(columnValues, (ic, cv) => ("$", ic.c.Name, cv))
-            );
+            var query = columnsOnTarget.Columns.Zip(columnValues, (ic, cv) => ("$", ic.c.Name, cv));
+
+            if (backRelation != null)
+            {
+                query = query.Concat(("", "from", backRelation).ToSingleton());
+            }
+
+            var url = UrlRenderer.RenderUrl(new[] { table.Name.Escaped, index?.Name }, query);
 
             return url;
         }
@@ -62,7 +67,7 @@ namespace Squil
             // We're allowing no index if we're looking at an entire table
             if (end.Key.Name != "" && index == null) return null;
 
-            return RenderColumnTupleUrl(end.Table, end.Key, end.OtherEnd.Key, parentEntity.ColumnValues, index);
+            return RenderColumnTupleUrl(end.Table, end.Key, end.OtherEnd.Key, parentEntity.ColumnValues, index, end.OtherEnd.Name);
         }
 
         public String RenderIndexUrl(CMIndexlike index, IDictionary<String, String> columnValueSource)
