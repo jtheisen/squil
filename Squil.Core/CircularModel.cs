@@ -111,7 +111,8 @@ namespace Squil
                         IsPrimary = i.Type == CsdKeyishType.Pk,
                         Table = table,
                         UnsupportedReason = support,
-                        Columns = columns
+                        Columns = columns,
+                        ColumnNames = i.Columns
                     }
                 ).ToDictionary(i => i.Name, i => i);
 
@@ -138,7 +139,8 @@ namespace Squil
                         ObjectName = c.Name,
                         Principal = keys[c.ReferencedIndexlike],
                         Table = table,
-                        Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.c], IndexDirection.Unknown)).ToArray()
+                        Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.c], IndexDirection.Unknown)).ToArray(),
+                        ColumnNames = c.Columns
                     })
                     .ToDictionary(c => c.Name, c => c);
 
@@ -205,7 +207,8 @@ namespace Squil
                     Name = "",
                     Principal = rootKey,
                     Table = table,
-                    Columns = rootKey.Columns,
+                    Columns = Empties<CMDirectedColumn>.Array,
+                    ColumnNames = Empties<DirectedColumnName>.Array,
                     BackingIndexes = table.Indexes.Values.Where(i => i.IsSupported).ToArray()
                 });
             }
@@ -347,6 +350,8 @@ namespace Squil
         public CMTable Table { get; set; }
 
         public CMDirectedColumn[] Columns { get; set; }
+
+        public DirectedColumnName[] ColumnNames { get; set; }
 
         public Boolean ContainsKey { get; set; }
 

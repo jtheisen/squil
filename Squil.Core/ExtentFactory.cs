@@ -1,6 +1,7 @@
 using Microsoft.VisualBasic.CompilerServices;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Squil
@@ -11,52 +12,50 @@ namespace Squil
 
         private readonly int? totalLimit;
 
-
+        public record PrincipalLocation(String Relation, DirectedColumnName[] KeyColumns, String[] KeyValues);
 
         public ExtentFactory(Int32? totalLimit)
         {
             this.totalLimit = totalLimit;
         }
 
-        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null, Int32? listLimit = null, String? backRelation = null)
+        public Extent CreateRootExtentForTable(
+            CMTable table, ExtentFlavorType type,
+            CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null,
+            Int32? listLimit = null, PrincipalLocation principal = null
+        )
         {
-            if (table == table.Root.RootTable)
+            Debug.Assert(table.Root.RootTable != table);
+
+            var root = table.Root.RootTable;
+
+            var rootRelation = root.Relations[table.Name.Simple];
+
+            var extents = new List<Extent>();
+
+            extents.Add(CreateExtent(rootRelation, (type, 2), index, order, values, keyValueCount ?? 0, listLimit));
+
+            if (principal != null)
             {
-                return CreateExtentForRoot(table);
-            }
-            else
-            {
-                var root = table.Root.RootTable;
+                var tableToPrincipal = table.Relations[principal.Relation];
 
-                var rootRelation = root.Relations[table.Name.Simple];
+                var rootToPrincipal = root.Relations[tableToPrincipal.Table.Name.Simple];
 
-                var extents = new List<Extent>();
-
-                extents.Add(CreateExtent(rootRelation, (type, 2), index, order, values, keyValueCount ?? 0, listLimit));
-
-                if (backRelation != null)
+                if (rootToPrincipal != null)
                 {
-                    var principal = table.Relations[backRelation];
-
-                    var principalRelation = root.Relations[principal.Table.Name.Simple];
-                    // FIXME: check if principal has primary key
-
-                    if (principalRelation != null)
-                    {
-                        extents.Add(CreateExtent(principalRelation, (ExtentFlavorType.BlockList, 2)));
-                    }
+                    extents.Add(CreateExtent(rootToPrincipal, (ExtentFlavorType.BlockList, 2), order: principal.KeyColumns, values: principal.KeyValues, keyValueCount: principal.KeyColumns.Length));
                 }
-
-                return new Extent
-                {
-                    Limit = 2,
-                    Flavor = (type, 2),
-                    Children = extents.ToArray()
-                };
             }
+
+            return new Extent
+            {
+                Limit = 2,
+                Flavor = (type, 2),
+                Children = extents.ToArray()
+            };
         }
 
-        public Extent CreateExtentForRoot(CMTable rootTable)
+        public Extent CreateRootExtentForRoot(CMTable rootTable)
         {
             return new Extent
             {

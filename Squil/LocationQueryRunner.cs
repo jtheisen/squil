@@ -238,68 +238,55 @@ namespace Squil
 
             var extentFactory = new ExtentFactory(2);
 
-            var cmIndex = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
-
-            ValidationResult GetColumnValue(CMDirectedColumn column)
-            {
-                var keyValue = request.KeyParams[column.Name];
-                var searchValue = request.SearchValues[column.Name];
-
-                var validationResult = column.c.Type.Validate(keyValue, searchValue, column.d, default);
-
-                return validationResult;
-            }
-
-            var columnValues = cmIndex?.Columns.Select(GetColumnValue).ToArray();
-
-            var keyValueCount = columnValues?.TakeWhile(cv => cv.IsKeyValue).Count();
-
-            var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
-            var extentValues = columnValues?.TakeWhile(cv => cv.SqlLowerValue != null).Select(cv => cv.GetSqlValue()).ToArray();
-
-            var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
-
-            if (request.BackRelation != null)
-            {
-                var root = cmTable.Root.RootTable;
-
-                var principal = cmTable.Relations[request.BackRelation];
-
-                var principalRelation = root.Relations[principal.Table.Name.Simple];
-                // FIXME: check if principal has primary key
-
-                var foreignKey = principal.OtherEnd.Key as CMForeignKey;
-                var domesticKey = principal.Key as CMIndexlike;
-
-                System.Diagnostics.Debug.Assert(foreignKey != null);
-                System.Diagnostics.Debug.Assert(domesticKey != null);
-
-                var fkColumns =
-                    foreignKey.Columns.Select(c => request.KeyParams[c.c.Name]).TakeWhile(v => v != null).ToArray();
-
-                //if (fkColumns.Length < foreignKey.Columns.Length) throw new Exception(); // FIXME
-
-                Debug.WriteLine("");
-            }
-
-
-            var extent = extentFactory.CreateRootExtent(
-                cmTable,
-                isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
-                cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
-                request.BackRelation
-                );
-
             var result = new LocationQueryResult
             {
-                QueryType = table == null ? QueryControllerQueryType.Root : isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist,
                 RootName = connectionName,
                 RootUrl = $"/query/{connectionName}",
-                IsRoot = isRoot,
-                ValidatedColumns = columnValues,
-                IsValidationOk = columnValues?.All(r => r.IsOk) ?? true,
-                LedgerEntries = ledger.GetEntries()
+                IsRoot = isRoot
             };
+
+            Extent extent;
+
+            if (isRoot)
+            {
+                result.QueryType = QueryControllerQueryType.Root;
+                result.IsValidationOk = true;
+                extent = extentFactory.CreateRootExtentForRoot(cmTable);
+            }
+            else
+            {
+                var cmIndex = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
+
+                ValidationResult GetColumnValue(CMDirectedColumn column)
+                {
+                    var keyValue = request.KeyParams[column.Name];
+                    var searchValue = request.SearchValues[column.Name];
+
+                    var validationResult = column.c.Type.Validate(keyValue, searchValue, column.d, default);
+
+                    return validationResult;
+                }
+
+                var columnValues = cmIndex?.Columns.Select(GetColumnValue).ToArray();
+
+                var keyValueCount = columnValues?.TakeWhile(cv => cv.IsKeyValue).Count();
+
+                var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
+                var extentValues = columnValues?.TakeWhile(cv => cv.SqlLowerValue != null).Select(cv => cv.GetSqlValue()).ToArray();
+
+                var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
+
+                extent = extentFactory.CreateRootExtentForTable(
+                    cmTable,
+                    isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
+                    cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
+                    GetPrincipalLocation(cmTable, request)
+                );
+
+                result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
+                result.ValidatedColumns = columnValues;
+                result.IsValidationOk = columnValues?.All(r => r.IsOk) ?? true;
+            }
 
             if (!result.IsValidationOk) return result;
 
@@ -310,7 +297,32 @@ namespace Squil
             result.Sql = sql;
             result.Entity = entity;
 
+            result.LedgerEntries = ledger.GetEntries();
+
             return result;
+        }
+
+        ExtentFactory.PrincipalLocation GetPrincipalLocation(CMTable cmTable, LocationQueryRequest request)
+        {
+            if (request.BackRelation == null) return null;
+
+            var root = cmTable.Root.RootTable;
+
+            var principal = cmTable.Relations[request.BackRelation];
+
+            var principalRelation = root.Relations[principal.Table.Name.Simple];
+
+            var foreignKey = principal.OtherEnd.Key as CMForeignKey;
+            var domesticKey = principal.Key as CMIndexlike;
+
+            Debug.Assert(foreignKey != null);
+            Debug.Assert(domesticKey != null);
+
+            var fkColumns =
+                foreignKey.Columns.Select(c => request.KeyParams[c.c.Name]).TakeWhile(v => v != null).ToArray();
+
+            return new ExtentFactory.PrincipalLocation(
+                request.BackRelation, domesticKey.ColumnNames, fkColumns);
         }
     }
 }
