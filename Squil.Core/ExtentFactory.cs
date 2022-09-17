@@ -11,12 +11,14 @@ namespace Squil
 
         private readonly int? totalLimit;
 
+
+
         public ExtentFactory(Int32? totalLimit)
         {
             this.totalLimit = totalLimit;
         }
 
-        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null, Int32? listLimit = null)
+        public Extent CreateRootExtent(CMTable table, ExtentFlavorType type, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null, Int32? listLimit = null, String? backRelation = null)
         {
             if (table == table.Root.RootTable)
             {
@@ -28,11 +30,28 @@ namespace Squil
 
                 var rootRelation = root.Relations[table.Name.Simple];
 
+                var extents = new List<Extent>();
+
+                extents.Add(CreateExtent(rootRelation, (type, 2), index, order, values, keyValueCount ?? 0, listLimit));
+
+                if (backRelation != null)
+                {
+                    var principal = table.Relations[backRelation];
+
+                    var principalRelation = root.Relations[principal.Table.Name.Simple];
+                    // FIXME: check if principal has primary key
+
+                    if (principalRelation != null)
+                    {
+                        extents.Add(CreateExtent(principalRelation, (ExtentFlavorType.BlockList, 2)));
+                    }
+                }
+
                 return new Extent
                 {
                     Limit = 2,
                     Flavor = (type, 2),
-                    Children = new[] { CreateExtent(rootRelation, (type, 2), index, order, values, keyValueCount ?? 0, listLimit) }
+                    Children = extents.ToArray()
                 };
             }
         }

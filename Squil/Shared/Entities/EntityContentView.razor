@@ -92,7 +92,11 @@
 
         var extraColumns = new HashSet<String>();
 
-        if (flavor?.type == ExtentFlavorType.Block)
+        var flavorType = flavor?.type;
+
+        var isBlockLevel = flavorType == ExtentFlavorType.Block;
+
+        if (isBlockLevel)
         {
             extraColumns.AddRange(table?.PrimaryKey?.Columns.Select(c => c.c.Name));
             extraColumns.AddRange(parentCollection?.Extent?.Order?.Select(c => c.c));
@@ -117,7 +121,7 @@
 
         if (singulars != null)
         {
-            groupsList.Add(new Fieldset { legend = "singulars", items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntites = r }) });
+            groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntites = r }) });
         }
 
         if (plurals != null)

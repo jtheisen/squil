@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Squil.SchemaBuilding;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Web;
 using TaskLedgering;
@@ -23,6 +24,8 @@ namespace Squil
 
         public Int32? ListLimit { get; set; }
 
+        public String BackRelation { get; set; }
+
         public NameValueCollection KeyParams { get; }
         public NameValueCollection RestParams { get; }
         public NameValueCollection SearchValues { get; }
@@ -41,6 +44,8 @@ namespace Squil
             KeyParams = keyParams;
             RestParams = restParams;
             SearchValues = searchValues;
+
+            BackRelation = queryParams["from"];
         }
 
         static (NameValueCollection keyParams, NameValueCollection restParams) SplitParams(NameValueCollection queryParams)
@@ -74,7 +79,7 @@ namespace Squil
         public String Sql { get; set; }
         public Entity Entity { get; set; }
         public Boolean IsRoot { get; set; }
-        public RelatedEntities RootRelation => IsRoot ? null : Entity?.Related.Single();
+        public RelatedEntities RootRelation => IsRoot ? null : Entity?.Related.FirstOrDefault();
         public Boolean IsValidationOk { get; set; }
         public ValidationResult[] ValidatedColumns { get; set; }
         public IEnumerable<LedgerEntry> LedgerEntries { get; set; }
@@ -254,10 +259,35 @@ namespace Squil
 
             var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
 
+            if (request.BackRelation != null)
+            {
+                var root = cmTable.Root.RootTable;
+
+                var principal = cmTable.Relations[request.BackRelation];
+
+                var principalRelation = root.Relations[principal.Table.Name.Simple];
+                // FIXME: check if principal has primary key
+
+                var foreignKey = principal.OtherEnd.Key as CMForeignKey;
+                var domesticKey = principal.Key as CMIndexlike;
+
+                System.Diagnostics.Debug.Assert(foreignKey != null);
+                System.Diagnostics.Debug.Assert(domesticKey != null);
+
+                var fkColumns =
+                    foreignKey.Columns.Select(c => request.KeyParams[c.c.Name]).TakeWhile(v => v != null).ToArray();
+
+                //if (fkColumns.Length < foreignKey.Columns.Length) throw new Exception(); // FIXME
+
+                Debug.WriteLine("");
+            }
+
+
             var extent = extentFactory.CreateRootExtent(
                 cmTable,
                 isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
-                cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit
+                cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
+                request.BackRelation
                 );
 
             var result = new LocationQueryResult

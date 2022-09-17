@@ -67,7 +67,7 @@ namespace Squil
             // We're allowing no index if we're looking at an entire table
             if (end.Key.Name != "" && index == null) return null;
 
-            return RenderColumnTupleUrl(end.Table, end.Key, end.OtherEnd.Key, parentEntity.ColumnValues, index, end.OtherEnd.Name);
+            return RenderColumnTupleUrl(end.Table, end.Key, end.OtherEnd.Key, parentEntity.ColumnValues, index, end.Name);
         }
 
         public String RenderIndexUrl(CMIndexlike index, IDictionary<String, String> columnValueSource)
