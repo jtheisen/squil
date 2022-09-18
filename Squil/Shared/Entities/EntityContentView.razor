@@ -3,21 +3,11 @@
     var fieldsets = ProduceFieldsets(Entity, ParentCollection);
 
     var table = ParentCollection?.RelationEnd.Table;
-
-    var name = table?.PrimaryNameColumn?.Apply(nc => Entity.ColumnValues[nc.Name]);
 }
 
 @if (table != null)
 {
-    <header>
-        <a href="@Context.RenderEntityUrl(table, Entity)">
-            <span class="entity-thumb">@table.Abbreviation</span>
-            @if (name != null)
-            {
-                <span class="entity-name">@name</span>
-            }
-        </a>
-    </header>
+    <EntityHeaderView Table="@table" Entity="@Entity" />
 }
 
 @foreach (var fs in fieldsets)
@@ -70,14 +60,16 @@
         return ColumnRenderClass.Data;
     }
 
-    Boolean IsColumnRenderedInFlavor(CMColumn column, ExtentFlavorType flavorType)
+    Boolean IsColumnRenderedInFlavor(CMColumn column, ExtentFlavorType flavorType, HashSet<String> extraColumns)
     {
         switch (flavorType)
         {
+            case ExtentFlavorType.Breadcrumb:
+                return false;
             case ExtentFlavorType.Page:
                 return !column.IsPrimaryName;
             default:
-                return false;
+                return extraColumns.Contains(column.Name);
         }
     }
 
@@ -107,7 +99,7 @@
         var groups =
             from cl in columnClasses
             from c in columns[cl]
-            where extraColumns.Contains(c.Name) || IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page)
+            where IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page, extraColumns)
             group c by cl into g
             select new Fieldset { legend = g.Key.ToString().ToLower(), layout = "grid3", items = g.Select(c => new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = g.Key }) }
             ;
@@ -121,12 +113,12 @@
 
         if (singulars != null)
         {
-            groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntites = r }) });
+            groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
         }
 
         if (plurals != null)
         {
-            groupsList.Add(new Fieldset { legend = "plurals", items = plurals.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntites = r }) });
+            groupsList.Add(new Fieldset { legend = "plurals", items = plurals.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
         }
 
         return groupsList;

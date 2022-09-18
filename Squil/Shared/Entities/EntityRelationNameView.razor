@@ -2,9 +2,9 @@
 @using Humanizer
 
 @{
-    var tableName = RelatedEntities.TableName;
+    var end = RelationEnd;
 
-    var end = RelatedEntities.RelationEnd;
+    var tableName = end.Table.Name;
 
     var parts = tableName.GetDistinguishedParts(end.OtherEnd.Table.Name);
 
@@ -25,5 +25,5 @@
 
 @code {
     [Parameter]
-    public RelatedEntities RelatedEntities { get; set; }
+    public CMRelationEnd RelationEnd { get; set; }
 }

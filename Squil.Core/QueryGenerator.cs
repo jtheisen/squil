@@ -44,7 +44,7 @@ namespace Squil
         {
             if (column.IsAssemblyType)
             {
-                return $"cast({column.Escaped} as varchar(2000)) {column.Escaped}";
+                return $"cast({column.Escaped} as varchar(8000)) {column.Escaped}";
             }
             else
             {
@@ -134,7 +134,7 @@ namespace Squil
 {selectsClause}
 {ipspace}from {forwardEnd.Table.Name.Escaped} {alias}
 {whereLine}{orderLine}{ispace}for xml auto{base64Option}, type
-{ipspace}) [{extent.RelationName.EscapeSqlServerXmlName() /* further name part escaping not required, [ is already replaced */}]";
+{ipspace}) [{extent.GetRelationAlias() /* further name part escaping not required, [ is already replaced */}]";
 
             return sql;
         }
@@ -149,7 +149,7 @@ namespace Squil
             {
                 IsMatching = data.GetOrDefault(IsMatchingAlias)?.Apply(im => im == "1"),
                 ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)) ?? Empties<String, String>.Dictionary,
-                Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(c.RelationName.EscapeSqlServerXmlName())))).ToArray()
+                Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(c.GetRelationAlias())))).ToArray()
             };
         }
 

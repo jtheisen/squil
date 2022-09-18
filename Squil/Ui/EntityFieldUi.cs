@@ -17,7 +17,7 @@
 
     public class EntityRelationFieldUi : EntityFieldUi
     {
-        public RelatedEntities RelatedEntites { get; set; }
+        public RelatedEntities RelatedEntities { get; set; }
     }
 
     public class EntityColumnFieldUi : EntityFieldUi

@@ -1,5 +1,4 @@
 ﻿<header class="header bg-white border-bottom box-shadow mb-3">
-
     <SidebarLayout>
         <LeftContent>
             <nav class="header-height navbar navbar-expand d-none d-md-block">
@@ -9,13 +8,11 @@
             </nav>
         </LeftContent>
         <ChildContent>
-            <nav class="header-height navbar navbar-expand navbar-light">
-                <div class="container-fluidx">
-                    <ul class="nav navbar-nav mr-auto">
-                        @NavItems
-                    </ul>
-                </div>
-            </nav>
+            <div class="header-height">
+                <ul class="header-height breadcrumb bg-white">
+                    @NavItems
+                </ul>
+            </div>
         </ChildContent>
         <RightContent>
             <nav class="header-height navbar navbar-expand position-absolute right">

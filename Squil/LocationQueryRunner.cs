@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Squil.SchemaBuilding;
+﻿using Squil.SchemaBuilding;
 using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Dynamic;
-using System.Web;
 using TaskLedgering;
 
 namespace Squil
@@ -34,7 +31,7 @@ namespace Squil
         {
             var segments = new Uri("https://host/" + path, UriKind.Absolute).Segments;
 
-            System.Diagnostics.Debug.Assert(segments.GetOrDefault(0) == "/");
+            Debug.Assert(segments.GetOrDefault(0) == "/");
 
             Table = segments.GetOrDefault(1)?.TrimEnd('/');
             Index = segments.GetOrDefault(2)?.TrimEnd('/');
@@ -78,11 +75,18 @@ namespace Squil
         public String RootName { get; set; }
         public String Sql { get; set; }
         public Entity Entity { get; set; }
-        public Boolean IsRoot { get; set; }
-        public RelatedEntities RootRelation => IsRoot ? null : Entity?.Related.FirstOrDefault();
+        public RelatedEntities PrimaryEntities { get; set; }
+        public RelatedEntities PrincipalEntities { get; set; }
+        public CMRelationEnd PrincipalRelation { get; set; }
         public Boolean IsValidationOk { get; set; }
         public ValidationResult[] ValidatedColumns { get; set; }
         public IEnumerable<LedgerEntry> LedgerEntries { get; set; }
+    }
+
+    public static class Extensions
+    {
+        public static RelatedEntities GetRelatedEntities(this RelatedEntities[] relatedEntities, String alias)
+            => relatedEntities.Where(e => e.Extent.RelationAlias == alias).Single($"Unexpectedly no single '{alias}' data");
     }
 
     public enum CanLoadMoreStatus
@@ -109,7 +113,7 @@ namespace Squil
             LastRequest = request;
             Result = result;
 
-            var relation = Result.RootRelation;
+            var relation = Result.PrimaryEntities;
 
             if (relation?.Extent.Flavor.type == ExtentFlavorType.Block)
             {
@@ -180,7 +184,7 @@ namespace Squil
 
         public CanLoadMoreStatus CanLoadMore()
         {
-            var r = LastResult.RootRelation;
+            var r = LastResult.PrimaryEntities;
 
             if (r == null) return CanLoadMoreStatus.Unavailable;
 
@@ -241,11 +245,12 @@ namespace Squil
             var result = new LocationQueryResult
             {
                 RootName = connectionName,
-                RootUrl = $"/query/{connectionName}",
-                IsRoot = isRoot
+                RootUrl = $"/query/{connectionName}"
             };
 
             Extent extent;
+
+            ExtentFactory.PrincipalLocation principalLocation = null;
 
             if (isRoot)
             {
@@ -276,11 +281,12 @@ namespace Squil
 
                 var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
 
+                principalLocation = GetPrincipalLocation(cmTable, request);
+
                 extent = extentFactory.CreateRootExtentForTable(
                     cmTable,
                     isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
-                    cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
-                    GetPrincipalLocation(cmTable, request)
+                    cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit, principalLocation
                 );
 
                 result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
@@ -296,6 +302,17 @@ namespace Squil
 
             result.Sql = sql;
             result.Entity = entity;
+
+            if (!isRoot)
+            {
+                result.PrimaryEntities = entity.Related.GetRelatedEntities("primary");
+            }
+
+            if (principalLocation != null)
+            {
+                result.PrincipalEntities = entity.Related.GetRelatedEntities("principal");
+                result.PrincipalRelation = principalLocation.Relation;
+            }
 
             result.LedgerEntries = ledger.GetEntries();
 
@@ -322,7 +339,7 @@ namespace Squil
                 foreignKey.Columns.Select(c => request.KeyParams[c.c.Name]).TakeWhile(v => v != null).ToArray();
 
             return new ExtentFactory.PrincipalLocation(
-                request.BackRelation, domesticKey.ColumnNames, fkColumns);
+                principal.OtherEnd, domesticKey.ColumnNames, fkColumns);
         }
     }
 }

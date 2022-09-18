@@ -12,7 +12,7 @@ namespace Squil
 
         private readonly int? totalLimit;
 
-        public record PrincipalLocation(String Relation, DirectedColumnName[] KeyColumns, String[] KeyValues);
+        public record PrincipalLocation(CMRelationEnd Relation, DirectedColumnName[] KeyColumns, String[] KeyValues);
 
         public ExtentFactory(Int32? totalLimit)
         {
@@ -20,7 +20,7 @@ namespace Squil
         }
 
         public Extent CreateRootExtentForTable(
-            CMTable table, ExtentFlavorType type,
+            CMTable table, ExtentFlavorType primaryFlavor,
             CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null,
             Int32? listLimit = null, PrincipalLocation principal = null
         )
@@ -29,28 +29,28 @@ namespace Squil
 
             var root = table.Root.RootTable;
 
-            var rootRelation = root.Relations[table.Name.Simple];
+            var rootToPrimary = root.Relations[table.Name.Simple];
 
             var extents = new List<Extent>();
 
-            extents.Add(CreateExtent(rootRelation, (type, 2), index, order, values, keyValueCount ?? 0, listLimit));
-
             if (principal != null)
             {
-                var tableToPrincipal = table.Relations[principal.Relation];
+                var tableToPrincipal = table.Relations[principal.Relation.Name];
 
                 var rootToPrincipal = root.Relations[tableToPrincipal.Table.Name.Simple];
 
                 if (rootToPrincipal != null)
                 {
-                    extents.Add(CreateExtent(rootToPrincipal, (ExtentFlavorType.BlockList, 2), order: principal.KeyColumns, values: principal.KeyValues, keyValueCount: principal.KeyColumns.Length));
+                    extents.Add(CreateExtent(rootToPrincipal, (ExtentFlavorType.BreadcrumbList, 2), relationAlias: "principal", order: principal.KeyColumns, values: principal.KeyValues, keyValueCount: principal.KeyColumns.Length));
                 }
             }
+
+            extents.Add(CreateExtent(rootToPrimary, (primaryFlavor, 2), index, "primary", order, values, keyValueCount ?? 0, listLimit));
 
             return new Extent
             {
                 Limit = 2,
-                Flavor = (type, 2),
+                Flavor = (primaryFlavor, 2),
                 Children = extents.ToArray()
             };
         }
@@ -77,7 +77,7 @@ namespace Squil
                 select extent;
         }
 
-        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0, Int32? listLimit = null)
+        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, String relationAlias = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0, Int32? listLimit = null)
         {
             if (order != null)
             {
@@ -98,6 +98,7 @@ namespace Squil
                     IndexName = index?.Name,
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
+                    RelationAlias = relationAlias,
                     Limit = listLimit ?? GetLimitInFlavor(flavor.type),
                     Children = CreateSubExtents(end.Table, flavor).ToArray(),
                     Columns = SelectColumns(flavor, end.Table).Select(c => c.Name).ToArray(),
@@ -130,9 +131,11 @@ namespace Squil
             {
                 case ExtentFlavorType.Existence:
                     return 1;
-                case ExtentFlavorType.Inline2:
-                    return 2;
                 case ExtentFlavorType.Inline:
+                case ExtentFlavorType.Breadcrumb:
+                case ExtentFlavorType.Flow1:
+                    return 2;
+                case ExtentFlavorType.Flow3:
                     return 4;
                 case ExtentFlavorType.Block:
                 case ExtentFlavorType.Page:
@@ -150,17 +153,21 @@ namespace Squil
         {
             switch (flavor.type)
             {
+                case ExtentFlavorType.BreadcrumbList:
+                    return (ExtentFlavorType.Breadcrumb, 1);
                 case ExtentFlavorType.PageList:
                     return (ExtentFlavorType.Page, 1);
                 case ExtentFlavorType.BlockList:
                     return (ExtentFlavorType.Block, 1);
                 case ExtentFlavorType.Page:
-                    return end.IsMany ? (ExtentFlavorType.Inline, 1) : (ExtentFlavorType.Inline, 1);
+                    return end.IsMany ? (ExtentFlavorType.Flow3, 1) : (ExtentFlavorType.Flow1, 1);
                 case ExtentFlavorType.Block:
                     return (ExtentFlavorType.None, 0);
+                case ExtentFlavorType.Flow1:
+                case ExtentFlavorType.Flow3:
+                case ExtentFlavorType.Breadcrumb:
+                    return end.IsMany || !end.IsUniquelyTyped ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline, 1);
                 case ExtentFlavorType.Inline:
-                    return end.IsMany || !end.IsUniquelyTyped ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline2, 1);
-                case ExtentFlavorType.Inline2:
                 default:
                     return (ExtentFlavorType.None, 0);
             }

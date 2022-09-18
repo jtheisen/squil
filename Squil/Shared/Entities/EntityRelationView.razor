@@ -1,7 +1,7 @@
 ﻿@using ColorHelper
 
 @{
-    var entities = Ui.RelatedEntites;
+    var entities = Ui.RelatedEntities;
     var extent = entities.Extent;
     var parentEntity = Ui.Entity;
 
@@ -19,7 +19,7 @@
 
     var flavor = entities.Extent.Flavor.Apply(f => f.GetCssValue(isLeaf));
 
-    var ai = Ui.RelatedEntites.GetListAnnotationInfo();
+    var ai = Ui.RelatedEntities.GetListAnnotationInfo();
 
     var hadOnlyMatching = true;
 }
@@ -27,7 +27,7 @@
 <div class="@String.Join(' ', classes)" style="@styleForHue">
     <label>
         <a href="@Context.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
-            <EntityRelationNameView RelatedEntities="@entities" />
+            <EntityRelationNameView RelationEnd="@entities.RelationEnd" />
         </a>
     </label>
     @if (Context.InDebug)

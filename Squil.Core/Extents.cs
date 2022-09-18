@@ -43,6 +43,8 @@ public class Extent
 {
     public String RelationName { get; set; }
 
+    public String RelationAlias { get; set; }
+
     public String RelationPrettyName { get; set; }
 
     public ExtentFlavor Flavor { get; set; }
@@ -93,12 +95,15 @@ public enum ExtentFlavorType
 {
     None,
     Existence,
-    Inline2,
     Inline,
+    Flow1,
+    Flow3,
+    Breadcrumb,
     Block,
     Page,
-    BlockList, // list of blocks
-    PageList // list of pages
+    BreadcrumbList,
+    BlockList,
+    PageList
 }
 
 public class Relation
@@ -132,4 +137,10 @@ public struct RelatedEntitiesListItemAnnotationInfo
 
     public string column;
     public string value;
+}
+
+public static class Extensions
+{
+    public static String GetRelationAlias(this Extent extent)
+        => extent.RelationAlias ?? extent.RelationName.EscapeSqlServerXmlName();
 }

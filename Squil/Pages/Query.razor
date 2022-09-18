@@ -11,8 +11,47 @@
 
 <DefaultLayout>
     <NavItems>
-        <li class="nav-item"><a class="nav-link text-muted" href="/">Databases</a></li>
-        <li class="nav-item"><a class="nav-link text-muted" href="@vm.Result.RootUrl">@vm.Result.RootName</a></li>
+        <li class="breadcrumb-item"><a class="text-muted" href="/">Databases</a></li>
+        <li class="breadcrumb-item"><a class="text-muted" href="@vm.Result.RootUrl">@vm.Result.RootName</a></li>
+        <CascadingValue Value="QueryContext">
+            @if (vm.Result.PrincipalEntities != null)
+            {
+                var entity = vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
+
+                <li class="breadcrumb-item d-flex entity-context">
+                    <a class="text-muted">
+                        <EntityHeaderView Table="@vm.Result.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" /></a>
+                </li>
+            }
+            else
+            {
+                switch (vm.Result.QueryType)
+                {
+                    case QueryControllerQueryType.Table:
+                        <span>@vm.LastRequest.Table</span>
+                        break;
+                    case QueryControllerQueryType.Single:
+                        var entity = vm.Result.PrimaryEntities.List.FirstOrDefault();
+
+                        <li class="breadcrumb-item d-flex entity-context">
+                            <a class="text-muted">
+                                <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" />
+                            </a>
+                        </li>
+                        break;
+                    case QueryControllerQueryType.Sublist:
+                        <span>sublist</span>
+                        break;
+                    case QueryControllerQueryType.Root:
+                    default:
+                        break;
+                }
+            }
+        </CascadingValue>
     </NavItems>
 
     <ActionItems>
@@ -144,10 +183,6 @@
 
     [Parameter]
     public String Path { get; set; }
-
-    //public String Table { get; set; }
-
-    //public String Index { get; set; }
 
     Int32 renderCount, queryCount;
 
