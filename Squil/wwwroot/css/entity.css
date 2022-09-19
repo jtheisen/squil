@@ -176,13 +176,13 @@
   color: #ccc;
   font-weight: bold;
 }
-.entity-context .entity-relation > label span:not(:first-child) {
+.entity-context .entity-relation-name-view span:not(:first-child) {
   font-size: 0.75em;
 }
-.entity-context .entity-relation > label span:not(:first-child):before {
+.entity-context .entity-relation-name-view span:not(:first-child):before {
   content: " in ";
 }
-.entity-context .entity-relation > label span:not(:first-child).entity-relation-name-fk:before {
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk:before {
   content: " through ";
 }
 .entity-context .entity-column > label {

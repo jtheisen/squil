@@ -5,7 +5,7 @@
 }
 
 <header>
-    <a href="@Context.RenderEntityUrl(table, Entity)">
+    <a href="@Context.RenderEntityUrl(table, Entity).If(ShowLink)">
         <span class="entity-thumb">@table.Abbreviation</span>
         @if (name != null)
         {
@@ -20,6 +20,9 @@
 
     [Parameter]
     public CMTable Table { get; set; }
+
+    [Parameter]
+    public Boolean ShowLink { get; set; } = true;
 
     [CascadingParameter]
     public QueryContext Context { get; set; }

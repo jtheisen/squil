@@ -11,37 +11,37 @@
 
 <DefaultLayout>
     <NavItems>
-        <li class="breadcrumb-item"><a class="text-muted" href="/">Databases</a></li>
-        <li class="breadcrumb-item"><a class="text-muted" href="@vm.Result.RootUrl">@vm.Result.RootName</a></li>
+        <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
+        <BreadcrumbItem><a class="text-muted" href="@vm.Result.RootUrl.If(vm.Result.QueryType != QueryControllerQueryType.Root)">@vm.Result.RootName</a></BreadcrumbItem>
         <CascadingValue Value="QueryContext">
             @if (vm.Result.PrincipalEntities != null)
             {
                 var entity = vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
 
-                <li class="breadcrumb-item d-flex entity-context">
-                    <a class="text-muted">
+                <BreadcrumbItem>
+                    <span class="entity-context text-muted">
                         <EntityHeaderView Table="@vm.Result.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
-                    </a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" /></a>
-                </li>
+                    </span>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                    <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" /></span>
+                </BreadcrumbItem>
             }
             else
             {
                 switch (vm.Result.QueryType)
                 {
                     case QueryControllerQueryType.Table:
-                        <span>@vm.LastRequest.Table</span>
+                        <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></span>
                         break;
                     case QueryControllerQueryType.Single:
                         var entity = vm.Result.PrimaryEntities.List.FirstOrDefault();
 
-                        <li class="breadcrumb-item d-flex entity-context">
-                            <a class="text-muted">
-                                <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" />
-                            </a>
-                        </li>
+                        <BreadcrumbItem>
+                            <span class="text-muted entity-context">
+                                <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
+                            </span>
+                        </BreadcrumbItem>
                         break;
                     case QueryControllerQueryType.Sublist:
                         <span>sublist</span>
