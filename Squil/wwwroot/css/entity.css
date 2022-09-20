@@ -217,12 +217,7 @@
   margin-right: 0.12em;
 }
 .entity-context ol[data-flavor=block] > li.list-marker-ellipsis {
-  display: block;
-  background: none;
-}
-.entity-context ol[data-flavor=block] > li.list-marker-ellipsis:after {
-  font-style: italic;
-  content: "...and more";
+  display: none;
 }
 .entity-context ol[data-flavor=breadcrumb] label, .entity-context ol[data-flavor=breadcrumb] legend, .entity-context ol[data-flavor=breadcrumb] .relation.is-empty > ul, .entity-context ol[data-flavor=breadcrumb] .relation.is-empty > ol, .entity-context ol[data-flavor=breadcrumb] .null-value, .entity-context ol[data-flavor=breadcrumb] .empty-value, .entity-context ol[data-flavor=breadcrumb] .ws-value,
 .entity-context ol[data-flavor=inline] label,

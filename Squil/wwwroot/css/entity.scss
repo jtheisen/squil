@@ -324,13 +324,7 @@ $bg-light-2: #e7e5e4;
     ol[data-flavor=block] {
         > li {
             &.list-marker-ellipsis {
-                display: block;
-                background: none;
-
-                &:after {
-                    font-style: italic;
-                    content: "...and more";
-                }
+                display: none;
             }
         }
     }

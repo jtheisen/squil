@@ -1,6 +1,7 @@
 ﻿@page "/query/{ConnectionName}/{*Path}"
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
+@inject IOptions<AppSettings> Options
 @implements IDisposable
 
 @{
@@ -55,7 +56,10 @@
     </NavItems>
 
     <ActionItems>
-        <a class="btn btn-outline-dark text-muted" href="/info/@ConnectionName">schema</a>
+        @if (Settings.EnableDevMode)
+        {
+            <a class="btn btn-outline-dark text-muted" href="/info/@ConnectionName">schema</a>
+        }
         <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
     </ActionItems>
 
@@ -65,21 +69,31 @@
 
             <SidebarLayout>
                 <RightContent>
-                    @if (vm.LastResult?.LedgerEntries != null)
+                    @if(Settings.EnableDevMode)
                     {
-                        <div>
-                            <span>@queryCount / @renderCount</span>
+                        if (vm.LastResult?.LedgerEntries != null)
+                        {
+                            <div>
+                                <span>@queryCount / @renderCount</span>
+                            </div>
+                            <div class="common-lead-spacer">&nbsp;</div>
+                            <div class="">
+                                <dl>
+                                    @foreach (var entry in vm.LastResult.LedgerEntries)
+                                    {
+                                        <dt>@entry.name</dt>
+                                        <dd>@entry.time</dd>
+                                    }
+                                </dl>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="sidebar-helptext small text-muted">
+                            <HelpText QueryType="@vm.LastResult.QueryType" />
                         </div>
-                        <div class="common-lead-spacer">&nbsp;</div>
-                        <div class="">
-                            <dl>
-                                @foreach (var entry in vm.LastResult.LedgerEntries)
-                                {
-                                    <dt>@entry.name</dt>
-                                    <dd>@entry.time</dd>
-                                }
-                            </dl>
-                        </div>
+                    
                     }
                 </RightContent>
 
@@ -89,10 +103,6 @@
                         <div class="common-lead-spacer">&nbsp;</div>
                         <IndexPanel Vm="vm" SearchValues="SearchValues" />
                     }
-                        @*            <div class="d-none d-xl-block col-xl-2 small text-muted">
-                        <HelpText QueryType="@Result.QueryType" />
-                        </div>
-                        *@
                 </LeftContent>
 
                 <ChildContent>
@@ -111,12 +121,12 @@
                         @switch (vm.CanLoadMore())
                         {
                             case CanLoadMoreStatus.Can:
-                                <div>
+                                <div class="my-4">
                                     <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@LocationQueryVm.LoadMoreLimit</span> at once</button>
                                 </div>
                                 break;
                             case CanLoadMoreStatus.Did:
-                                <div>
+                                <div class="my-4">
                                     <em class="btn">...and more (maximum load size reached)</em>
                                 </div>
                                 break;
@@ -126,6 +136,7 @@
                                 break;
                         }
 
+                        <div class="common-lead-spacer">&nbsp;</div>
                     }
                     else
                     {
@@ -181,6 +192,8 @@
 
     [Parameter]
     public String Path { get; set; }
+
+    AppSettings Settings => Options.Value;
 
     Int32 renderCount, queryCount;
 
