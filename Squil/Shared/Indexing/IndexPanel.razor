@@ -6,29 +6,26 @@
     </button>
 
     <div class="indexes-form">
-        <p>
-            You can search by the following indexes on this table.
-        </p>
+        <h5 class="text-muted font-weight-bold border-bottom mb-4">Search</h5>
 
-        @if (!Vm.Result.IsValidationOk)
+        @if (Vm.Indexes.Length > 0)
         {
+            foreach (var index in Vm.Indexes)
+            {
+                if (!index.Index.IsSupported) continue;
 
+                <IndexLine Vm="@Vm" Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            }
         }
-
-        @foreach (var index in Vm.Indexes)
+        else
         {
-            if (!index.Index.IsSupported) continue;
-
-            <IndexLine Vm="@Vm" Index="@index" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
-        }
-
-        @foreach (var index in Vm.Indexes)
-        {
-            if (index.Index.IsSupported) continue;
+            <p class="text-muted">There are no suitable indexes to search by.</p>
         }
     </div>
 
-    <UnsupportedIndexesPanel Indexes="@Vm.UnsuitableIndexes" />
+    <div class="text-muted">
+        <UnsupportedIndexesPanel Indexes="@Vm.UnsuitableIndexes" />
+    </div>
 </div>
 
 @code {

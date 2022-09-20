@@ -19,7 +19,7 @@ namespace Squil
 
         public String Index { get; }
 
-        public Int32? ListLimit { get; set; }
+        public Int32 ListLimit { get; set; }
 
         public String BackRelation { get; set; }
 
@@ -93,7 +93,6 @@ namespace Squil
     {
         Unavailable,
         Can,
-        Did,
         Complete
     }
 
@@ -180,8 +179,6 @@ namespace Squil
             }
         }
 
-        public static readonly Int32 LoadMoreLimit = 10;
-
         public CanLoadMoreStatus CanLoadMore()
         {
             var r = LastResult.PrimaryEntities;
@@ -191,8 +188,6 @@ namespace Squil
             if (r.Extent.Flavor.type != ExtentFlavorType.Block) return CanLoadMoreStatus.Unavailable;
 
             if (r.Extent.Limit > r.List.Length) return CanLoadMoreStatus.Complete;
-
-            if (LastRequest.ListLimit.HasValue) return CanLoadMoreStatus.Did;
 
             return CanLoadMoreStatus.Can;
         }

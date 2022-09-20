@@ -69,6 +69,8 @@
 
             <SidebarLayout>
                 <RightContent>
+                    <div class="common-lead-spacer">&nbsp;</div>
+
                     @if(Settings.EnableDevMode)
                     {
                         if (vm.LastResult?.LedgerEntries != null)
@@ -90,6 +92,7 @@
                     }
                     else
                     {
+                        <h5 class="text-muted font-weight-bold border-bottom mb-4">Guidance</h5>
                         <div class="sidebar-helptext small text-muted">
                             <HelpText QueryType="@vm.LastResult.QueryType" />
                         </div>
@@ -121,14 +124,18 @@
                         @switch (vm.CanLoadMore())
                         {
                             case CanLoadMoreStatus.Can:
-                                <div class="my-4">
-                                    <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@LocationQueryVm.LoadMoreLimit</span> at once</button>
-                                </div>
-                                break;
-                            case CanLoadMoreStatus.Did:
-                                <div class="my-4">
-                                    <em class="btn">...and more (maximum load size reached)</em>
-                                </div>
+                                if (vm.LastRequest.ListLimit < Settings.LoadMoreLimit)
+                                {
+                                    <div class="my-4">
+                                        <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@Settings.LoadMoreLimit</span> at once</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="my-4">
+                                        <em class="btn">...and more (maximum load size reached)</em>
+                                    </div>
+                                }
                                 break;
                             case CanLoadMoreStatus.Complete:
                             case CanLoadMoreStatus.Unavailable:
@@ -215,7 +222,7 @@
 
         var request = new LocationQueryRequest(Path, queryParams, SearchValues.ToNameValueCollection())
         {
-            ListLimit = listLimit
+            ListLimit = listLimit ?? Settings.InitialLimit
         };
 
         var result = Runner.Query(ConnectionName, request);
@@ -247,7 +254,7 @@
 
     void HandleLoadMoreClick()
     {
-        RunQuery(false, LocationQueryVm.LoadMoreLimit);
+        RunQuery(false, Settings.LoadMoreLimit + 1);
     }
 
     protected override void OnParametersSet()

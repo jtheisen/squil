@@ -1,5 +1,4 @@
-﻿
-<div class="mt-5"></div>
+﻿@inject IOptions<AppSettings> Options
 
 @switch (QueryType)
 {
@@ -12,7 +11,7 @@
             loaded for better orientation.
         </p>
         <p>
-            How much data is loaded is done entirely heuristically - SQuiL has
+            How much data is loaded is decided entirely by a fixed set of heuristics - SQuiL has
             no special logic or configuration to cater to a specific
             database schema. It simply recurses all table relationships and takes an
             educated guess at what and how much data would be appropriate.
@@ -24,11 +23,12 @@
             you're looking at.
         </p>
         <p>
-            That's what makes SQuiL great: As long as your database schema is
+            That's what makes SQuiL unique: As long as your database schema is
             well-designed, a semi-decent UI just drops off without any further work.
         </p>
         <p>
             Try navigating to a specific row by clicking on a tag or name.
+            (This is only possible when the respective table has a primary key.)
         </p>
         break;
     case QueryControllerQueryType.Single:
@@ -45,7 +45,7 @@
         </p>
         <p>
             Try moving around until you find a non-empty to-many entry and click on
-            the label to get to the link. You can move back to the root by clicking
+            the label to get to one. You can move back to the root by clicking
             on the database name in the header.
         </p>
         break;
@@ -66,12 +66,40 @@
             therefore not requiring section labels.
         </p>
         <p>
-            This list <em>is filtered</em> to show only data related to a row from
+            This list <em>is already filtered</em> to show only data related to a row from
             which you arrived here.
         </p>
         <p>
-            In the future, there should be breadcrumbs to help get a more intuitive
-            idea of what you're looking at in this view.
+            Look at the breadcrumbs above the results to check if you are looking
+            at only a part of a table and which other table row this subset relates to.
+        </p>
+        break;
+}
+
+@switch (QueryType)
+{
+    case QueryControllerQueryType.Table:
+    case QueryControllerQueryType.Sublist:
+        <h6>Search</h6>
+        <p>
+            Searching on lists works via indexes. On the left you see input fields
+            generated from viable indexes and an expandable report for all indexes
+            that are unavailable for searching with the respective reasons.
+        </p>
+        <p>
+            Searching along indexes is called <em>seeking</em> and this is the only
+            method of search currently supported. A future version of SQuiL will
+            support <em>scanning</em>, which is potentially inefficient as it works
+            by walking the entirety of the candidate rows to find the matches.
+        </p>
+        <h6>Loading more</h6>
+        <p>
+            Loading more rows than the initial @Settings.InitialLimit results is also
+            currently restricted to a single reloading of @Settings.LoadMoreLimit entries.
+        </p>
+        <p>
+            A future version will keep auto-loading on scroll for tables that have
+            suitable indexes.
         </p>
         break;
 }
@@ -79,4 +107,6 @@
 @code {
     [Parameter]
     public QueryControllerQueryType QueryType { get; set; }
+
+    AppSettings Settings => Options.Value;
 }

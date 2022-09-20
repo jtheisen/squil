@@ -1,6 +1,7 @@
 ﻿@if (Indexes.Any())
 {
     <div style="height: 3em">&nbsp;</div>
+    <hr />
     <ExpandableHeaderedContent>
         <Header>Missing an index?</Header>
         <Body>
@@ -8,19 +9,19 @@
                 Here you see all indexes declared on the table that are not available for seeking grouped by the reason why.
             </p>
 
-            <div class="indexes-unsupported">
+            <ul class="indexes-unsupported">
                 @foreach (var group in Indexes)
                 {
-                    <div class="unsupported-index">
+                    <li class="unsupported-index">
                         <div class="unsupported-tag">@group.Reason.Tag</div>
                         <div class="unsupported-reason">@group.Reason.Reason; concerns</div>
                         @foreach (var i in group.Indexes)
                         {
                             <div class="index-name">@i.Index.Name</div>
                         }
-                    </div>
+                    </li>
                 }
-            </div>
+            </ul>
         </Body>
     </ExpandableHeaderedContent>
 }

@@ -67,6 +67,10 @@ body {
     display: none;
 }
 
+.fill-current-color {
+    fill: currentColor;
+}
+
 /* Blazor
 -------------------------------------------------- */
 #blazor-error-ui {
