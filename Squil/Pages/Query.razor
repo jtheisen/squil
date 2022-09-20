@@ -105,25 +105,24 @@
                     @if (vm.Entity != null)
                     {
                         <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsValidationOk))">
-                            <EntityContentView Entity="vm.Entity" />
+                            <EntityContentView Entity="@vm.LastResult.Entity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
                         </div>
 
                         @switch (vm.CanLoadMore())
                         {
                             case CanLoadMoreStatus.Can:
                                 <div>
-                                    <button @onclick="HandleLoadMoreClick">Load more</button>
+                                    <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@LocationQueryVm.LoadMoreLimit</span> at once</button>
                                 </div>
                                 break;
                             case CanLoadMoreStatus.Did:
                                 <div>
-                                    That's enough.
+                                    <em class="btn">...and more (maximum load size reached)</em>
                                 </div>
                                 break;
                             case CanLoadMoreStatus.Complete:
-                                <div>
-                                    No more items.
-                                </div>
+                            case CanLoadMoreStatus.Unavailable:
+                            default:
                                 break;
                         }
 
@@ -138,7 +137,6 @@
                         <div class="validation-display">
                             @foreach (var c in vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
                             {
-                                <div>@(new object())</div>
                                 <div>
                                     @c.Error
                                 </div>

@@ -47,6 +47,8 @@ public class Extent
 
     public String RelationPrettyName { get; set; }
 
+    public Boolean IgnoreOnRender { get; set; }
+
     public ExtentFlavor Flavor { get; set; }
 
     public String IndexName { get; set; }

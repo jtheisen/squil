@@ -41,11 +41,24 @@ namespace Squil
 
                 if (rootToPrincipal != null)
                 {
-                    extents.Add(CreateExtent(rootToPrincipal, (ExtentFlavorType.BreadcrumbList, 2), relationAlias: "principal", order: principal.KeyColumns, values: principal.KeyValues, keyValueCount: principal.KeyColumns.Length));
+                    var principalExtent = CreateExtent(rootToPrincipal, (ExtentFlavorType.BreadcrumbList, 2), order: principal.KeyColumns, values: principal.KeyValues);
+
+                    principalExtent.RelationAlias = "principal";
+                    principalExtent.KeyValueCount = principal.KeyColumns.Length;
+                    principalExtent.IgnoreOnRender = true;
+
+                    extents.Add(principalExtent);
                 }
             }
 
-            extents.Add(CreateExtent(rootToPrimary, (primaryFlavor, 2), index, "primary", order, values, keyValueCount ?? 0, listLimit));
+            var primaryExtent = CreateExtent(rootToPrimary, (primaryFlavor, 2), index, order, values);
+
+            primaryExtent.IndexName = index?.Name;
+            primaryExtent.RelationAlias = "primary";
+            primaryExtent.KeyValueCount = keyValueCount ?? 0;
+            primaryExtent.Limit = listLimit ?? primaryExtent.Limit;
+
+            extents.Add(primaryExtent);
 
             return new Extent
             {
@@ -77,7 +90,7 @@ namespace Squil
                 select extent;
         }
 
-        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, String relationAlias = null, DirectedColumnName[] order = null, String[] values = null, Int32 keyValueCount = 0, Int32? listLimit = null)
+        Extent CreateExtent(CMRelationEnd end, ExtentFlavor parentFlavor, CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null)
         {
             if (order != null)
             {
@@ -98,13 +111,11 @@ namespace Squil
                     IndexName = index?.Name,
                     Flavor = flavor,
                     RelationName = end.OtherEnd.Name,
-                    RelationAlias = relationAlias,
-                    Limit = listLimit ?? GetLimitInFlavor(flavor.type),
+                    Limit = GetLimitInFlavor(flavor.type),
                     Children = CreateSubExtents(end.Table, flavor).ToArray(),
                     Columns = SelectColumns(flavor, end.Table).Select(c => c.Name).ToArray(),
                     Order = order,
-                    Values = values,
-                    KeyValueCount = keyValueCount
+                    Values = values
                 };
             }
             finally

@@ -25,11 +25,14 @@
 }
 
 <div class="@String.Join(' ', classes)" style="@styleForHue">
-    <label>
-        <a href="@Context.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
-            <EntityRelationNameView RelationEnd="@entities.RelationEnd" />
-        </a>
-    </label>
+    @if (!HideHeader)
+    {
+        <label>
+            <a href="@Context.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
+                <EntityRelationNameView RelationEnd="@entities.RelationEnd" />
+            </a>
+        </label>
+    }
     @if (Context.InDebug)
     {
         <DebugTooltip IsOpen="true">
@@ -101,6 +104,9 @@
 @code {
     [Parameter]
     public EntityRelationFieldUi Ui { get; set; }
+
+    [Parameter]
+    public Boolean HideHeader { get; set; }
 
     [CascadingParameter]
     public QueryContext Context { get; set; }
