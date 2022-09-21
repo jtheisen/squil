@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Squil.SchemaBuilding;
+﻿namespace Squil.SchemaBuilding;
 
 public record CsdUnsupportedReason(String Tag, String Reason, String Specific)
 {
