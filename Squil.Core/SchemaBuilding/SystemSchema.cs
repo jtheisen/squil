@@ -7,6 +7,9 @@ public class SysRoot
 {
     [XmlArray("sys.schemas")]
     public SysSchema[] Schemas { get; set; }
+
+    [XmlAttribute("__schema-date")]
+    public DateTime SchemaDate { get; set; }
 }
 
 [XmlType("s")]

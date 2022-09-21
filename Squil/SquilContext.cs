@@ -1,33 +1,117 @@
 using System.Data.SqlClient;
+using System.Xml.Linq;
 
-namespace Squil
+namespace Squil;
+
+public class SchemaChangedException : Exception
 {
-    public class SquilContext
+    public SchemaChangedException() { }
+
+    public SchemaChangedException(Exception nested)
+        : base("The schema has changed", nested)
+    { }
+}
+
+public class SquilContext
+{
+    private readonly string connectionString;
+
+    private DateTime currentModelFromSchemaAt;
+
+    private volatile Model currentModel;
+
+    record Model(CMRoot CMRoot, QueryGenerator QueryGenerator);
+
+    public CMRoot CircularModel => currentModel.CMRoot;
+
+    public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
+
+    public SquilContext(String connectionString)
     {
-        private readonly string connectionString;
+        this.connectionString = connectionString;
 
-        public CMRoot CircularModel { get; set; }
+        UpdateModel();
+    }
 
-        public QueryGenerator QueryGenerator { get; set; }
+    public SqlConnection GetConnection()
+    {
+        var connection = new SqlConnection(connectionString);
 
-        public SquilContext(String connectionString)
+        connection.Open();
+
+        return connection;
+    }
+
+    public async Task<SqlConnection> GetConnectionAsync()
+    {
+        var connection = new SqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        return connection;
+    }
+
+
+    public QueryResult Query(SqlConnection connection, Extent extent)
+    {
+        QueryResult result;
+
+        try
         {
-            this.connectionString = connectionString;
-
-            using var connection = GetConnection();
-
-            CircularModel = connection.GetCircularModel();
-
-            QueryGenerator = new QueryGenerator(CircularModel);
+            result = QueryGenerator.Query(connection, extent);
+        }
+        catch (SqlException ex)
+        {
+            if (CheckAndUpdateIfApplicable())
+            {
+                throw new SchemaChangedException(ex);
+            }
+            else
+            {
+                throw;
+            }
         }
 
-        public SqlConnection GetConnection()
+        var entity = result.entity;
+
+        if (entity.SchemaDate > CircularModel.TimeStamp)
         {
-            var connection = new SqlConnection(connectionString);
+            UpdateModel();
 
-            connection.Open();
+            return QueryGenerator.Query(connection, extent);
+        }
+        else
+        {
+            return result;
+        }
+    }
 
-            return connection;
+    void UpdateModel()
+    {
+        using var connection = GetConnection();
+
+        var cmRoot = connection.GetCircularModel();
+
+        var qg = new QueryGenerator(cmRoot);
+
+        currentModel = new Model(cmRoot, qg);
+    }
+
+    Boolean CheckAndUpdateIfApplicable()
+    {
+        var connection = GetConnection();
+
+        var modifiedAt = connection.GetSchemaModifiedAt();
+
+        if (modifiedAt > currentModelFromSchemaAt)
+        {
+            UpdateModel();
+
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 }

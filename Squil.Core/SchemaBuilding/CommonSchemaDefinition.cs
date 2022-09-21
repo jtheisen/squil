@@ -21,6 +21,8 @@ public class CsdBase
 public class CsdRoot : CsdBase
 {
     public CsdTable[] Tables { get; set; }
+
+    public DateTime TimeStamp { get; set; }
 }
 
 public class CsdTable : CsdBase
@@ -201,7 +203,7 @@ public static class CsdExtensions
             }
         }
 
-        return new CsdRoot { Tables = csdTables.ToArray() };
+        return new CsdRoot { Tables = csdTables.ToArray(), TimeStamp = root.SchemaDate };
     }
 
     public static CsdRoot CreateCsd(this ISRoot root)
@@ -272,7 +274,8 @@ public static class CsdExtensions
 
         return new CsdRoot
         {
-            Tables = csdTables.ToArray()
+            Tables = csdTables.ToArray(),
+            TimeStamp = root.SchemaDate
         };
     }
 }

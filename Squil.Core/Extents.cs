@@ -12,6 +12,8 @@ public class DebugEntity
 
 public class Entity
 {
+    public DateTime? SchemaDate { get; set; }
+
     public Boolean? IsMatching { get; set; }
 
     public Dictionary<String, String> ColumnValues { get; set; }

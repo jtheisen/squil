@@ -1,5 +1,6 @@
 using Squil.SchemaBuilding;
 using System.Data.SqlClient;
+using System.Runtime.CompilerServices;
 
 namespace Squil;
 
@@ -181,5 +182,27 @@ public static class SchemaBuildingExtensions
         cmRootForCs.Closeup();
 
         return cmRootForCs;
+    }
+
+    public static DateTime GetSchemaModifiedAt(this SqlConnection connection)
+    {
+        var cmd = connection.CreateSqlCommandFromSql($"select max(modify_date) from sys.objects");
+
+        var result = cmd.ExecuteScalar();
+
+        var modifiedAt = (DateTime)result;
+
+        return modifiedAt;
+    }
+
+    public static async Task<DateTime> GetSchemaModifiedAtAsync(this SqlConnection connection)
+    {
+        var cmd = connection.CreateSqlCommandFromSql($"select max(modify_date) from sys.objects");
+
+        var result = await cmd.ExecuteScalarAsync();
+
+        var modifiedAt = (DateTime)result;
+
+        return modifiedAt;
     }
 }

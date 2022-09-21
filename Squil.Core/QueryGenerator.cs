@@ -4,6 +4,8 @@ using System.Xml.Linq;
 
 namespace Squil;
 
+public record QueryResult(Entity entity, String sql, XElement resultXml);
+
 public class QueryGenerator
 {
     private readonly CMRoot cmRoot;
@@ -30,7 +32,11 @@ public class QueryGenerator
     {
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
-        var sql = String.Join(",\n", rootExtent.Children.Select(e => GetSql(e, rootTable, "_" + CreateSymbolForIdentifier(e.RelationName), 1)));
+        var selectables =
+            $"(select max(modify_date) from sys.objects) [@{SchemaDateAlias}]".ToSingleton()
+            .Concat(rootExtent.Children.Select(e => GetSql(e, rootTable, "_" + CreateSymbolForIdentifier(e.RelationName), 1)));
+
+        var sql = String.Join(",\n", selectables);
 
         return $"select\n{sql}\n for xml path ('root')";
     }
@@ -137,13 +143,15 @@ public class QueryGenerator
     }
 
     static String IsMatchingAlias = "__is-matching";
+    static String SchemaDateAlias = "__schema-date";
 
-    Entity MakeEntity(Extent extent, CMTable table, XElement element)
+    Entity MakeEntity(Extent extent, CMTable table, XElement element, Boolean isRoot = false)
     {
         var data = element.Attributes().ToDictionary(a => a.Name.LocalName.UnescapeSqlServerXmlName(), a => a.Value);
 
         return new Entity
         {
+            SchemaDate = isRoot ? data.GetOrDefault(SchemaDateAlias)?.Apply(DateTime.Parse) : null,
             IsMatching = data.GetOrDefault(IsMatchingAlias)?.Apply(im => im == "1"),
             ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)) ?? Empties<String, String>.Dictionary,
             Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(c.GetRelationAlias())))).ToArray()
@@ -206,7 +214,7 @@ public class QueryGenerator
         };
     }
 
-    public (Entity entity, String sql, XElement resultXml) Query(SqlConnection connection, Extent extent)
+    public QueryResult Query(SqlConnection connection, Extent extent)
     {
         var sql = GetCompleteSql(extent);
 
@@ -214,9 +222,9 @@ public class QueryGenerator
 
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
-        var entity = MakeEntity(extent, rootTable, resultXml);
+        var entity = MakeEntity(extent, rootTable, resultXml, true);
 
-        return (entity, sql, resultXml);
+        return new QueryResult(entity, sql, resultXml);
     }
 
     public Entity QueryDummy(Extent extent)

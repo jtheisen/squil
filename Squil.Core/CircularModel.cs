@@ -12,6 +12,8 @@ public class CMRoot
     Dictionary<ObjectName, CMTable> tables;
     Dictionary<ObjectName, CMIndexlike> keys;
 
+    public DateTime TimeStamp { get; private set; }
+
     public IEnumerable<CMIndexlike> GetAllIndexes() =>
         from t in tables.Values
         from i in t.Indexes?.Values ?? Empties<CMIndexlike>.Enumerable
@@ -174,6 +176,8 @@ public class CMRoot
                 fk.BackingIndexes = table.Indexes.Values.Where(IsIndexBacking).ToArray();
             }
         }
+
+        TimeStamp = root.TimeStamp;
     }
 
     public void PopulateRoot()

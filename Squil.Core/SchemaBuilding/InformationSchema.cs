@@ -7,6 +7,9 @@ public class ISRoot
 {
     [XmlArray("INFORMATION_SCHEMA.TABLES")]
     public ISTable[] Tables { get; set; }
+
+    [XmlAttribute("__schema-date")]
+    public DateTime SchemaDate { get; set; }
 }
 
 public class ISWithTable
