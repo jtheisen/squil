@@ -110,7 +110,14 @@
 
                 <ChildContent>
 
-                    <div class="search-panel-spacer">&nbsp;</div>
+                    @switch(vm.LastResult.QueryType)
+                    {
+                        case QueryControllerQueryType.Table:
+                        case QueryControllerQueryType.Sublist:
+                            <div class="search-panel-spacer">&nbsp;</div>
+                            break;
+                    }
+
                     <div class="common-lead-spacer">&nbsp;</div>
 
                     <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>

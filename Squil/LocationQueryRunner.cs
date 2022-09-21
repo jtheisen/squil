@@ -194,6 +194,17 @@ namespace Squil
 
         public IndexVm CurrentIndex { get; }
 
+        public IndexVm NoIndex { get; } = new IndexVm
+        {
+            IsCurrent = true,
+            IsNoIndex = true,
+            Index = new CMIndexlike
+            {
+                ColumnNames = new[] { new DirectedColumnName("") },
+                Columns = null
+            }
+        };
+
         public IndexVm[] Indexes { get; }
 
         public UnsuitableIndexesVm[] UnsuitableIndexes { get; set; }
@@ -208,6 +219,8 @@ namespace Squil
         public CMIndexlike Index { get; set; }
 
         public Boolean IsCurrent { get; set; }
+
+        public Boolean IsNoIndex { get; set; }
 
         public CsdUnsupportedReason UnsupportedReason { get; set; }
     }

@@ -1,11 +1,11 @@
 ﻿@inject NavigationManager Nav
 
 @{
-    var columns = Index.Index.Columns.Skip(HiddenPrefixLength).ToArray();
+    var columns = Index.Index.ColumnNames.Skip(HiddenPrefixLength).ToArray();
     var validation = Index.ValidatedValues?.Skip(HiddenPrefixLength).ToArray();
 }
 
-<a class="@ClassNames("index", "current".If(Index.IsCurrent))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
+<a class="@ClassNames("index", "current".If(Index.IsCurrent), "no-index".If(Index.IsNoIndex))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
     <fieldset>
         <div class="index-columns d-flex">
             @for (var i = 0; i < columns.Length; ++i)
@@ -15,13 +15,19 @@
 
                 var first = i == 0;
 
-                <span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(!isOk))">
-
-                    <span class="index-column-name" type="text">@c.c.Name</span>
-
-                    @if (Index.IsCurrent)
+                <span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(!isOk), "no-index-column".If(Index.IsNoIndex))">
+                    @if (Index.IsNoIndex)
                     {
-                        <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c.Name]" />
+                        <span class="align-self-center text-muted">no suitable index for search</span>
+                    }
+                    else
+                    {
+                        <span class="index-column-name" type="text">@c.c</span>
+
+                        @if (Index.IsCurrent)
+                        {
+                            <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c]" />
+                        }
                     }
                 </span>
             }
@@ -45,7 +51,7 @@
             else
             {
                 <div class="more-search-options-button" @onclick="ShowSearchOptions">
-                    › more search options
+                    › search options
                 </div>
             }
         </div>

@@ -1,13 +1,13 @@
 ﻿@using System.Diagnostics
 
 <div class="@ClassNames("search-panel", "show".If(showSearchOptions))">
-    <button type="button" class="close search-panel-close-button" @onclick="@HideSearchOptions" aria-label="Close">
+    <button type="button" class="close w-100 float-none text-right search-panel-close-button" @onclick="@HideSearchOptions" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
 
-    <div class="indexes-form">
-        <h5 class="text-muted font-weight-bold border-bottom mb-4">Search</h5>
+    <h5 class="text-muted font-weight-bold border-bottom mb-4">Search</h5>
 
+    <div class="indexes-form">
         @if (Vm.Indexes.Length > 0)
         {
             foreach (var index in Vm.Indexes)
@@ -19,9 +19,14 @@
         }
         else
         {
-            <p class="text-muted">There are no suitable indexes to search by.</p>
+            <IndexLine Vm="@Vm" Index="@Vm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
         }
     </div>
+
+    @if (Vm.Indexes.Length == 0)
+    {
+        <p class="text-muted">There are no suitable indexes to search by.</p>
+    }
 
     <div class="text-muted">
         <UnsupportedIndexesPanel Indexes="@Vm.UnsuitableIndexes" />
