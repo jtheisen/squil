@@ -16,7 +16,7 @@ public class ExtentFactory
     public Extent CreateRootExtentForTable(
         CMTable table, ExtentFlavorType primaryFlavor,
         CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null,
-        Int32? listLimit = null, PrincipalLocation principal = null
+        Int32? listLimit = null, PrincipalLocation principal = null, String scanValue = null
     )
     {
         Debug.Assert(table.Root.RootTable != table);
@@ -51,6 +51,15 @@ public class ExtentFactory
         primaryExtent.RelationAlias = "primary";
         primaryExtent.KeyValueCount = keyValueCount ?? 0;
         primaryExtent.Limit = listLimit ?? primaryExtent.Limit;
+
+        ScanMatchOption GetScanMatchOptionOrNull(CMColumn c)
+        {
+            var option = c.Type.GetScanOptionOrNull(scanValue);
+
+            return option.Apply(o => new ScanMatchOption(c.Name, o.Operator, o.Value));
+        }
+
+        primaryExtent.ScanMatchOptions = scanValue?.Apply(v => table.Columns.Values.Select(GetScanMatchOptionOrNull).Where(o => o != null).ToArray());
 
         extents.Add(primaryExtent);
 

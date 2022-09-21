@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Squil;
 
@@ -20,6 +21,8 @@ public struct ValidationResult
 
     public Boolean IsOk => Error == null;
 }
+
+public record ScanOptionResult(ScanOperator Operator, String Value);
 
 public struct ColumnTypePrecisions
 {
@@ -78,6 +81,8 @@ public abstract class ColumnType
 
     protected abstract ValidationResult Validate(String text, ColumnTypePrecisions precisions);
 
+    public virtual ScanOptionResult GetScanOptionOrNull(String value) => null;
+
     public static ColumnType Create<T>(String name)
         where T : ColumnType, new()
     {
@@ -110,6 +115,11 @@ public class CharacterColumnType : ColumnType
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
         return Ok(text);
+    }
+
+    public override ScanOptionResult GetScanOptionOrNull(String value)
+    {
+        return new ScanOptionResult(ScanOperator.Substring, value);
     }
 }
 
@@ -372,6 +382,18 @@ public class IntegerColumnType : ColumnType
 
         return Issue($"text is not a valid {Name}");
     }
+
+    public override ScanOptionResult GetScanOptionOrNull(String value)
+    {
+        if (Int64.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number))
+        {
+            return new ScanOptionResult(ScanOperator.Equal, value);
+        }
+        else
+        {
+            return null;
+        }
+    }
 }
 
 public class DecimalColumnType : ColumnType
@@ -434,6 +456,18 @@ public class GuidColumnType : ColumnType
         }
 
         return Issue($"text is not a valid {Name}");
+    }
+
+    public override ScanOptionResult GetScanOptionOrNull(String value)
+    {
+        if (Guid.TryParse(value, out var guid))
+        {
+            return new ScanOptionResult(ScanOperator.Equal, guid.ToString());
+        }
+        else
+        {
+            return null;
+        }
     }
 }
 

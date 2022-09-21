@@ -37,6 +37,14 @@ public class RelatedEntities
     public Entity[] List { get; set; }
 }
 
+public enum ScanOperator
+{
+    Equal,
+    Substring
+}
+
+public record ScanMatchOption(String Column, ScanOperator Operator, String Value);
+
 [DebuggerDisplay("{DebuggerDisplay}")]
 public class Extent
 {
@@ -65,6 +73,8 @@ public class Extent
     public Int32 KeyValueCount { get; set; }
 
     public Extent[] Children { get; set; }
+
+    public ScanMatchOption[] ScanMatchOptions { get; set; }
 
     String DebuggerDisplay => RelationName ?? "<root>";
 }

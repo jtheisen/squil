@@ -90,9 +90,32 @@ public class QueryGenerator
 
         var filterItems = extent.Values?.Select(MakeFilterItem);
 
-        var filterPredicates = filterItems?.Select(i => $"{alias}.{i.column.Sql} {i.op} {i.value.ToSqlServerStringLiteral()}") ?? Enumerable.Empty<String>();
+        var predicates = Enumerable.Empty<String>();
+            
+        predicates = predicates.Concat(filterItems?.Select(i => $"{alias}.{i.column.Sql} {i.op} {i.value.ToSqlServerStringLiteral()}") ?? Enumerable.Empty<String>());
+        predicates = predicates.Concat(forwardEnd.Columns.Zip(forwardEnd.OtherEnd.Columns, (s, p) => $"{alias}.{s.Name} = {aliasPrefix}.{p.Name}"));
 
-        var allPredicates = filterPredicates.Concat(joinPredicates).ToArray();
+        String RenderScanMatchOption(ScanMatchOption o)
+        {
+            switch (o.Operator)
+            {
+                case ScanOperator.Equal:
+                    return $"{alias}{o.Column} = '{o.Value.ToSqlServerStringLiteral()}'";
+                case ScanOperator.Substring:
+                    return $"{alias}{o.Column} like '%{o.Value.ToSqlServerLikeLiteral()}%'";
+                default:
+                    throw new Exception($"Unknown operator {o.Operator}");
+            }
+        }
+
+        if (extent.ScanMatchOptions != null)
+        {
+            var predicate = String.Join(" or ", extent.ScanMatchOptions.Select(RenderScanMatchOption));
+
+            predicates = predicates.Concat(predicate.ToSingleton());
+        }
+
+        var allPredicates = predicates.ToArray();
 
         var whereLine = allPredicates.Length > 0 ? $"{ispace}where {string.Join($"\n{ispace}  and ", allPredicates)}\n" : "";
 

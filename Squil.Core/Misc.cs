@@ -10,4 +10,9 @@ public static class MiscExtensions
     {
         return $"'{s.Replace("'", "''")}'";
     }
+
+    public static String ToSqlServerLikeLiteral(this String s)
+    {
+        return $"'{s.Replace("'", "''").Replace("[", "[[").Replace("%", "[%]").Replace("_", "[_]")}'";
+    }
 }
