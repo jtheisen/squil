@@ -122,10 +122,10 @@
 
                     <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
 
-                    @if (vm.Entity != null)
+                    @if (vm.DisplayedEntity != null)
                     {
                         <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsValidationOk))">
-                            <EntityContentView Entity="@vm.LastResult.Entity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
+                            <EntityContentView Entity="@vm.DisplayedEntity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
                         </div>
 
                         @switch (vm.CanLoadMore())

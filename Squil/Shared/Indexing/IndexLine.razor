@@ -23,7 +23,7 @@
 
                             @if (Index.IsCurrent)
                             {
-                                <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[f.ColumnName]" />
+                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[f.ColumnName]" />
                             }
                             break;
                         case SearchOptionType.Scan:
@@ -31,7 +31,7 @@
 
                             @if (Index.IsCurrent)
                             {
-                                <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[""]" />
+                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[""]" />
                             }
                             break;
                         case SearchOptionType.NoOption:

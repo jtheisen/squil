@@ -24,6 +24,10 @@ body {
     max-width: 40ex;
 }
 
+.text-decoration-underline {
+    text-decoration: underline;
+}
+
 /* Breadcrumbs
 -------------------------------------------------- */
 .squil-breadcrumbs {

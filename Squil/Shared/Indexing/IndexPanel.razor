@@ -7,6 +7,17 @@
 
     <h5 class="font-weight-bold border-bottom mb-4">Search</h5>
 
+    <h6 class="text-right mt-4 text-decoration-underline">scanning</h6>
+
+    <div class="indexes-form">
+        @if (Vm.ScanOption != null)
+        {
+            <IndexLine Vm="@Vm" Index="@Vm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+        }
+    </div>
+
+    <h6 class="text-right mt-4 text-decoration-underline">seeking</h6>
+
     <div class="indexes-form mb-4">
         @if (Vm.SearchOptions.Length > 0)
         {
@@ -25,19 +36,11 @@
 
     @if (Vm.SearchOptions.Length == 0)
     {
-        <p class="text-muted">There are no suitable indexes to search by.</p>
+        <p>There are no suitable indexes to seek by.</p>
     }
 
-    <div class="text-muted">
-        <UnsupportedIndexesPanel Indexes="@Vm.UnsuitableIndexes" />
-    </div>
+    <UnsupportedIndexesPanel Indexes="@Vm.UnsuitableIndexes" />
 
-    <div class="indexes-form">
-        @if (Vm.ScanOption != null)
-        {
-            <IndexLine Vm="@Vm" Index="@Vm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
-        }
-    </div>
 </div>
 
 @code {

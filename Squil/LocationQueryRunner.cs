@@ -203,6 +203,8 @@ public class LocationQueryRunner
 
         var (entity, sql, resultXml) = context.Query(connection, extent);
 
+        Debug.Assert(entity != null);
+
         result.Sql = sql;
         result.Entity = entity;
 

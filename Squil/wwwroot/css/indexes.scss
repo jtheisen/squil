@@ -162,6 +162,8 @@ $border-color: #eee;
         background: white;
         flex: 1 1 auto;
         border: 1px solid $border-color;
+
+        position: relative;
     }
 
     .no-index-column {
@@ -197,6 +199,15 @@ $border-color: #eee;
         min-height: 1rem;
         white-space: nowrap;
         padding: .25rem .5rem;
+        border: none;
+        outline: none;
+
+        display: block;
+        background: transparent;
+        position: absolute;
+        bottom: 0px;
+        right: 0px;
+        left: 0px;
     }
 
     .index-column-value:not(:empty) + .index-column-name {

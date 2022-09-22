@@ -108,7 +108,7 @@
             ;
 
         
-            var relations = (from r in entity.Related where !r.Extent.IgnoreOnRender group r by r.RelationEnd.IsMany).ToArray();
+        var relations = (from r in entity.Related where !r.Extent.IgnoreOnRender group r by r.RelationEnd.IsMany).ToArray();
 
         var singulars = relations.FirstOrDefault(r => !r.Key)?.ToArray();
         var plurals = relations.FirstOrDefault(r => r.Key)?.ToArray();

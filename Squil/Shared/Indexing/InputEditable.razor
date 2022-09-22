@@ -1,0 +1,59 @@
+﻿@inject IJSRuntime Js
+
+@if (IsActive)
+{
+    <input @ref="element" class="@Class" value="@Value" oninput="@HandleChanged" autofocus="@Focus" />
+}
+else
+{
+    <span @ref="element" class="@Class" />
+}
+
+@code {
+    [Parameter]
+    public String Class { get; set; }
+
+    [Parameter]
+    public Boolean IsActive { get; set; }
+
+    [Parameter]
+    public String Value { get; set; }
+
+    [Parameter]
+    public Boolean Focus { get; set; }
+
+    [Parameter]
+    public EventCallback<String> ValueChanged { get; set; }
+
+
+
+    ElementReference element;
+
+    Boolean wasActive;
+
+    String DesiredInnerText => Value ?? "";
+
+    public ValueTask FocusAsync() => element.FocusAsync();
+
+    async Task HandleChanged(ChangeEventArgs e)
+    {
+        var newText = ((String)e.Value).Replace('\u00a0', ' ');
+
+        var newValue = newText == "" ? null : newText;
+
+        if (newValue != Value)
+        {
+            await ValueChanged.InvokeAsync(newValue);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!wasActive && IsActive && Focus)
+        {
+            await FocusAsync();
+        }
+
+        wasActive = IsActive;
+    }
+}

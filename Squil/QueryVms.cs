@@ -60,7 +60,7 @@ public class LocationQueryVm
     public LocationQueryResult Result { get; }
     public LocationQueryResult LastResult { get; private set; }
 
-    public Entity Entity { get; private set; }
+    public Entity DisplayedEntity { get; private set; }
 
     public Int32 KeyValuesCount { get; }
 
@@ -129,7 +129,7 @@ public class LocationQueryVm
 
         if (LastResult.IsValidationOk)
         {
-            Entity = LastResult.Entity;
+            DisplayedEntity = LastResult.Entity;
         }
 
         if (CurrentIndex != null)
