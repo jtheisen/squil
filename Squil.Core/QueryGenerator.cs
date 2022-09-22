@@ -93,16 +93,16 @@ public class QueryGenerator
         var predicates = Enumerable.Empty<String>();
             
         predicates = predicates.Concat(filterItems?.Select(i => $"{alias}.{i.column.Sql} {i.op} {i.value.ToSqlServerStringLiteral()}") ?? Enumerable.Empty<String>());
-        predicates = predicates.Concat(forwardEnd.Columns.Zip(forwardEnd.OtherEnd.Columns, (s, p) => $"{alias}.{s.Name} = {aliasPrefix}.{p.Name}"));
+        predicates = predicates.Concat(forwardEnd.Columns.Zip(forwardEnd.OtherEnd.Columns, (s, p) => $"{alias}.{s.Escaped} = {aliasPrefix}.{p.Escaped}"));
 
         String RenderScanMatchOption(ScanMatchOption o)
         {
             switch (o.Operator)
             {
                 case ScanOperator.Equal:
-                    return $"{alias}{o.Column} = '{o.Value.ToSqlServerStringLiteral()}'";
+                    return $"{alias}.{o.Column.Sql} = {o.Value.ToSqlServerStringLiteral()}";
                 case ScanOperator.Substring:
-                    return $"{alias}{o.Column} like '%{o.Value.ToSqlServerLikeLiteral()}%'";
+                    return $"{alias}.{o.Column.Sql} like '%{o.Value.ToSqlServerLikeLiteralContent()}%'";
                 default:
                     throw new Exception($"Unknown operator {o.Operator}");
             }

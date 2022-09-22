@@ -1,5 +1,4 @@
-﻿using Squil.SchemaBuilding;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using TaskLedgering;
 
 namespace Squil;
@@ -18,6 +17,8 @@ public class LocationQueryRequest
 
     public String Index { get; }
 
+    public Boolean InScanMode { get; set; }
+
     public Int32 ListLimit { get; set; }
 
     public String BackRelation { get; set; }
@@ -34,6 +35,13 @@ public class LocationQueryRequest
 
         Table = segments.GetOrDefault(1)?.TrimEnd('/');
         Index = segments.GetOrDefault(2)?.TrimEnd('/');
+
+        if (Index == UrlRenderer.BlazorDefeatingDummySegment)
+        {
+            Index = null;
+        }
+
+        InScanMode = Index == null;
 
         (var keyParams, var restParams) = SplitParams(queryParams);
 
@@ -73,6 +81,7 @@ public class LocationQueryResult
     public String RootUrl { get; set; }
     public String RootName { get; set; }
     public String Sql { get; set; }
+    public CMTable Table { get; set; }
     public Entity Entity { get; set; }
     public RelatedEntities PrimaryEntities { get; set; }
     public RelatedEntities PrincipalEntities { get; set; }
@@ -93,135 +102,6 @@ public enum CanLoadMoreStatus
     Unavailable,
     Can,
     Complete
-}
-
-public class LocationQueryVm
-{
-    public LocationQueryRequest LastRequest { get; private set; }
-    
-    public LocationQueryResult Result { get; }
-    public LocationQueryResult LastResult { get; private set; }
-
-    public Entity Entity { get; private set; }
-
-    public Int32 KeyValuesCount { get; }
-
-    public LocationQueryVm(LocationQueryRequest request, LocationQueryResult result)
-    {
-        LastRequest = request;
-        Result = result;
-
-        var relation = Result.PrimaryEntities;
-
-        if (relation?.Extent.Flavor.type == ExtentFlavorType.Block)
-        {
-            var table = relation.RelationEnd.Table;
-
-            var keyKeysArray = request.KeyParams.Cast<String>().ToArray();
-
-            KeyValuesCount = keyKeysArray.Length;
-
-            var accountedIndexes = new HashSet<ObjectName>();
-
-            Indexes = table.Indexes.Values
-                .Where(i => i.IsSupported)
-                .StartsWith(keyKeysArray)
-                .Where(i => i.Columns.Length > keyKeysArray.Length)
-                .Select(i => new IndexVm { Index = i, IsCurrent = request.Index == i.Name })
-                .ToArray();
-
-            accountedIndexes.AddRange(Indexes.Select(i => i.Index.ObjectName));
-
-            var unsupportedGroups = (
-                from i in table.Indexes.Values
-                where !i.IsSupported
-                group i by i.UnsupportedReason into g
-                select new UnsuitableIndexesVm(g.Key, from i in g select new IndexVm { Index = i, UnsupportedReason = g.Key })
-            ).ToList();
-
-            accountedIndexes.AddRange(from i in table.Indexes.Values where !i.IsSupported select i.ObjectName);
-
-            var unsuitableReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
-
-            var unsuitableIndexes = (
-                from i in table.Indexes.Values
-                where !accountedIndexes.Contains(i.ObjectName)
-                select new IndexVm { Index = i, UnsupportedReason = unsuitableReason }
-            ).ToArray();
-
-            if (unsuitableIndexes.Any())
-            {
-                unsupportedGroups.Insert(0, new UnsuitableIndexesVm(unsuitableReason, unsuitableIndexes));
-            }
-
-            UnsuitableIndexes = unsupportedGroups.ToArray();
-
-            CurrentIndex = Indexes.FirstOrDefault(i => i.IsCurrent);
-        }
-
-        Update(request, result);
-    }
-
-    public void Update(LocationQueryRequest request, LocationQueryResult result)
-    {
-        LastRequest = request;
-        LastResult = result;
-
-        if (LastResult.IsValidationOk)
-        {
-            Entity = LastResult.Entity;
-        }
-
-        if (CurrentIndex != null)
-        {
-            CurrentIndex.ValidatedValues = result.ValidatedColumns;
-        }
-    }
-
-    public CanLoadMoreStatus CanLoadMore()
-    {
-        var r = LastResult.PrimaryEntities;
-
-        if (r == null) return CanLoadMoreStatus.Unavailable;
-
-        if (r.Extent.Flavor.type != ExtentFlavorType.Block) return CanLoadMoreStatus.Unavailable;
-
-        if (r.Extent.Limit > r.List.Length) return CanLoadMoreStatus.Complete;
-
-        return CanLoadMoreStatus.Can;
-    }
-
-    public IndexVm CurrentIndex { get; }
-
-    public IndexVm NoIndex { get; } = new IndexVm
-    {
-        IsCurrent = true,
-        IsNoIndex = true,
-        Index = new CMIndexlike
-        {
-            ColumnNames = new[] { new DirectedColumnName("") },
-            Columns = null
-        }
-    };
-
-    public IndexVm[] Indexes { get; }
-
-    public UnsuitableIndexesVm[] UnsuitableIndexes { get; set; }
-}
-
-public record UnsuitableIndexesVm(CsdUnsupportedReason Reason, IEnumerable<IndexVm> Indexes);
-
-public class IndexVm
-{
-    public ValidationResult[] ValidatedValues { get; set; }
-
-    public CMIndexlike Index { get; set; }
-
-    public Boolean IsCurrent { get; set; }
-
-    public Boolean IsNoIndex { get; set; }
-
-    public CsdUnsupportedReason UnsupportedReason { get; set; }
 }
 
 public class LocationQueryRunner
@@ -264,7 +144,8 @@ public class LocationQueryRunner
         var result = new LocationQueryResult
         {
             RootName = connectionName,
-            RootUrl = $"/query/{connectionName}"
+            RootUrl = $"/query/{connectionName}",
+            Table = cmTable
         };
 
         Extent extent;
@@ -302,10 +183,13 @@ public class LocationQueryRunner
 
             principalLocation = GetPrincipalLocation(cmTable, request);
 
+            var scanValue = request.InScanMode ? request.SearchValues[""] : null;
+
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
                 isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
-                cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit, principalLocation
+                cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
+                principalLocation, scanValue
             );
 
             result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;

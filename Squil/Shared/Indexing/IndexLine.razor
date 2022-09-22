@@ -1,33 +1,42 @@
 ﻿@inject NavigationManager Nav
 
 @{
-    var columns = Index.Index.ColumnNames.Skip(HiddenPrefixLength).ToArray();
-    var validation = Index.ValidatedValues?.Skip(HiddenPrefixLength).ToArray();
+    var fields = Index.Fields;
+    var validation = Index.ValidationValues;
 }
 
-<a class="@ClassNames("index", "current".If(Index.IsCurrent), "no-index".If(Index.IsNoIndex))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
+<a class="@ClassNames("index", "current".If(Index.IsCurrent), "no-index".If(noOption))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
     <fieldset>
         <div class="index-columns d-flex">
-            @for (var i = 0; i < columns.Length; ++i)
+            @for (var i = 0; i < fields.Length; ++i)
             {
-                var c = columns[i];
-                var isOk = validation?[i].IsOk ?? true;
+                var f = fields[i];
+                var isInvalid = validation?[i].isInvalid ?? false;
 
                 var first = i == 0;
 
-                <span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(!isOk), "no-index-column".If(Index.IsNoIndex))">
-                    @if (Index.IsNoIndex)
+                <span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(isInvalid), "no-index-column".If(noOption))">
+                    @switch (Index.OptionType)
                     {
-                        <span class="align-self-center text-muted">no suitable index for search</span>
-                    }
-                    else
-                    {
-                        <span class="index-column-name" type="text">@c.c</span>
+                        case SearchOptionType.Seek:
+                            <span class="index-column-name" type="text">@f.DisplayName</span>
 
-                        @if (Index.IsCurrent)
-                        {
-                            <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[c.c]" />
-                        }
+                            @if (Index.IsCurrent)
+                            {
+                                <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[f.ColumnName]" />
+                            }
+                            break;
+                        case SearchOptionType.Scan:
+                            <span class="index-column-name" type="text"><em>scan</em></span>
+
+                            @if (Index.IsCurrent)
+                            {
+                                <ContentEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[""]" />
+                            }
+                            break;
+                        case SearchOptionType.NoOption:
+                            <span class="align-self-center text-muted">no suitable search option</span>
+                            break;
                     }
                 </span>
             }
@@ -66,7 +75,7 @@
     public LocationQueryVm Vm { get; set; }
 
     [Parameter]
-    public IndexVm Index { get; set; }
+    public SearchOptionVm Index { get; set; }
 
     [Parameter]
     public Int32 HiddenPrefixLength { get; set; }
@@ -77,7 +86,25 @@
     [Parameter]
     public Action ShowSearchOptions { get; set; }
 
-    String Url => Index.IsCurrent ? null : Context.RenderIndexUrl(Index.Index, Vm.Result.Entity.ColumnValues);
+    Boolean noOption => Index.OptionType == SearchOptionType.NoOption;
+
+    String Url
+    {
+        get
+        {
+            if (Index.IsCurrent) return null;
+
+            switch (Index.OptionType)
+            {
+                case SearchOptionType.Seek:
+                    return Context.RenderIndexUrl(Index.Index, Vm.Result.Entity.ColumnValues);
+                case SearchOptionType.Scan:
+                    return Context.RenderScanUrl(Vm.LastResult.Table);
+                default:
+                    throw new Exception($"Unexpected option type {Index.OptionType}");
+            }
+        }
+    }
 
     void HandleClick()
     {

@@ -56,6 +56,14 @@ namespace Squil
             return url;
         }
 
+        public String RenderEntitiesUrl(CMRelationEnd end, CMIndexlike index, Dictionary<String, String> values)
+        {
+            // We're allowing no index if we're looking at an entire table
+            if (end.Key.Name != "" && index == null) return null;
+
+            return RenderColumnTupleUrl(end.Table, end.Key, end.OtherEnd.Key, values, index, end.Name);
+        }
+
         public String RenderEntitiesUrl(Entity parentEntity, RelatedEntities relatedEntities)
         {
             if (parentEntity == null || !relatedEntities.RelationEnd.IsMany) return null;
@@ -64,15 +72,21 @@ namespace Squil
 
             var index = relatedEntities.ChooseIndex();
 
-            // We're allowing no index if we're looking at an entire table
-            if (end.Key.Name != "" && index == null) return null;
-
-            return RenderColumnTupleUrl(end.Table, end.Key, end.OtherEnd.Key, parentEntity.ColumnValues, index, end.Name);
+            return RenderEntitiesUrl(end, index, parentEntity.ColumnValues);
         }
 
         public String RenderIndexUrl(CMIndexlike index, IDictionary<String, String> columnValueSource)
         {
             return RenderColumnTupleUrl(index.Table, index, index, columnValueSource, index);
         }
+
+        public String RenderScanUrl(CMTable table)
+        {
+            var rootTable = table.Root.RootTable;
+            var tableRelation = rootTable.Relations[table.Name.Simple];
+
+            return RenderEntitiesUrl(tableRelation, null, Empties<String, String>.Dictionary);
+        }
+
     }
 }

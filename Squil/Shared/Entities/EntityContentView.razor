@@ -107,7 +107,8 @@
             select new Fieldset { legend = g.Key.ToString().ToLower(), layout = "grid3", items = g.Select(c => new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = g.Key }) }
             ;
 
-        var relations = (from r in entity.Related where !r.Extent.IgnoreOnRender group r by r.RelationEnd.IsMany).ToArray();
+        
+            var relations = (from r in entity.Related where !r.Extent.IgnoreOnRender group r by r.RelationEnd.IsMany).ToArray();
 
         var singulars = relations.FirstOrDefault(r => !r.Key)?.ToArray();
         var plurals = relations.FirstOrDefault(r => r.Key)?.ToArray();

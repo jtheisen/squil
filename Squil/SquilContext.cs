@@ -16,8 +16,6 @@ public class SquilContext
 {
     private readonly string connectionString;
 
-    private DateTime currentModelFromSchemaAt;
-
     private volatile Model currentModel;
 
     record Model(CMRoot CMRoot, QueryGenerator QueryGenerator);
@@ -103,7 +101,7 @@ public class SquilContext
 
         var modifiedAt = connection.GetSchemaModifiedAt();
 
-        if (modifiedAt > currentModelFromSchemaAt)
+        if (modifiedAt > currentModel.CMRoot.TimeStamp)
         {
             UpdateModel();
 

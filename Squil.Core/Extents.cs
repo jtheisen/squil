@@ -43,7 +43,7 @@ public enum ScanOperator
     Substring
 }
 
-public record ScanMatchOption(String Column, ScanOperator Operator, String Value);
+public record ScanMatchOption(DirectedColumnName Column, ScanOperator Operator, String Value);
 
 [DebuggerDisplay("{DebuggerDisplay}")]
 public class Extent

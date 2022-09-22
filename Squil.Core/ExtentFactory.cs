@@ -56,7 +56,7 @@ public class ExtentFactory
         {
             var option = c.Type.GetScanOptionOrNull(scanValue);
 
-            return option.Apply(o => new ScanMatchOption(c.Name, o.Operator, o.Value));
+            return option?.Apply(o => new ScanMatchOption(c.Name, o.Operator, o.Value));
         }
 
         primaryExtent.ScanMatchOptions = scanValue?.Apply(v => table.Columns.Values.Select(GetScanMatchOptionOrNull).Where(o => o != null).ToArray());
