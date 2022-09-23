@@ -97,12 +97,17 @@
             extraColumns.AddRange(parentCollection?.Extent?.Order?.Select(c => c.c));
         }
 
+        var showAll = false;
+
+        showAll |= parentCollection?.Extent.ScanMatchOptions != null;
+        showAll |= isBlockLevel && table?.PrimaryKey == null;
+
         var columnClasses = Enum.GetValues(typeof(ColumnRenderClass)) as ColumnRenderClass[];
 
         var groups =
             from cl in columnClasses
             from c in columns[cl]
-            where IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page, extraColumns)
+            where showAll || IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page, extraColumns)
             group c by cl into g
             select new Fieldset { legend = g.Key.ToString().ToLower(), layout = "grid3", items = g.Select(c => new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = g.Key }) }
             ;

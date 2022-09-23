@@ -108,7 +108,7 @@ public class QueryGenerator
             }
         }
 
-        if (extent.ScanMatchOptions != null)
+        if (extent.ScanMatchOptions?.Length > 0)
         {
             var predicate = String.Join(" or ", extent.ScanMatchOptions.Select(RenderScanMatchOption));
 

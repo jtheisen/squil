@@ -183,7 +183,7 @@ public class LocationQueryRunner
 
             principalLocation = GetPrincipalLocation(cmTable, request);
 
-            var scanValue = request.InScanMode ? request.SearchValues[""] : null;
+            var scanValue = request.InScanMode ? request.SearchValues[""] ?? "" : null;
 
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
