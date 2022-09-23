@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using Newtonsoft.Json.Linq;
+using System.Globalization;
+using System.Numerics;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Squil;
@@ -373,21 +375,69 @@ public class IntegerColumnType : ColumnType
 {
     public Boolean IsBit => Name.Equals("bit", StringComparison.InvariantCultureIgnoreCase);
 
+    public Int32 Bits { get; set; }
+
+    public Boolean IsSigned { get; set; } = true;
+
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
-        if (Int64.TryParse(text, out var number))
+        if (TryParse(text, out var normalized, out var error))
         {
-            return Ok(number.ToString());
+            return Ok(normalized);
         }
-
-        return Issue($"text is not a valid {Name}");
+        else
+        {
+            return Issue(error);
+        }
     }
 
     public override ScanOptionResult GetScanOptionOrNull(String value)
     {
-        if (Int64.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number))
+        if (TryParse(value, out var normalized, out _))
         {
-            return new ScanOptionResult(ScanOperator.Equal, value);
+            return new ScanOptionResult(ScanOperator.Equal, normalized);
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    Boolean TryParse(String text, out String normalized, out String error)
+    {
+        normalized = error = null;
+
+        if (BigInteger.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var number))
+        {
+            error = CheckRange(number);
+
+            normalized = number.ToString();
+        }
+        else
+        {
+            error = $"text is not a valid integer";
+        }
+
+        return error == null;
+    }
+
+    String CheckRange(BigInteger value)
+    {
+        if (!IsSigned && value < 0)
+        {
+            return "the value must be non-negative";
+        }
+
+        var maxValue = BigInteger.One << Bits;
+        var minValue = -BigInteger.One << Bits;
+
+        if (value > maxValue)
+        {
+            return $"value can't be greater than {maxValue}";
+        }
+        else if (value < minValue)
+        {
+            return $"value can't be smaller than {minValue}";
         }
         else
         {
@@ -504,11 +554,11 @@ public class TypeRegistry
             new BinaryColumnType { Name = "varbinary" },
             new BinaryColumnType { Name = "image" },
 
-            new IntegerColumnType { Name = "bigint" },
-            new IntegerColumnType { Name = "bit" },
-            new IntegerColumnType { Name = "smallint" },
-            new IntegerColumnType { Name = "int" },
-            new IntegerColumnType { Name = "tinyint" },
+            new IntegerColumnType { Name = "bit", Bits = 1, IsSigned = false },
+            new IntegerColumnType { Name = "tinyint", Bits = 7 },
+            new IntegerColumnType { Name = "smallint", Bits = 15 },
+            new IntegerColumnType { Name = "int", Bits = 31 },
+            new IntegerColumnType { Name = "bigint", Bits = 63 },
 
             new DecimalColumnType { Name = "decimal" },
             new DecimalColumnType { Name = "numeric" },

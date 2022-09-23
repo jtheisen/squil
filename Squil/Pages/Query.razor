@@ -169,18 +169,6 @@
                         <div class="common-lead-spacer">&nbsp;</div>
                     }
 
-                    @if (!vm.LastResult.IsValidationOk)
-                    {
-                        <div class="validation-display">
-                            @foreach (var c in vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
-                            {
-                                <div>
-                                    @c.Error
-                                </div>
-                            }
-                        </div>
-                    }
-
                     <Modal OnClose="SqlModalSubscription">
                         <Title>SQL Query</Title>
                         <HeaderExtra>

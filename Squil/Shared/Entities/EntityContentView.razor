@@ -99,7 +99,7 @@
 
         var showAll = false;
 
-        showAll |= parentCollection?.Extent.ScanMatchOptions != null;
+        showAll |= parentCollection?.Extent.ScanValue != null;
         showAll |= isBlockLevel && table?.PrimaryKey == null;
 
         var columnClasses = Enum.GetValues(typeof(ColumnRenderClass)) as ColumnRenderClass[];

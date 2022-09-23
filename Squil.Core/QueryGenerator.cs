@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Xml.Linq;
 
@@ -113,6 +114,10 @@ public class QueryGenerator
             var predicate = String.Join(" or ", extent.ScanMatchOptions.Select(RenderScanMatchOption));
 
             predicates = predicates.Concat(predicate.ToSingleton());
+        }
+        else if (extent.ScanMatchOptions?.Length == 0 && !String.IsNullOrEmpty(extent.ScanValue))
+        {
+            predicates = predicates.Concat("false".ToSingleton());
         }
 
         var allPredicates = predicates.ToArray();

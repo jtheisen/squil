@@ -59,6 +59,7 @@ public class ExtentFactory
             return option?.Apply(o => new ScanMatchOption(c.Name, o.Operator, o.Value));
         }
 
+        primaryExtent.ScanValue = scanValue;
         primaryExtent.ScanMatchOptions = scanValue?.Apply(v => table.Columns.Values.Select(GetScanMatchOptionOrNull).Where(o => o != null).ToArray());
 
         extents.Add(primaryExtent);

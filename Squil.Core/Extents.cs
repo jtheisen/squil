@@ -74,6 +74,8 @@ public class Extent
 
     public Extent[] Children { get; set; }
 
+    public String ScanValue { get; set; }
+
     public ScanMatchOption[] ScanMatchOptions { get; set; }
 
     String DebuggerDisplay => RelationName ?? "<root>";
