@@ -75,7 +75,7 @@ public static class SqlConnectionExtensions
 
     public static XElement QueryAndParseXml(this SqlConnection connection, String sql)
     {
-        using var _ = GetCurrentLedger().TimedScope("query-and-parsing");
+        using var scope = GetCurrentLedger().TimedScope("query-and-parsing");
 
         var command = connection.CreateSqlCommandFromSql(sql);
 
@@ -83,7 +83,7 @@ public static class SqlConnectionExtensions
 
         var rootRow = XElement.Load(reader);
 
-        return rootRow;
+        return scope.SetResult(rootRow);
     }
 
     public static CMIndexlike ChooseIndex(this RelatedEntities relatedEntities)

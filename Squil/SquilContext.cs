@@ -50,13 +50,13 @@ public class SquilContext
     }
 
 
-    public QueryResult Query(SqlConnection connection, Extent extent)
+    public Entity Query(SqlConnection connection, Extent extent)
     {
-        QueryResult result;
+        Entity entity;
 
         try
         {
-            result = QueryGenerator.Query(connection, extent);
+            entity = QueryGenerator.Query(connection, extent);
         }
         catch (SqlException ex)
         {
@@ -70,8 +70,6 @@ public class SquilContext
             }
         }
 
-        var entity = result.entity;
-
         if (entity.SchemaDate > CircularModel.TimeStamp)
         {
             UpdateModel();
@@ -80,7 +78,7 @@ public class SquilContext
         }
         else
         {
-            return result;
+            return entity;
         }
     }
 

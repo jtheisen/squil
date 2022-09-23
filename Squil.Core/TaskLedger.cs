@@ -7,6 +7,7 @@ public class TimedScope : IDisposable
     private readonly Stopwatch watch;
     private readonly TaskLedger report;
     private readonly String name;
+    private Object result;
 
     public TimedScope(TaskLedger report, String name, Stopwatch watch)
     {
@@ -17,10 +18,18 @@ public class TimedScope : IDisposable
         watch.Start();
     }
 
+    public T SetResult<T>(T result)
+    {
+        this.result = result;
+
+        return result;
+    }
+
     public void Dispose()
     {
         watch.Stop();
-        report.ReportTime(name, watch.Elapsed);
+
+        report.ReportTime(name, watch.Elapsed, result);
     }
 }
 
@@ -37,11 +46,13 @@ public struct LedgerEntry
 {
     public String name;
     public TimeSpan time;
+    public Object result;
 
-    public LedgerEntry(String name, TimeSpan time)
+    public LedgerEntry(String name, TimeSpan time, Object result)
     {
         this.name = name;
         this.time = time;
+        this.result = result;
     }
 }
 
@@ -73,7 +84,12 @@ public class TaskLedger : IDisposable
 
     public IEnumerable<LedgerEntry> GetEntries() => entries;
 
-    public void ReportTime(String name, TimeSpan time) => entries.Add(new LedgerEntry(name, time));
+    public T GetLastEntry<T>()
+    {
+        return entries.Select(e => e.result).OfType<T>().LastOrDefault();
+    }
+
+    public void ReportTime(String name, TimeSpan time, Object result) => entries.Add(new LedgerEntry(name, time, result));
 
     public IDisposable GroupingScope(String name)
     {
@@ -82,5 +98,5 @@ public class TaskLedger : IDisposable
         return new ActionScope(() => groups.Pop());
     }
 
-    public IDisposable TimedScope(String name) => new TimedScope(this, name, watch);
+    public TimedScope TimedScope(String name) => new TimedScope(this, name, watch);
 }

@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Squil;
 
-public record QueryResult(Entity entity, String sql, XElement resultXml);
+public record QuerySql(String Sql);
 
 public class QueryGenerator
 {
@@ -29,8 +29,10 @@ public class QueryGenerator
         return "x";
     }
 
-    public String GetCompleteSql(Extent rootExtent)
+    public QuerySql GetCompleteSql(Extent rootExtent)
     {
+        using var scope = GetCurrentLedger().TimedScope("create-query");
+
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
         var selectables =
@@ -39,7 +41,7 @@ public class QueryGenerator
 
         var sql = String.Join(",\n", selectables);
 
-        return $"select\n{sql}\n for xml path ('root')";
+        return scope.SetResult(new QuerySql($"select\n{sql}\n for xml path ('root')"));
     }
 
     String I(Int32 indent) => new String(' ', indent);
@@ -117,7 +119,8 @@ public class QueryGenerator
         }
         else if (extent.ScanMatchOptions?.Length == 0 && !String.IsNullOrEmpty(extent.ScanValue))
         {
-            predicates = predicates.Concat("false".ToSingleton());
+            // FIXME: a better way would be to make no request at all
+            predicates = predicates.Concat("0 = 1".ToSingleton());
         }
 
         var allPredicates = predicates.ToArray();
@@ -242,17 +245,17 @@ public class QueryGenerator
         };
     }
 
-    public QueryResult Query(SqlConnection connection, Extent extent)
+    public Entity Query(SqlConnection connection, Extent extent)
     {
         var sql = GetCompleteSql(extent);
 
-        var resultXml = connection.QueryAndParseXml(sql);
+        var resultXml = connection.QueryAndParseXml(sql.Sql);
 
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
         var entity = MakeEntity(extent, rootTable, resultXml, true);
 
-        return new QueryResult(entity, sql, resultXml);
+        return entity;
     }
 
     public Entity QueryDummy(Extent extent)
@@ -267,6 +270,6 @@ public class QueryGenerator
     {
         var sql = GetCompleteSql(extent);
 
-        return connection.QueryAndParseXml<X>(sql);
+        return connection.QueryAndParseXml<X>(sql.Sql);
     }
 }

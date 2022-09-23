@@ -73,7 +73,7 @@
 
                     @if(Settings.EnableDevMode)
                     {
-                        if (vm.LastResult?.LedgerEntries != null)
+                        if (vm.LastResult?.Ledger != null)
                         {
                             <div>
                                 <span>@queryCount / @renderCount</span>
@@ -81,7 +81,7 @@
                             <div class="common-lead-spacer">&nbsp;</div>
                             <div class="">
                                 <dl>
-                                    @foreach (var entry in vm.LastResult.LedgerEntries)
+                                    @foreach (var entry in vm.LastResult.Ledger.GetEntries())
                                     {
                                         <dt>@entry.name</dt>
                                         <dd>@entry.time</dd>
@@ -187,7 +187,7 @@
                             </small>
                         </HeaderExtra>
                         <Body>
-                            <pre>@vm.LastResult.Sql</pre>
+                            <pre>@(vm.LastResult?.Ledger.GetLastEntry<QuerySql>()?.Sql)</pre>
                         </Body>
                     </Modal>
 

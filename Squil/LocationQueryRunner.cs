@@ -81,7 +81,6 @@ public class LocationQueryResult
     public QueryControllerQueryType QueryType { get; set; }
     public String RootUrl { get; set; }
     public String RootName { get; set; }
-    public String Sql { get; set; }
     public CMTable Table { get; set; }
     public Entity Entity { get; set; }
     public RelatedEntities PrimaryEntities { get; set; }
@@ -89,7 +88,7 @@ public class LocationQueryResult
     public CMRelationEnd PrincipalRelation { get; set; }
     public Boolean IsValidationOk { get; set; }
     public ValidationResult[] ValidatedColumns { get; set; }
-    public IEnumerable<LedgerEntry> LedgerEntries { get; set; }
+    public TaskLedger Ledger { get; set; }
     public SqlException Exception { get; set; }
 
     public Boolean IsOk => IsValidationOk && Exception == null;
@@ -205,11 +204,9 @@ public class LocationQueryRunner
 
         using var connection = context.GetConnection();
 
-        QueryResult queryResult;
-
         try
         {
-            queryResult = context.Query(connection, extent);
+            result.Entity = context.Query(connection, extent);
         }
         catch (SqlException ex)
         {
@@ -217,24 +214,21 @@ public class LocationQueryRunner
 
             return result;
         }
-
-        var (entity, sql, resultXml) = queryResult;
-
-        result.Sql = sql;
-        result.Entity = entity;
+        finally
+        {
+            result.Ledger = ledger;
+        }
 
         if (!isRoot)
         {
-            result.PrimaryEntities = entity.Related.GetRelatedEntities("primary");
+            result.PrimaryEntities = result.Entity.Related.GetRelatedEntities("primary");
         }
 
         if (principalLocation != null)
         {
-            result.PrincipalEntities = entity.Related.GetRelatedEntities("principal");
+            result.PrincipalEntities = result.Entity.Related.GetRelatedEntities("principal");
             result.PrincipalRelation = principalLocation.Relation;
         }
-
-        result.LedgerEntries = ledger.GetEntries();
 
         return result;
     }
