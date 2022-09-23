@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.Data.SqlClient;
 using TaskLedgering;
 
 namespace Squil;
@@ -89,6 +90,9 @@ public class LocationQueryResult
     public Boolean IsValidationOk { get; set; }
     public ValidationResult[] ValidatedColumns { get; set; }
     public IEnumerable<LedgerEntry> LedgerEntries { get; set; }
+    public SqlException Exception { get; set; }
+
+    public Boolean IsOk => IsValidationOk && Exception == null;
 }
 
 public static class Extensions
@@ -201,9 +205,20 @@ public class LocationQueryRunner
 
         using var connection = context.GetConnection();
 
-        var (entity, sql, resultXml) = context.Query(connection, extent);
+        QueryResult queryResult;
 
-        Debug.Assert(entity != null);
+        try
+        {
+            queryResult = context.Query(connection, extent);
+        }
+        catch (SqlException ex)
+        {
+            result.Exception = ex;
+
+            return result;
+        }
+
+        var (entity, sql, resultXml) = queryResult;
 
         result.Sql = sql;
         result.Entity = entity;

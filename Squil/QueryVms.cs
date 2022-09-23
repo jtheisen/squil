@@ -127,7 +127,7 @@ public class LocationQueryVm
         LastRequest = request;
         LastResult = result;
 
-        if (LastResult.IsValidationOk)
+        if (LastResult.IsOk)
         {
             DisplayedEntity = LastResult.Entity;
         }

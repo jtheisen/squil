@@ -122,9 +122,25 @@
 
                     <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
 
+                    @if (vm.LastResult.Exception != null)
+                    {
+                        <div class="alert alert-danger">
+                            <div class="mb-2">
+                                The database sent an unexpected error, this is likely a bug.
+                            </div>
+
+                            <pre class="mb-0">
+                                @foreach (System.Data.SqlClient.SqlError msg in vm.LastResult.Exception.Errors)
+                                {
+                                    <div>@msg.Message</div>
+                                }
+                            </pre>
+                        </div>
+                    }
+
                     @if (vm.DisplayedEntity != null)
                     {
-                        <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsValidationOk))">
+                        <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsOk))">
                             <EntityContentView Entity="@vm.DisplayedEntity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
                         </div>
 
@@ -151,10 +167,6 @@
                         }
 
                         <div class="common-lead-spacer">&nbsp;</div>
-                    }
-                    else
-                    {
-                        <h4>No entity</h4>
                     }
 
                     @if (!vm.LastResult.IsValidationOk)
