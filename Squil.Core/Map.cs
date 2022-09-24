@@ -25,7 +25,7 @@ public static class Map
     public static IMap<K, T> AsMap<K, T>(this IDictionary<K, T> source, Boolean withDefaults = false)
         => new FromDictionaryMap<K, T>(source, withDefaults);
 
-    public static IMap<String, String> AsMap<K, T>(this NameValueCollection source)
+    public static IMap<String, String> AsMap(this NameValueCollection source)
         => new FromNvcMap(source);
 
     public static IMap<K, T> Convert<K, T, S>(this IMap<K, S> source, Func<S, T> convert, Func<T, S> convertBack)
@@ -43,6 +43,20 @@ public static class Map
 
         return nvc;
     }
+}
+
+class DefaultMap<K, T> : IMap<K, T>
+{
+    public T this[K key] { get => default; set => throw new NotImplementedException(); }
+
+    public Object Backing => null;
+
+    public IEnumerator<KeyValuePair<K, T>> GetEnumerator()
+    {
+        yield break;
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 class FromDictionaryMap<K, T> : IMap<K, T>

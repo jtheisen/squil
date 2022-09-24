@@ -23,16 +23,18 @@ public class MultipleElementsException : InvalidOperationException
 
 public class Empties<T>
 {
-    public static T[] Array = new T[0];
+    public static readonly T[] Array = new T[0];
 
-    public static IEnumerable<T> Enumerable = Array;
+    public static readonly IEnumerable<T> Enumerable = Array;
 }
 
 public class Empties<K, T>
 {
-    public static Dictionary<K, T> Dictionary = new Dictionary<K, T>();
+    public static readonly Dictionary<K, T> Dictionary = new Dictionary<K, T>();
 
-    public static ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
+    public static readonly IMap<K, T> Map = new DefaultMap<K, T>();
+
+    public static readonly ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
 }
 
 public static class RazorHelpers

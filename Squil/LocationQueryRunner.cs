@@ -60,7 +60,7 @@ public class LocationQueryRequest
             Index = null;
         }
 
-        InScanMode = Index == null;
+        InScanMode = queryParams["scan"] != null;
 
         (var keyParams, var restParams) = SplitParams(queryParams);
 
@@ -100,6 +100,7 @@ public class LocationQueryResult
     public String RootUrl { get; set; }
     public String RootName { get; set; }
     public CMTable Table { get; set; }
+    public CMIndexlike Index { get; set; }
     public Entity Entity { get; set; }
     public RelatedEntities PrimaryEntities { get; set; }
     public RelatedEntities PrincipalEntities { get; set; }
@@ -182,7 +183,7 @@ public class LocationQueryRunner
         }
         else
         {
-            var cmIndex = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
+            var cmIndex = result.Index = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
             ValidationResult GetColumnValue(CMDirectedColumn column)
             {

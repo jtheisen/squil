@@ -38,13 +38,14 @@ namespace Squil
             CMTable table,
             CMColumnTuple columnsOnTarget,
             CMColumnTuple columnsOnSource,
-            IDictionary<String, String> columnValueSource,
+            IMap<String, String> columnValueSource,
             CMIndexlike index = null,
-            String backRelation = null
+            String backRelation = null,
+            Boolean scan = false
         )
         {
             var columnValues = columnsOnSource.Columns
-                .Select(c => columnValueSource.GetOrDefault(c.c.Name))
+                .Select(c => columnValueSource[c.c.Name])
                 .TakeWhile(c => c != null);
 
             var query = columnsOnTarget.Columns.Zip(columnValues, (ic, cv) => ("$", ic.c.Name, cv));
@@ -54,6 +55,11 @@ namespace Squil
                 query = query.Concat(("", "from", backRelation).ToSingleton());
             }
 
+            if (scan)
+            {
+                query = query.Concat(("", "scan", "").ToSingleton());
+            }
+
             var (schema, tableName) = table.Name;
 
             var url = UrlRenderer.RenderUrl(new[] { "tables", schema, tableName, index?.Name }, query);
@@ -61,7 +67,7 @@ namespace Squil
             return url;
         }
 
-        public String RenderEntitiesUrl(CMRelationEnd end, CMIndexlike index, Dictionary<String, String> values)
+        public String RenderEntitiesUrl(CMRelationEnd end, CMIndexlike index, IMap<String, String> values)
         {
             // We're allowing no index if we're looking at an entire table
             if (end.Key.Name != "" && index == null) return null;
@@ -77,21 +83,17 @@ namespace Squil
 
             var index = relatedEntities.ChooseIndex();
 
-            return RenderEntitiesUrl(end, index, parentEntity.ColumnValues);
+            return RenderEntitiesUrl(end, index, parentEntity.ColumnValues.AsMap());
         }
 
-        public String RenderIndexUrl(CMIndexlike index, IDictionary<String, String> columnValueSource)
+        public String RenderIndexOrTableUrl(CMTable table, CMIndexlike index, IMap<String, String> columnValueSource, String backRelation, Boolean scan = false)
         {
-            return RenderColumnTupleUrl(index.Table, index, index, columnValueSource, index);
+            return RenderColumnTupleUrl(table, index, index, columnValueSource, index, backRelation, scan);
         }
 
-        public String RenderScanUrl(CMTable table)
+        public String RenderTableUrl(CMTable table, Boolean scan = false)
         {
-            var rootTable = table.Root.RootTable;
-            var tableRelation = rootTable.Relations[table.Name.Simple];
-
-            return RenderEntitiesUrl(tableRelation, null, Empties<String, String>.Dictionary);
+            return RenderColumnTupleUrl(table, null, null, Empties<String, String>.Map, scan: scan);
         }
-
     }
 }

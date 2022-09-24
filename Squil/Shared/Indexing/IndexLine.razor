@@ -94,12 +94,16 @@
         {
             if (Index.IsCurrent) return null;
 
+            var result = Vm.LastResult;
+
+            var keys = Vm.LastRequest.KeyParams.AsMap();
+
             switch (Index.OptionType)
             {
                 case SearchOptionType.Seek:
-                    return Context.RenderIndexUrl(Index.Index, Vm.Result.Entity.ColumnValues);
+                    return Context.RenderIndexOrTableUrl(result.Table, Index.Index, keys, Vm.LastRequest.BackRelation);
                 case SearchOptionType.Scan:
-                    return Context.RenderScanUrl(Vm.LastResult.Table);
+                    return Context.RenderIndexOrTableUrl(result.Table, result.Index, keys, Vm.LastRequest.BackRelation, true);
                 default:
                     throw new Exception($"Unexpected option type {Index.OptionType}");
             }
