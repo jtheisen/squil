@@ -2,8 +2,15 @@ using System.Xml.Serialization;
 
 namespace Squil.SchemaBuilding;
 
+public class SysWithComment
+{
+    [XmlNoColumn]
+    [XmlAttribute("comment")]
+    public String Comment { get; set; }
+}
+
 [XmlRoot("root")]
-public class SysRoot
+public class SysRoot : SysWithComment
 {
     [XmlArray("sys.schemas")]
     public SysSchema[] Schemas { get; set; }
@@ -15,7 +22,7 @@ public class SysRoot
 [XmlType("s")]
 [XmlTable("schemas")]
 [DebuggerDisplay("{Name}")]
-public class SysSchema
+public class SysSchema : SysWithComment
 {
     [XmlAttribute("name")]
     public String Name { get; set; }
@@ -30,7 +37,7 @@ public class SysSchema
 [XmlType("o")]
 [XmlTable("objects")]
 [DebuggerDisplay("{Name}")]
-public class SysObject
+public class SysObject : SysWithComment
 {
     [XmlAttribute("object_id")]
     public Int32 ObjectId { get; set; }
@@ -87,7 +94,7 @@ public class SysTable : SysObject
 [XmlType("c")]
 [XmlTable("columns")]
 [DebuggerDisplay("{Name}")]
-public class SysColumn
+public class SysColumn : SysWithComment
 {
     [XmlAttribute("object_id")]
     public Int32 ObjectId { get; set; }
@@ -144,7 +151,7 @@ public class SysIndexReference
 [XmlType("ix")]
 [XmlTable("indexes")]
 [DebuggerDisplay("{Name}")]
-public class SysIndex
+public class SysIndex : SysWithComment
 {
     [XmlAttribute("name")]
     public String Name { get; set; }

@@ -69,6 +69,22 @@ join sys.allocation_units u on p.[partition_id] = u.container_id
 where p.[object_id] = {a}.[object_id] and p.index_id = {a}.index_id
 ";
 
+    static String GetCatalogCommentSql(String _) => $@"
+select value from sys.extended_properties ep where class = 0 and name = 'MS_Description' and ep.major_id = 0 and ep.minor_id = 0
+";
+
+    static String GetSchemaCommentSql(String a) => $@"
+select value from sys.extended_properties ep where class = 3 and name = 'MS_Description' and ep.major_id = {a}.schema_id and ep.minor_id = 0
+";
+
+    static String GetTableCommentSql(String a) => $@"
+select value from sys.extended_properties ep where class = 1 and name = 'MS_Description' and ep.major_id = {a}.[object_id] and ep.minor_id = 0
+";
+
+    static String GetColumnCommentSql(String a) => $@"
+select value from sys.extended_properties ep where class = 1 and name = 'MS_Description' and ep.major_id = {a}.[object_id] and ep.minor_id = {a}.column_id
+";
+
     static SysRoot GetSysSchema(this SqlConnection connection)
     {
         using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
@@ -83,18 +99,31 @@ where p.[object_id] = {a}.[object_id] and p.index_id = {a}.index_id
         var cSchema = sysGenerator.Query<SysRoot>(connection, new Extent
         {
             RelationName = "",
+            SqlSelectables = new[]
+            {
+                // doesn't yet work
+                new SqlSelectable(GetCatalogCommentSql, "comment"),
+            },
             Children = new[]
             {
                 new Extent
                 {
                     RelationName = "sys.schemas",
                     Alias = "s",
+                    SqlSelectables = new[]
+                    {
+                        new SqlSelectable(GetSchemaCommentSql, "comment"),
+                    },
                     Children = new[]
                     {
                             new Extent
                             {
                                 RelationName = "tables",
                                 Alias = "t",
+                                SqlSelectables = new[]
+                                {
+                                    new SqlSelectable(GetTableCommentSql, "comment"),
+                                },
                                 Children = new[]
                                 {
                                     new Extent
@@ -102,6 +131,10 @@ where p.[object_id] = {a}.[object_id] and p.index_id = {a}.index_id
                                         Order = new DirectedColumnName[] { "column_id" },
                                         RelationName = "columns",
                                         Alias = "c",
+                                        SqlSelectables = new[]
+                                        {
+                                            new SqlSelectable(GetColumnCommentSql, "comment"),
+                                        },
                                         Children = new[]
                                         {
                                             new Extent

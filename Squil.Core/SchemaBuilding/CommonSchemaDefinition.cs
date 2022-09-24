@@ -10,6 +10,8 @@ public record CsdUnsupportedReason(String Tag, String Reason, String Specific)
 
 public class CsdBase
 {
+    public String Comment { get; set; }
+
     public List<String> Comments { get; set; }
 
     public CsdUnsupportedReason UnsupportedReason { get; set; }
@@ -134,7 +136,8 @@ public static class CsdExtensions
                         IsSystemType = systemtype != null,
                         IsAssemblyType = usertype.IsAssemblyType,
                         IsNullable = c.IsNullable,
-                        ColumnId = c.ColumnId
+                        ColumnId = c.ColumnId,
+                        Comment = c.Comment
                     }
                 ).ToArray();
 
@@ -211,12 +214,13 @@ public static class CsdExtensions
                     Columns = csdColumns,
                     Keyishs = csdKeyishs.ToArray(),
                     Type = CsdTableType.Table,
-                    UsedKb = tableSizeKb
+                    UsedKb = tableSizeKb,
+                    Comment = table.Comment
                 });
             }
         }
 
-        return new CsdRoot { Tables = csdTables.ToArray(), TimeStamp = root.SchemaDate };
+        return new CsdRoot { Tables = csdTables.ToArray(), Comment = root.Comment, TimeStamp = root.SchemaDate };
     }
 
     public static CsdRoot CreateCsd(this ISRoot root)
