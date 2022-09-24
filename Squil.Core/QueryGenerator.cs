@@ -149,6 +149,11 @@ public class QueryGenerator
 
         selectables.AddRange(children);
 
+        if (extent.SqlSelectables != null)
+        {
+            selectables.AddRange(from s in extent.SqlSelectables select $"({s.GetSql(alias)}) {s.Alias}");
+        }
+
         if (selectables.Count == 0)
         {
             selectables.Add("42 dummy");

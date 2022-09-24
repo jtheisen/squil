@@ -14,6 +14,11 @@ public class XmlTableAttribute : Attribute
     }
 }
 
+[AttributeUsage(AttributeTargets.Property)]
+public class XmlNoColumnAttribute : Attribute
+{
+}
+
 public class LazyStaticSingleton<T>
     where T : new()
 {
@@ -73,6 +78,7 @@ public class XmlEntitiyMetata<E> : LazyStaticSingleton<XmlEntitiyMetata<E>>
             from c in hierarchy
             from p in c.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
             from a in p.GetCustomAttributes<XmlAttributeAttribute>()
+            where p.GetCustomAttribute<XmlNoColumnAttribute>() == null
             select new XmlProperty { p = p, a = a }
         ).ToArray();
 

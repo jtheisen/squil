@@ -45,6 +45,8 @@ public enum ScanOperator
 
 public record ScanMatchOption(DirectedColumnName Column, ScanOperator Operator, String Value);
 
+public record SqlSelectable(Func<String, String> GetSql, String Alias);
+
 [DebuggerDisplay("{DebuggerDisplay}")]
 public class Extent
 {
@@ -65,6 +67,8 @@ public class Extent
     public String Alias { get; set; }
 
     public String[] Columns { get; set; }
+
+    public SqlSelectable[] SqlSelectables { get; set; }
 
     public DirectedColumnName[] Order { get; set; }
 

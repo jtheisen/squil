@@ -62,6 +62,13 @@ public static class SchemaBuildingExtensions
         return cSchema;
     }
 
+    static String GetUsedPagesSql(String a) => $@"
+select sum(u.used_pages)
+from sys.partitions p
+join sys.allocation_units u on p.[partition_id] = u.container_id
+where p.[object_id] = {a}.[object_id] and p.index_id = {a}.index_id
+";
+
     static SysRoot GetSysSchema(this SqlConnection connection)
     {
         using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
@@ -114,6 +121,10 @@ public static class SchemaBuildingExtensions
                                         Order = new DirectedColumnName[] { "index_id" },
                                         RelationName = "indexes",
                                         Alias = "ix",
+                                        SqlSelectables = new[]
+                                        {
+                                            new SqlSelectable(GetUsedPagesSql, "used_pages")
+                                        },
                                         Children = new[]
                                         {
                                             new Extent

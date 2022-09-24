@@ -179,6 +179,10 @@ public class SysIndex
     [XmlAttribute("is_hypothetical")]
     public Boolean IsHypothetical { get; set; }
 
+    [XmlNoColumn]
+    [XmlAttribute("used_pages")]
+    public Int32 UsedPages { get; set; }
+
     [XmlArray("columns")]
     public SysIndexColumn[] Columns { get; set; } = Empties<SysIndexColumn>.Array;
 

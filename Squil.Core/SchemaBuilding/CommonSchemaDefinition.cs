@@ -34,6 +34,8 @@ public class CsdTable : CsdBase
     public CsdColumn[] Columns { get; set; }
 
     public CsdKeyish[] Keyishs { get; set; }
+
+    public Int32? UsedKb { get; set; }
 }
 
 public class CsdColumn : CsdBase
@@ -81,6 +83,8 @@ public class CsdKeyish : CsdBase
 public class CsdIndexlike : CsdKeyish
 {
     public Boolean IsUnique { get; set; }
+
+    public Int32? UsedKb { get; set; }
 }
 
 public class CsdForeignKey : CsdKeyish
@@ -114,6 +118,8 @@ public static class CsdExtensions
         {
             foreach (var table in schema.Tables)
             {
+                Int32? tableSizeKb = null;
+
                 var tableName = new ObjectName(schema.Name, table.Name);
 
                 var csdColumns = (
@@ -136,6 +142,11 @@ public static class CsdExtensions
 
                 foreach (var index in table.Indexes)
                 {
+                    if (index.Type <= 1)
+                    {
+                        tableSizeKb = index.UsedPages * 8;
+                    }
+
                     if (index.Type == 0)
                     {
                         // Heaps appear as indexes, but that makes no sense for Squil to deal with.
@@ -162,6 +173,7 @@ public static class CsdExtensions
                         Columns = directedColumnNames,
                         IsUnique = index.IsUnique,
                         Type = index.GetCsdType(),
+                        UsedKb = index.UsedPages * 8,
                         UnsupportedReason = intrinsicallyUnsupported
                     });
                 }
@@ -198,7 +210,8 @@ public static class CsdExtensions
                     Name = tableName,
                     Columns = csdColumns,
                     Keyishs = csdKeyishs.ToArray(),
-                    Type = CsdTableType.Table
+                    Type = CsdTableType.Table,
+                    UsedKb = tableSizeKb
                 });
             }
         }
