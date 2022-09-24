@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using System.Linq;
 using static System.Web.HttpUtility;
 
 namespace Squil
@@ -23,8 +24,10 @@ namespace Squil
 
         public String RenderEntityUrl(Entity entity, CMIndexlike key)
         {
+            var (schema, table) = key.Table.Name;
+
             var url = UrlRenderer.RenderUrl(
-                new[] { key.Table.Name.Escaped, key.Name },
+                new[] { "tables", schema, table, key.Name },
                 from c in key.Columns select ("$", c.c.Name, entity.ColumnValues[c.c.Name])
             );
 
@@ -51,7 +54,9 @@ namespace Squil
                 query = query.Concat(("", "from", backRelation).ToSingleton());
             }
 
-            var url = UrlRenderer.RenderUrl(new[] { table.Name.Escaped, index?.Name }, query);
+            var (schema, tableName) = table.Name;
+
+            var url = UrlRenderer.RenderUrl(new[] { "tables", schema, tableName, index?.Name }, query);
 
             return url;
         }

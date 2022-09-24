@@ -14,8 +14,8 @@ public enum QueryControllerQueryType
 
 public class LocationQueryRequest
 {
+    public String Schema { get; }
     public String Table { get; }
-
     public String Index { get; }
 
     public Boolean InScanMode { get; set; }
@@ -31,11 +31,29 @@ public class LocationQueryRequest
     public LocationQueryRequest(String path, NameValueCollection queryParams, NameValueCollection searchValues)
     {
         var segments = new Uri("https://host/" + path, UriKind.Absolute).Segments;
-
+        
         Debug.Assert(segments.GetOrDefault(0) == "/");
 
-        Table = segments.GetOrDefault(1)?.TrimEnd('/');
-        Index = segments.GetOrDefault(2)?.TrimEnd('/');
+        String Get(Int32 i)
+        {
+            return segments.GetOrDefault(i)?.TrimEnd('/');
+        }
+
+        var section = Get(1);
+
+        switch (section)
+        {
+            case "views":
+            case "tables":
+                Schema = Get(2);
+                Table = Get(3);
+                Index = Get(4);
+                break;
+            case "indexes":
+                Schema = Get(2);
+                Index = Get(3);
+                break;
+        }
 
         if (Index == UrlRenderer.BlazorDefeatingDummySegment)
         {
@@ -135,12 +153,13 @@ public class LocationQueryRunner
 
         var context = connections.GetContext(connectionName);
 
+        var schema = request.Schema;
         var table = request.Table;
         var index = request.Index;
 
         var isRoot = table == null;
 
-        var cmTable = isRoot ? context.CircularModel.RootTable : context.CircularModel.GetTable(parser.Parse(table));
+        var cmTable = isRoot ? context.CircularModel.RootTable : context.CircularModel.GetTable(new ObjectName(schema, table));
 
         var extentFactory = new ExtentFactory(2);
 
