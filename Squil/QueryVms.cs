@@ -85,7 +85,7 @@ public class LocationQueryVm
                 .Where(i => i.IsSupported)
                 .StartsWith(keyKeysArray)
                 .Where(i => i.Columns.Length > keyKeysArray.Length)
-                .Select(i => new SearchOptionVm(i, KeyValuesCount) { IsCurrent = request.Index == i.Name && !request.InScanMode })
+                .Select(i => new SearchOptionVm(i, KeyValuesCount) { IsCurrent = request.Index == i.Name && result.SearchMode == QuerySearchMode.Seek })
                 .ToArray();
 
             accountedIndexes.AddRange(SearchOptions.Select(i => i.Index.ObjectName));
@@ -116,7 +116,7 @@ public class LocationQueryVm
 
             CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
 
-            ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = request.InScanMode };
+            ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = result.SearchMode == QuerySearchMode.Scan };
         }
 
         Update(request, result);

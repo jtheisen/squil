@@ -12,7 +12,7 @@
     <div class="indexes-form">
         @if (Vm.ScanOption != null)
         {
-            <IndexLine Vm="@Vm" Index="@Vm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            <IndexLine Vm="@Vm" Option="@Vm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
         }
     </div>
 
@@ -25,12 +25,12 @@
             {
                 if (!option.Index.IsSupported) continue;
 
-                <IndexLine Vm="@Vm" Index="@option" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+                <IndexLine Vm="@Vm" Option="@option" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
             }
         }
         else if (Vm.ScanOption?.IsCurrent ?? false == false)
         {
-            <IndexLine Vm="@Vm" Index="@Vm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            <IndexLine Vm="@Vm" Option="@Vm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
         }
     </div>
 

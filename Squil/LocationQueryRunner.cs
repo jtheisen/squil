@@ -18,7 +18,7 @@ public class LocationQueryRequest
     public String Table { get; }
     public String Index { get; }
 
-    public Boolean InScanMode { get; set; }
+    public QuerySearchMode? SearchMode { get; set; }
 
     public Int32 ListLimit { get; set; }
 
@@ -60,7 +60,10 @@ public class LocationQueryRequest
             Index = null;
         }
 
-        InScanMode = queryParams["scan"] != null;
+        if (Enum.TryParse<QuerySearchMode>(queryParams["search"], true, out var searchMode))
+        {
+            SearchMode = searchMode;
+        }
 
         (var keyParams, var restParams) = SplitParams(queryParams);
 
@@ -97,6 +100,7 @@ public class LocationQueryRequest
 public class LocationQueryResult
 {
     public QueryControllerQueryType QueryType { get; set; }
+    public QuerySearchMode? SearchMode { get; set; }
     public String RootUrl { get; set; }
     public String RootName { get; set; }
     public CMTable Table { get; set; }
@@ -111,12 +115,6 @@ public class LocationQueryResult
     public SqlException Exception { get; set; }
 
     public Boolean IsOk => IsValidationOk && Exception == null;
-}
-
-public static class Extensions
-{
-    public static RelatedEntities GetRelatedEntities(this RelatedEntities[] relatedEntities, String alias)
-        => relatedEntities.Where(e => e.Extent.RelationAlias == alias).Single($"Unexpectedly no single '{alias}' data");
 }
 
 public enum CanLoadMoreStatus
@@ -159,6 +157,8 @@ public class LocationQueryRunner
         var index = request.Index;
 
         var isRoot = table == null;
+
+        var settings = connections.AppSettings;
 
         var cmTable = isRoot ? context.CircularModel.RootTable : context.CircularModel.GetTable(new ObjectName(schema, table));
 
@@ -206,7 +206,14 @@ public class LocationQueryRunner
 
             principalLocation = GetPrincipalLocation(cmTable, request);
 
-            var scanValue = request.InScanMode ? request.SearchValues[""] ?? "" : null;
+            var searchMode = request.SearchMode ?? cmIndex?.GetDefaultSearchMode(settings) ?? cmTable.GetDefaultSearchMode(settings);
+
+            if (cmIndex == null && searchMode == QuerySearchMode.Seek)
+            {
+                searchMode = null;
+            }
+
+            var scanValue = searchMode == QuerySearchMode.Scan ? request.SearchValues[""] ?? "" : null;
 
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
@@ -216,6 +223,7 @@ public class LocationQueryRunner
             );
 
             result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
+            result.SearchMode = searchMode;
             result.ValidatedColumns = columnValues;
             result.IsValidationOk = columnValues?.All(r => r.IsOk) ?? true;
         }

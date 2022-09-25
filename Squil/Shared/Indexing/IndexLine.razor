@@ -1,11 +1,11 @@
 ﻿@inject NavigationManager Nav
 
 @{
-    var fields = Index.Fields;
-    var validation = Index.ValidationValues;
+    var fields = Option.Fields;
+    var validation = Option.ValidationValues;
 }
 
-<a class="@ClassNames("index", "current".If(Index.IsCurrent), "no-index".If(noOption))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
+<a class="@ClassNames("index", "current".If(Option.IsCurrent), "no-index".If(noOption))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
     <fieldset>
         <div class="index-columns d-flex">
             @for (var i = 0; i < fields.Length; ++i)
@@ -16,22 +16,22 @@
                 var first = i == 0;
 
                 <span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(isInvalid), "no-index-column".If(noOption))">
-                    @switch (Index.OptionType)
+                    @switch (Option.OptionType)
                     {
                         case SearchOptionType.Seek:
                             <span class="index-column-name" type="text">@f.DisplayName</span>
 
-                            @if (Index.IsCurrent)
+                            @if (Option.IsCurrent)
                             {
-                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[f.ColumnName]" />
+                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Option.IsCurrent" @bind-Value="@SearchValues[f.ColumnName]" />
                             }
                             break;
                         case SearchOptionType.Scan:
                             <span class="index-column-name" type="text"><em>scan</em></span>
 
-                            @if (Index.IsCurrent)
+                            @if (Option.IsCurrent)
                             {
-                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Index.IsCurrent" @bind-Value="@SearchValues[""]" />
+                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Option.IsCurrent" @bind-Value="@SearchValues[""]" />
                             }
                             break;
                         case SearchOptionType.NoOption:
@@ -43,7 +43,7 @@
         </div>
     </fieldset>
 
-    @if (Index.IsCurrent)
+    @if (Option.IsCurrent)
     {
         <div class="validation-area">
             @if (!Vm.LastResult.IsValidationOk)
@@ -75,7 +75,7 @@
     public LocationQueryVm Vm { get; set; }
 
     [Parameter]
-    public SearchOptionVm Index { get; set; }
+    public SearchOptionVm Option { get; set; }
 
     [Parameter]
     public Int32 HiddenPrefixLength { get; set; }
@@ -86,33 +86,33 @@
     [Parameter]
     public Action ShowSearchOptions { get; set; }
 
-    Boolean noOption => Index.OptionType == SearchOptionType.NoOption;
+    Boolean noOption => Option.OptionType == SearchOptionType.NoOption;
 
     String Url
     {
         get
         {
-            if (Index.IsCurrent) return null;
+            if (Option.IsCurrent) return null;
 
             var result = Vm.LastResult;
 
             var keys = Vm.LastRequest.KeyParams.AsMap();
 
-            switch (Index.OptionType)
+            switch (Option.OptionType)
             {
                 case SearchOptionType.Seek:
-                    return Context.RenderIndexOrTableUrl(result.Table, Index.Index, keys, Vm.LastRequest.BackRelation);
+                    return Context.RenderIndexOrTableUrl(result.Table, Option.Index, keys, Vm.LastRequest.BackRelation, QuerySearchMode.Seek);
                 case SearchOptionType.Scan:
-                    return Context.RenderIndexOrTableUrl(result.Table, result.Index, keys, Vm.LastRequest.BackRelation, true);
+                    return Context.RenderIndexOrTableUrl(result.Table, result.Index, keys, Vm.LastRequest.BackRelation, QuerySearchMode.Scan);
                 default:
-                    throw new Exception($"Unexpected option type {Index.OptionType}");
+                    throw new Exception($"Unexpected option type {Option.OptionType}");
             }
         }
     }
 
     void HandleClick()
     {
-        if (Index.IsCurrent) return;
+        if (Option.IsCurrent) return;
 
         Nav.NavigateTo(Url, replace: true);
     }

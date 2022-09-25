@@ -4,6 +4,12 @@ using System.Text;
 
 namespace Squil;
 
+public enum QuerySearchMode
+{
+    Seek,
+    Scan
+}
+
 public static class MiscExtensions
 {
     public static String ToSqlServerStringLiteral(this String s)

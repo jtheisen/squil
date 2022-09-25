@@ -39,6 +39,10 @@
                         var entity = vm.Result.PrimaryEntities.List.FirstOrDefault();
 
                         <BreadcrumbItem>
+                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></a>
+                        </BreadcrumbItem>
+
+                        <BreadcrumbItem>
                             <span class="text-muted entity-context">
                                 <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
                             </span>

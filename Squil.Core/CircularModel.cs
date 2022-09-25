@@ -50,6 +50,7 @@ public class CMRoot
         {
             Root = this,
             Name = t.Name,
+            UsedKb = t.UsedKb
         }
         ).ToDictionary(t => t.Name, t => t);
 
@@ -110,7 +111,9 @@ public class CMRoot
                     Table = table,
                     UnsupportedReason = support,
                     Columns = columns,
-                    ColumnNames = i.Columns
+                    ColumnNames = i.Columns,
+                    UsedKb = i.UsedKb
+                    
                 }
             ).ToDictionary(i => i.Name, i => i);
 
@@ -310,7 +313,7 @@ public class CMRoot
 }
 
 [DebuggerDisplay("{Name}")]
-public class CMTable
+public class CMTable : IWithUsedKb
 {
     public static readonly CMColumn[] noColumns = new CMColumn[0];
 
@@ -331,6 +334,8 @@ public class CMTable
     public CMColumn[] ColumnsInOrder { get; set; } = noColumns;
 
     public Dictionary<String, CMColumn> Columns = new Dictionary<String, CMColumn>();
+
+    public Int32? UsedKb { get; set; }
 
     public CMIndexlike PrimaryKey { get; set; }
 
@@ -358,13 +363,15 @@ public abstract class CMColumnTuple
     public abstract Boolean IsDomestic { get; }
 }
 
-public class CMIndexlike : CMColumnTuple
+public class CMIndexlike : CMColumnTuple, IWithUsedKb
 {
     public override Boolean IsDomestic => true;
 
     public Boolean IsPrimary { get; set; }
 
     public Boolean IsUnique { get; set; }
+
+    public Int32? UsedKb { get; set; }
 
     public Boolean IsSupported => UnsupportedReason == null;
 
@@ -427,6 +434,11 @@ public class CMColumn
     public Boolean IsString { get; set; }
 
     public Boolean IsPrimaryName { get; set; }
+}
+
+public interface IWithUsedKb
+{
+    public Int32? UsedKb { get; }
 }
 
 public static class CMExtensions
