@@ -222,7 +222,7 @@ public class LocationQueryRunner
                 principalLocation, scanValue
             );
 
-            result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : (extentValues?.Length ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
+            result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : keyValueCount == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
             result.SearchMode = searchMode;
             result.ValidatedColumns = columnValues;
             result.IsValidationOk = columnValues?.All(r => r.IsOk) ?? true;
