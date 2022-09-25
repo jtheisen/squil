@@ -56,8 +56,6 @@
 
     ColumnRenderClass GetRenderClass(CMTable table, CMColumn column)
     {
-        if (table.PrimaryNameColumn == column) return ColumnRenderClass.PrimaryName;
-
         if (table.PrimaryKey?.Columns.Select(c => c.c).Contains(column) ?? false) return ColumnRenderClass.PrimaryKey;
 
         return ColumnRenderClass.Data;
@@ -70,7 +68,7 @@
             case ExtentFlavorType.Breadcrumb:
                 return false;
             case ExtentFlavorType.Page:
-                return !column.IsPrimaryName;
+                return true;
             default:
                 return extraColumns.Contains(column.Name);
         }
