@@ -169,10 +169,12 @@ public class QueryGenerator
 
         var base64Option = columns.Any(c => c.Type is BinaryColumnType) ? ", binary base64" : "";
 
+        var indexLine = extent.IndexName?.Apply(i => $"{ipspace}with (index ({i}))\n");
+
         var sql = @$"(select{topClause}{comment}
 {selectsClause}
 {ipspace}from {forwardEnd.Table.Name.Escaped} {alias}
-{whereLine}{orderLine}{ispace}for xml auto{base64Option}, type
+{indexLine}{whereLine}{orderLine}{ispace}for xml auto{base64Option}, type
 {ipspace}) [{extent.GetRelationAlias() /* further name part escaping not required, [ is already replaced */}]";
 
         return sql;
