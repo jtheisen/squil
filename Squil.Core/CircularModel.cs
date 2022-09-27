@@ -304,7 +304,9 @@ public class CMRoot
 
             table.PrimaryNameColumn =
                 candidateColumns.Where(c => c.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
+                candidateColumns.Where(c => c.Name.Equals("title", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
                 candidateColumns.Where(c => c.Name.Contains("name", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
+                candidateColumns.Where(c => c.Name.Contains("title", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ??
                 candidateColumns.FirstOrDefault();
 
             table.PrimaryNameColumn?.Apply(c => c.IsPrimaryName = true);
