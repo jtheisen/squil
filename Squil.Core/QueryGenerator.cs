@@ -113,7 +113,7 @@ public class QueryGenerator
 
         if (extent.ScanMatchOptions?.Length > 0)
         {
-            var predicate = String.Join(" or ", extent.ScanMatchOptions.Select(RenderScanMatchOption));
+            var predicate = $"({String.Join(" or ", extent.ScanMatchOptions.Select(RenderScanMatchOption))})";
 
             predicates = predicates.Concat(predicate.ToSingleton());
         }
