@@ -199,7 +199,7 @@ public class DateValidation : DateOrTimeValidationTestBase
 public static class ColumnTypeExtensions
 {
     public static ValidationResult Validate(this ColumnType ct, String value)
-        => ct.Validate(null, value, IndexDirection.Unknown, default);
+        => ct.Validate(0, null, value, IndexDirection.Unknown, default);
 
     public static void AssertFail(this ValidationResult result)
     {

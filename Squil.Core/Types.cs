@@ -7,6 +7,8 @@ namespace Squil;
 
 public struct ValidationResult
 {
+    public Int32 No { get; set; }
+
     public ColumnType ColumnType { get; set; }
 
     public String Error { get; set; }
@@ -48,7 +50,7 @@ public abstract class ColumnType
 
     public virtual Boolean IsSupported => true;
 
-    public ValidationResult Validate(String keyValue, String searchValue, IndexDirection direction, ColumnTypePrecisions precisions)
+    public ValidationResult Validate(Int32 no, String keyValue, String searchValue, IndexDirection direction, ColumnTypePrecisions precisions)
     {
         // We have decided that for now, SQuiL doesn't support nulls as key values. We probably do want
         // to support them as search values as that's far less unusual.
@@ -72,6 +74,7 @@ public abstract class ColumnType
             result = Validate(value, precisions);
         }
 
+        result.No = no;
         result.Value = value;
         result.IsKeyValue = keyValue != null;
         result.Direction = direction;
@@ -223,27 +226,6 @@ public class DateOrTimeColumnType : ColumnType
         return new DateTimeOffset(ticks + offset.Ticks, offset);
     }
 
-    String AddSuffix(String text, String suffix)
-    {
-        // For the boundary years we're using UTC to avoid offset-related
-        // out-of-range issues. A bit sloppy, but good enough for now.
-
-        if (text.StartsWith(LowerBasePattern[..10]))
-        {
-            text += " Z";
-        }
-        else if (text.StartsWith(UpperBasePattern[..10]))
-        {
-            text += " Z";
-        }
-        else
-        {
-            text += suffix;
-        }
-
-        return text;
-    }
-
     ValidationResult Validate(String text)
     {
         var lc = text.LastOrDefault();
@@ -381,7 +363,11 @@ public class IntegerColumnType : ColumnType
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
-        if (TryParse(text, out var normalized, out var error))
+        if (String.IsNullOrWhiteSpace(text))
+        {
+            return Ok((-1 << Bits).ToString(), (1 << Bits).ToString());
+        }
+        else if (TryParse(text, out var normalized, out var error))
         {
             return Ok(normalized);
         }

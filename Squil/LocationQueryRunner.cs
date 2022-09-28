@@ -185,12 +185,12 @@ public class LocationQueryRunner
         {
             var cmIndex = result.Index = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
-            ValidationResult GetColumnValue(CMDirectedColumn column)
+            ValidationResult GetColumnValue(CMDirectedColumn column, Int32 no)
             {
                 var keyValue = request.KeyParams[column.Name];
                 var searchValue = request.SearchValues[column.Name];
 
-                var validationResult = column.c.Type.Validate(keyValue, searchValue, column.d, default);
+                var validationResult = column.c.Type.Validate(no, keyValue, searchValue ?? "", column.d, default);
 
                 return validationResult;
             }
@@ -200,18 +200,32 @@ public class LocationQueryRunner
             var keyValueCount = columnValues?.TakeWhile(cv => cv.IsKeyValue).Count();
 
             var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
-            var extentValues = columnValues?.TakeWhile(cv => cv.SqlLowerValue != null).Select(cv => cv.GetSqlValue()).ToArray();
+
+            var noOfValuesToUse = columnValues?.Where(r => !String.IsNullOrWhiteSpace(r.Value)).Select(r => r.No + 1).LastOrDefault();
+
+            var extentValues = columnValues?.Take(noOfValuesToUse.Value).Select(cv => cv.GetSqlValue()).ToArray();
 
             var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
 
             principalLocation = GetPrincipalLocation(cmTable, request);
 
-            var searchMode = request.SearchMode ?? cmIndex?.GetDefaultSearchMode(settings) ?? cmTable.GetDefaultSearchMode(settings);
-
-            if (cmIndex == null && searchMode == QuerySearchMode.Seek)
+            QuerySearchMode? GetSearchMode()
             {
-                searchMode = null;
+                if (isSingletonQuery) return QuerySearchMode.Seek;
+
+                var searchMode = request.SearchMode ?? cmIndex?.GetDefaultSearchMode(settings) ?? cmTable.GetDefaultSearchMode(settings);
+
+                if (cmIndex == null && searchMode == QuerySearchMode.Seek)
+                {
+                    return null;
+                }
+                else
+                {
+                    return searchMode;
+                }
             }
+
+            var searchMode = GetSearchMode();
 
             var scanValue = searchMode == QuerySearchMode.Scan ? request.SearchValues[""] ?? "" : null;
 
@@ -222,7 +236,7 @@ public class LocationQueryRunner
                 principalLocation, scanValue
             );
 
-            result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : keyValueCount == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
+            result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : (keyValueCount ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
             result.SearchMode = searchMode;
             result.ValidatedColumns = columnValues;
             result.IsValidationOk = columnValues?.All(r => r.IsOk) ?? true;
