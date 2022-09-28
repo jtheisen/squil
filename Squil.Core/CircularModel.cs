@@ -48,6 +48,7 @@ public class CMRoot
 
         tables = csdTables.Select(t => new CMTable
         {
+            Csd = t,
             Root = this,
             Name = t.Name,
             UsedKb = t.UsedKb
@@ -319,7 +320,11 @@ public class CMTable : IWithUsedKb
 {
     public static readonly CMColumn[] noColumns = new CMColumn[0];
 
+    public Boolean IsRoot => Root.RootTable == this;
+
     public CMRoot Root { get; set; }
+
+    public CsdTable Csd { get; set; }
 
     public Dictionary<String, CMRelationEnd> Relations { get; } = new Dictionary<String, CMRelationEnd>();
 

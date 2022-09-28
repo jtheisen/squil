@@ -88,7 +88,7 @@ public class ExtentFactory
             from end in parentTable.Relations.Values
             where !path.Contains(end)
             let index = end.GetIndex()
-            where index != null
+            where index != null || parentTable.IsRoot
             let extent = CreateExtent(end, parentFlavor, index)
             where extent != null
             select extent;

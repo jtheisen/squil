@@ -31,6 +31,8 @@ public class CsdTable : CsdBase
 {
     public ObjectName Name { get; set; }
 
+    public Boolean IsHeap { get; set; }
+
     public CsdTableType Type { get; set; }
 
     public CsdColumn[] Columns { get; set; }
@@ -124,6 +126,8 @@ public static class CsdExtensions
 
                 var tableName = new ObjectName(schema.Name, table.Name);
 
+                var isHeap = false;
+
                 var csdColumns = (
                     from c in table.Columns
                     let usertype = c.UserTypes.Single("Unexpectedly no unique usertype at column")
@@ -152,6 +156,8 @@ public static class CsdExtensions
 
                     if (index.Type == 0)
                     {
+                        isHeap = true;
+
                         // Heaps appear as indexes, but that makes no sense for Squil to deal with.
                         continue;
                     }
@@ -215,7 +221,8 @@ public static class CsdExtensions
                     Keyishs = csdKeyishs.ToArray(),
                     Type = CsdTableType.Table,
                     UsedKb = tableSizeKb,
-                    Comment = table.Comment
+                    Comment = table.Comment,
+                    IsHeap = isHeap
                 });
             }
         }

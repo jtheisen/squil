@@ -98,6 +98,19 @@ namespace Squil.PointsOfInterest
         }
     }
 
+    public class IndexlessTables : PointsOfInterestFinder
+    {
+        public override IEnumerable<String> Find(CMRoot root)
+        {
+            var tables = root.RootTable.Relations.Values.Select(r => r.Table);
+
+            return
+                from t in tables
+                where t.Indexes.Values.All(i => !i.IsSupported)
+                select t.Name.Escaped;
+        }
+    }
+
     public class TablesWithOverlappingIndexes : PointsOfInterestFinder
     {
         public override IEnumerable<String> Find(CMRoot root)
@@ -163,6 +176,7 @@ namespace Squil
             Add<LongestIndex>();
             Add<TablesWithOverlappingIndexes>();
             Add<TablesWithIndexesWithKeyPrefix>();
+            Add<IndexlessTables>();
         }
 
         public IEnumerable<PointOfInterest> GetReport(CMRoot root)
