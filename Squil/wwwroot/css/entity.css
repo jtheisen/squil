@@ -45,7 +45,7 @@
                   isolation: isolate;
   */
 }
-.entity-context label:hover > * :after {
+.entity-context label:hover > *:after {
   position: absolute;
   top: 0;
   right: 0;

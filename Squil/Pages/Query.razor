@@ -2,6 +2,7 @@
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
 @inject IOptions<AppSettings> Options
+@inject IJSRuntime Js
 @implements IDisposable
 
 @{
@@ -282,6 +283,7 @@
 
     protected override async Task OnAfterRenderAsync(Boolean firstRender)
     {
+        await Js.InvokeVoidAsync("initBootstrapContent");
     }
 
     void LocationChanged(object sender, LocationChangedEventArgs e)

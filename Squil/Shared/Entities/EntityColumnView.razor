@@ -1,5 +1,17 @@
 ﻿<div class="entity-column" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType">
-    <label>@Column.Name</label>
+    <label>
+        <span>
+            @Column.Name
+@*          Doesn't work - the hovering is blocked by the outer style change on hover  
+            @if (Column.Comment != null)
+            {
+                <span data-toggle="tooltip" title="@Column.Comment">
+                    &nbsp;
+                    <span class="fa fa-xs fa-info" />
+                </span>
+            }
+*@        </span>
+    </label>
     <div>
         <a>
             @{

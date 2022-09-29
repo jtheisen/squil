@@ -51,6 +51,7 @@ public class CMRoot
             Csd = t,
             Root = this,
             Name = t.Name,
+            Comment = t.Comment,
             UsedKb = t.UsedKb
         }
         ).ToDictionary(t => t.Name, t => t);
@@ -71,6 +72,7 @@ public class CMRoot
                 {
                     Order = i,
                     Name = c.Name,
+                    Comment = c.Comment,
                     SqlType = c.DataType,
                     IsNullable = c.IsNullable,
                     IsAssemblyType = c.IsAssemblyType,
@@ -329,6 +331,8 @@ public class CMTable : IWithUsedKb
 
     public CMRoot Root { get; set; }
 
+    public String Comment { get; set; }
+
     public CsdTable Csd { get; set; }
 
     public Dictionary<String, CMRelationEnd> Relations { get; } = new Dictionary<String, CMRelationEnd>();
@@ -436,6 +440,8 @@ public class CMColumn
     public Int32 Order { get; set; }
 
     public String Name { get; set; }
+
+    public String Comment { get; set; }
 
     public String SqlType { get; set; }
 
