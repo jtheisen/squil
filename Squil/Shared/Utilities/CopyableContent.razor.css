@@ -1,0 +1,9 @@
+﻿.copyable-content {
+    position: relative;
+}
+
+.copyable-content-button {
+    position: absolute;
+    top: .25em;
+    right: .25em;
+}

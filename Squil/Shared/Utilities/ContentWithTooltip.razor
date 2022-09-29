@@ -1,0 +1,54 @@
+﻿@inject IJSRuntime Js
+
+<span class="content-with-tooltip" @ref="span" data-placement="@Placement">
+    @if (InlineString != null)
+    {
+        <span class="@InlineStringClass">@InlineString</span>
+    }else {
+        <text>@InlineContent</text>
+    }
+    <span class="template">
+        <div class="tooltip m-1" role="tooltip"><div class="arrow"></div><div class="text-light tooltip-inner @TooltipInnerClass"></div></div>
+    </span>
+    <span class="content">@ChildContent</span>
+</span>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment InlineContent { get; set; }
+
+    [Parameter]
+    public String InlineString { get; set; }
+
+    [Parameter]
+    public String InlineStringClass { get; set; }
+
+    [Parameter]
+    public String TooltipInnerClass { get; set; }
+
+    [Parameter]
+    public String Placement { get; set; }
+
+    [Parameter]
+    public Boolean IsManual { get; set; }
+
+    ElementReference span;
+
+    public async Task Show()
+    {
+        if (!IsManual) return;
+
+        await Js.InvokeVoidAsync("showEphemeralTooltip", span);
+    }
+
+    protected override async Task OnAfterRenderAsync(Boolean firstRender)
+    {
+        if (firstRender && !IsManual)
+        {
+            await Js.InvokeVoidAsync("initTooltip", span);
+        }
+    }
+}

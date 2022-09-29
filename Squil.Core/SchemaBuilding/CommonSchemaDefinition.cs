@@ -1,4 +1,6 @@
-﻿namespace Squil.SchemaBuilding;
+﻿using System;
+
+namespace Squil.SchemaBuilding;
 
 public record CsdUnsupportedReason(String Tag, String Reason, String Specific)
 {
@@ -205,12 +207,15 @@ public static class CsdExtensions
 
                     var referencedIndexlike = new ObjectName(referencedSchema.Name, referencedTable.Name, referencedIndex.Name);
 
+                    var intrinsicallyUnsupported = fk.CheckIntrinsicSupport()?.Apply(t => new CsdUnsupportedReason(t.tag, t.reason, t.specific));
+
                     csdKeyishs.Add(new CsdForeignKey
                     {
                         Name = name,
                         Columns = directedColumnNames,
                         Type = CsdKeyishType.Fk,
-                        ReferencedIndexlike = referencedIndexlike
+                        ReferencedIndexlike = referencedIndexlike,
+                        UnsupportedReason = intrinsicallyUnsupported
                     });
                 }
 

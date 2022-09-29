@@ -99,24 +99,33 @@ public class LocationQueryVm
 
             accountedIndexes.AddRange(from i in table.Indexes.Values where !i.IsSupported select i.ObjectName);
 
-            var unsuitableReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
-
-            var unsuitableIndexes = (
-                from i in table.Indexes.Values
-                where !accountedIndexes.Contains(i.ObjectName)
-                select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = unsuitableReason }
-            ).ToArray();
-
-            if (unsuitableIndexes.Any())
             {
-                unsupportedGroups.Insert(0, new UnsuitableIndexesVm(unsuitableReason, unsuitableIndexes));
+                var unsuitableReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
+
+                var unsuitableIndexes = (
+                    from i in table.Indexes.Values
+                    where !accountedIndexes.Contains(i.ObjectName)
+                    select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = unsuitableReason }
+                ).ToArray();
+
+                if (unsuitableIndexes.Any())
+                {
+                    unsupportedGroups.Insert(0, new UnsuitableIndexesVm(unsuitableReason, unsuitableIndexes));
+                }
+            }
+
+            if (Result.MayScan)
+            {
+                ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = result.SearchMode == QuerySearchMode.Scan };
+            }
+            else
+            {
+                NoScanOptionReason = "The scanning search option is disabled for large tables.";
             }
 
             UnsuitableIndexes = unsupportedGroups.ToArray();
 
             CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
-
-            ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = result.SearchMode == QuerySearchMode.Scan };
         }
 
         Update(request, result);
@@ -156,6 +165,8 @@ public class LocationQueryVm
     public SearchOptionVm NoIndex { get; } = staticNoIndex;
 
     public SearchOptionVm ScanOption { get; }
+
+    public String NoScanOptionReason { get; }
 
     static SearchOptionVm staticNoIndex = new SearchOptionVm(SearchOptionType.NoOption)
     {

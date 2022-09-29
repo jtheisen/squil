@@ -48,3 +48,29 @@ function initBootstrapContent() {
         }
     })
 }
+
+function initTooltip(element) {
+    const content = element.querySelector(".content");
+    const template = element.querySelector(".template");
+
+    $(element).tooltip({ html: true, title: content.innerHTML, template: template.innerHTML, delay: { show: 500, hide: 0 } });
+}
+
+function showEphemeralTooltip(element) {
+    const content = element.querySelector(".content");
+    const template = element.querySelector(".template");
+
+    $(element).tooltip({ html: true, trigger: "manual", title: content.innerHTML, template: template.innerHTML });
+
+    $(element).tooltip("show");
+
+    setTimeout(() => {
+        window["dummy_element"] = element;
+        $(element).tooltip("hide");
+    }, 1000);
+}
+
+function copyInnerTextToClipboard(element) {
+    const innerText = element.innerText;
+    navigator.clipboard.writeText(innerText);
+}

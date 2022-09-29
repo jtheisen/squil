@@ -191,7 +191,7 @@
                             </small>
                         </HeaderExtra>
                         <Body>
-                            <pre>@(vm.LastResult?.Ledger.GetLastEntry<QuerySql>()?.Sql)</pre>
+                            <pre><CopyableContent>@(vm.LastResult?.Ledger.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
                         </Body>
                     </Modal>
 

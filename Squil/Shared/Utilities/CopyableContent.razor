@@ -1,0 +1,18 @@
+﻿@inject IJSRuntime Js
+
+<div class="copyable-content"><span class="copyable-content-button"><ContentWithTooltip @ref="tooltip" IsManual="@true"><ChildContent>copied!</ChildContent><InlineContent><button class="btn btn-sm btn-outline-dark" @onclick="HandleCopyClick"><i class="fa fa-copy" /></button></InlineContent></ContentWithTooltip></span><span @ref="element">@ChildContent</span></div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    ElementReference element;
+    ContentWithTooltip tooltip;
+
+    async Task HandleCopyClick()
+    {
+        await Js.InvokeVoidAsync("copyInnerTextToClipboard", element);
+
+        await tooltip.Show();
+    }
+}

@@ -142,7 +142,8 @@ public class CMRoot
                     Principal = keys[c.ReferencedIndexlike],
                     Table = table,
                     Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.c], IndexDirection.Unknown)).ToArray(),
-                    ColumnNames = c.Columns
+                    ColumnNames = c.Columns,
+                    UnsupportedReason = c.UnsupportedReason
                 })
                 .ToDictionary(c => c.Name, c => c);
 
@@ -266,6 +267,8 @@ public class CMRoot
             {
                 // Those are cared for with better end names
                 if (fk.Principal.Table == rootTable) continue;
+
+                if (fk.UnsupportedReason != null) continue;
 
                 yield return new Relation
                 {
@@ -392,6 +395,8 @@ public class CMForeignKey : CMColumnTuple
     public CMIndexlike[] BackingIndexes { get; set; } = Empties<CMIndexlike>.Array;
 
     public CMIndexlike Principal { get; set; }
+
+    public CsdUnsupportedReason UnsupportedReason { get; set; }
 }
 
 [DebuggerDisplay("{OtherEnd.Name}->{Table.Name}")]

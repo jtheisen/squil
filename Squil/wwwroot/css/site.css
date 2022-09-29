@@ -29,6 +29,14 @@ body {
     text-decoration: underline;
 }
 
+.max-w-prose {
+    max-width: 65ch;
+}
+
+.tooltip-translate-right {
+    transform: translateX(10px);
+}
+
 /* Breadcrumbs
 -------------------------------------------------- */
 .squil-breadcrumbs {

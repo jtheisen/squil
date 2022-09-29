@@ -101,6 +101,7 @@ public class LocationQueryResult
 {
     public QueryControllerQueryType QueryType { get; set; }
     public QuerySearchMode? SearchMode { get; set; }
+    public Boolean MayScan { get; set; }
     public String RootUrl { get; set; }
     public String RootName { get; set; }
     public CMTable Table { get; set; }
@@ -209,20 +210,17 @@ public class LocationQueryRunner
 
             principalLocation = GetPrincipalLocation(cmTable, request);
 
+            var defaultSearchMode = cmIndex?.GetDefaultSearchMode(settings) ?? cmTable.GetDefaultSearchMode(settings);
+
             QuerySearchMode? GetSearchMode()
             {
                 if (isSingletonQuery) return QuerySearchMode.Seek;
 
-                var searchMode = request.SearchMode ?? cmIndex?.GetDefaultSearchMode(settings) ?? cmTable.GetDefaultSearchMode(settings);
+                var searchMode = request.SearchMode ?? defaultSearchMode;
 
-                if (cmIndex == null && searchMode == QuerySearchMode.Seek)
-                {
-                    return null;
-                }
-                else
-                {
-                    return searchMode;
-                }
+                if (cmIndex == null && searchMode == QuerySearchMode.Seek) return null;
+
+                return searchMode;
             }
 
             var searchMode = GetSearchMode();
@@ -240,6 +238,7 @@ public class LocationQueryRunner
             result.SearchMode = searchMode;
             result.ValidatedColumns = columnValues;
             result.IsValidationOk = columnValues?.All(r => r.IsOk) ?? true;
+            result.MayScan = defaultSearchMode == QuerySearchMode.Scan; // ie "is small table/index"
         }
 
         if (!result.IsValidationOk) return result;

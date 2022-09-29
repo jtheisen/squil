@@ -256,6 +256,9 @@ public class SysForeignKey : SysObject
     [XmlAttribute("is_disabled")]
     public Boolean IsDisabled { get; set; }
 
+    [XmlAttribute("is_not_trusted")]
+    public Boolean IsNotTrusted { get; set; }
+
     [XmlAttribute("is_system_named")]
     public Boolean IsSystemNamed { get; set; }
 
@@ -267,6 +270,13 @@ public class SysForeignKey : SysObject
 
     [XmlArray("referenced_index")]
     public SysIndexReference[] ReferencedIndexes { get; set; } = Empties<SysIndexReference>.Array;
+
+    public (String tag, String reason, String specific)? CheckIntrinsicSupport()
+    {
+        if (IsDisabled) return ("Disabled", "The foreign key is disabled", null);
+        if (IsNotTrusted) return ("Not trusted", "Untrusted foreign keys are ignored", null);
+        return null;
+    }
 }
 
 
