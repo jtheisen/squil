@@ -113,6 +113,7 @@ public class CMRoot
                     UnsupportedReason = support,
                     Columns = columns,
                     ColumnNames = i.Columns,
+                    SerializedColumnNames = i.Columns.SerializeColumnNames(),
                     UsedKb = i.UsedKb
                     
                 }
@@ -143,6 +144,7 @@ public class CMRoot
                     Table = table,
                     Columns = c.Columns.Select(cc => new CMDirectedColumn(table.Columns[cc.c], IndexDirection.Unknown)).ToArray(),
                     ColumnNames = c.Columns,
+                    SerializedColumnNames = c.Columns.SerializeColumnNames(),
                     UnsupportedReason = c.UnsupportedReason
                 })
                 .ToDictionary(c => c.Name, c => c);
@@ -368,6 +370,8 @@ public abstract class CMColumnTuple
 
     public DirectedColumnName[] ColumnNames { get; set; }
 
+    public String SerializedColumnNames { get; set; }
+
     public Boolean ContainsKey { get; set; }
 
     public abstract Boolean IsDomestic { get; }
@@ -471,7 +475,7 @@ public static class CMExtensions
         }
     }
 
-    public static IEnumerable<CMIndexlike> StartsWith(this IEnumerable<CMIndexlike> indexes, IEnumerable<String> columns, Boolean isPrefix = false)
+    public static IEnumerable<CMIndexlike> StartsWith(this IEnumerable<CMIndexlike> indexes, IEnumerable<String> columns, Boolean isPrefix = false, Boolean not = false)
     {
         var prefixColumns = columns.OrderBy(c => c).ToArray();
 
@@ -482,9 +486,14 @@ public static class CMExtensions
                 .Select(c => c.c.Name)
                 .OrderBy(c => c);
 
-            return ixColumns.SequenceEqual(prefixColumns) && (!isPrefix || index.Columns.Length > prefixColumns.Length);
+            return not != (ixColumns.SequenceEqual(prefixColumns) && (!isPrefix || index.Columns.Length > prefixColumns.Length));
         }
 
         return indexes.Where(HasIndexMatchingPrefix);
+    }
+
+    public static String SerializeColumnNames(this IEnumerable<DirectedColumnName> names)
+    {
+        return String.Join("", names.Select(n => $"{n.d.GetSymbolOnlyForDescending()}{n.Sql}"));
     }
 }

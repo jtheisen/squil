@@ -79,40 +79,60 @@ public class LocationQueryVm
 
             KeyValuesCount = keyKeysArray.Length;
 
-            var accountedIndexes = new HashSet<ObjectName>();
+            var indexesToConsider = new HashSet<CMIndexlike>(table.Indexes.Values);
 
-            SearchOptions = table.Indexes.Values
-                .Where(i => i.IsSupported)
-                .StartsWith(keyKeysArray)
-                .Where(i => i.Columns.Length > keyKeysArray.Length)
-                .Select(i => new SearchOptionVm(i, KeyValuesCount) { IsCurrent = request.Index == i.Name && result.SearchMode == QuerySearchMode.Seek })
-                .ToArray();
+            var exclusionGroups = new List<UnsuitableIndexesVm>();
 
-            accountedIndexes.AddRange(SearchOptions.Select(i => i.Index.ObjectName));
-
-            var unsupportedGroups = (
-                from i in table.Indexes.Values
-                where !i.IsSupported
-                group i by i.UnsupportedReason into g
-                select new UnsuitableIndexesVm(g.Key, from i in g select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = g.Key })
-            ).ToList();
-
-            accountedIndexes.AddRange(from i in table.Indexes.Values where !i.IsSupported select i.ObjectName);
-
+            void AddExclusionGroups(IEnumerable<UnsuitableIndexesVm> groups)
             {
-                var unsuitableReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
+                exclusionGroups.AddRange(from g in groups where g.Indexes.Any() select g);
 
-                var unsuitableIndexes = (
-                    from i in table.Indexes.Values
-                    where !accountedIndexes.Contains(i.ObjectName)
-                    select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = unsuitableReason }
-                ).ToArray();
-
-                if (unsuitableIndexes.Any())
+                foreach (var index in from g in groups from i in g.Indexes select i.Index)
                 {
-                    unsupportedGroups.Insert(0, new UnsuitableIndexesVm(unsuitableReason, unsuitableIndexes));
+                    indexesToConsider.Remove(index);
                 }
             }
+
+            void AddExclusionGroup(UnsuitableIndexesVm group) => AddExclusionGroups(group.ToSingleton());
+
+            {
+                AddExclusionGroups(
+                    from i in indexesToConsider
+                    where !i.IsSupported
+                    group i by i.UnsupportedReason into g
+                    select new UnsuitableIndexesVm(g.Key, from i in g select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = g.Key })
+                );
+            }
+
+            {
+                var invalidPrefixReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
+
+                AddExclusionGroup(new UnsuitableIndexesVm(
+                    invalidPrefixReason,
+                    from i in indexesToConsider.StartsWith(keyKeysArray, not: true)
+                    select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = invalidPrefixReason }
+                ));
+            }
+
+            {
+                var duplicationReason = new CsdUnsupportedReason("Duplicate", "Although supported, the index's order is already covered by another one.", "");
+
+                AddExclusionGroup(new UnsuitableIndexesVm(
+                    duplicationReason,
+                    from i in table.Indexes.Values
+                    group i by i.SerializedColumnNames into g
+                    where g.Count() >= 2
+                    from i in g.Skip(1)
+                    select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = duplicationReason }
+                ));
+            }
+
+            SearchOptions = (
+                from i in table.Indexes.Values
+                join itc in indexesToConsider on i equals itc into match
+                where match.Any()
+                select new SearchOptionVm(i, KeyValuesCount) { IsCurrent = request.Index == i.Name && result.SearchMode == QuerySearchMode.Seek }
+            ).ToArray();
 
             if (Result.MayScan)
             {
@@ -123,7 +143,7 @@ public class LocationQueryVm
                 NoScanOptionReason = "The scanning search option is disabled for large tables.";
             }
 
-            UnsuitableIndexes = unsupportedGroups.ToArray();
+            UnsuitableIndexes = exclusionGroups.ToArray();
 
             CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
         }

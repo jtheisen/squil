@@ -102,6 +102,7 @@
 }
 .indexes-unsupported .unsupported-tag {
   font-weight: bold;
+  margin-top: 1em;
 }
 .indexes-unsupported .unsupported-reason {
   font-size: 0.8em;

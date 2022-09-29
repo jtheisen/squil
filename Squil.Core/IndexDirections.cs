@@ -25,6 +25,12 @@ public static class IndexDirectionExtensions
         _ => '?'
     };
 
+    public static String GetSymbolOnlyForDescending(this IndexDirection direction) => direction switch
+    {
+        IndexDirection.Desc => "-",
+        _ => ""
+    };
+
     public static String GetSqlSuffix(this IndexDirection direction) => direction switch
     {
         IndexDirection.Asc => " asc",
