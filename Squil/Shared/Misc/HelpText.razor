@@ -82,15 +82,20 @@
     case QueryControllerQueryType.Sublist:
         <h6>Search</h6>
         <p>
-            Searching on lists works via indexes. On the left you see input fields
-            generated from viable indexes and an expandable report for all indexes
-            that are unavailable for searching with the respective reasons.
+            Searching on lists works via indexes when the table is large.
+            On the left you see input fields generated from viable indexes
+            and an expandable report for all indexes that are unavailable
+            for searching with the respective reasons.
         </p>
         <p>
-            Searching along indexes is called <em>seeking</em> and this is the only
-            method of search currently supported. A future version of SQuiL will
-            support <em>scanning</em>, which is potentially inefficient as it works
+            Searching along indexes is called <em>seeking</em> and this is one
+            of the main values that databases offer. The trivial alternative is
+            <em>scanning</em>, which is potentially inefficient as it works
             by walking the entirety of the candidate rows to find the matches.
+        </p>
+        <p>
+            The offer to scan is given for small tables. Currently, this only
+            works on text and integer columns and they are searched all at once.
         </p>
         <h6>Loading more</h6>
         <p>
