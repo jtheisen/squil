@@ -1,0 +1,20 @@
+﻿
+<div class="debug-tooltip escape">
+    <div class="face" @onmouseover="@(() => isOpen = true)" @onmouseover:stopPropagation @onmouseover:preventDefault @onmouseout="@(() => isOpen = false)" data-isopen="@isOpen.ToString()">?</div>
+    @if (isOpen || IsOpen)
+    {
+        <div class="content">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public Boolean IsOpen { get; set; }
+
+    Boolean isOpen;
+}

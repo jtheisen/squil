@@ -1,0 +1,298 @@
+﻿@page "/query/{ConnectionName}/{*Path}"
+@inject LocationQueryRunner Runner
+@inject NavigationManager NavigationManager
+@inject IOptions<AppSettings> Options
+@inject IJSRuntime Js
+@implements IDisposable
+
+@{
+    renderCount++; 
+}
+
+<PageTitle>@vm.Result.RootName</PageTitle>
+
+<DefaultLayout>
+    <NavItems>
+        <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
+        <BreadcrumbItem><a class="text-muted" href="@vm.Result.RootUrl.If(vm.Result.QueryType != QueryControllerQueryType.Root)">@vm.Result.RootName</a></BreadcrumbItem>
+        <CascadingValue Value="QueryContext">
+            @if (vm.Result.PrincipalEntities != null)
+            {
+                var entity = vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
+
+                <BreadcrumbItem>
+                    <span class="entity-context text-muted">
+                        <EntityHeaderView Table="@vm.Result.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
+                    </span>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                    <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" /></span>
+                </BreadcrumbItem>
+            }
+            else
+            {
+                switch (vm.Result.QueryType)
+                {
+                    case QueryControllerQueryType.Table:
+                        <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></span>
+                        break;
+                    case QueryControllerQueryType.Single:
+                        var entity = vm.Result.PrimaryEntities.List.FirstOrDefault();
+
+                        <BreadcrumbItem>
+                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></a>
+                        </BreadcrumbItem>
+
+                        <BreadcrumbItem>
+                            <span class="text-muted entity-context">
+                                <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
+                            </span>
+                        </BreadcrumbItem>
+                        break;
+                    case QueryControllerQueryType.Sublist:
+                        <span>sublist</span>
+                        break;
+                    case QueryControllerQueryType.Root:
+                    default:
+                        break;
+                }
+            }
+        </CascadingValue>
+    </NavItems>
+
+    <ActionItems>
+        @if (Settings.EnableDevMode)
+        {
+            <a class="btn btn-outline-dark text-muted" href="/info/@ConnectionName">schema</a>
+        }
+        <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+    </ActionItems>
+
+    <ChildContent>
+
+        <CascadingValue Value="QueryContext">
+
+            <SidebarLayout>
+                <RightContent>
+                    <div class="common-lead-spacer">&nbsp;</div>
+
+                    @if(Settings.EnableDevMode)
+                    {
+                        if (vm.LastResult?.Ledger != null)
+                        {
+                            <div>
+                                <span>@queryCount / @renderCount</span>
+                            </div>
+                            <div class="common-lead-spacer">&nbsp;</div>
+                            <div class="">
+                                <dl>
+                                    @foreach (var entry in vm.LastResult.Ledger.GetEntries())
+                                    {
+                                        <dt>@entry.name</dt>
+                                        <dd>@entry.time</dd>
+                                    }
+                                </dl>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <h5 class="text-muted font-weight-bold border-bottom mb-4">Guidance</h5>
+                        <div class="sidebar-helptext small text-muted">
+                            <HelpText QueryType="@vm.LastResult.QueryType" />
+                        </div>
+                    
+                    }
+                </RightContent>
+
+                <LeftContent>
+                    @if (vm.SearchOptions != null)
+                    {
+                        <div class="common-lead-spacer">&nbsp;</div>
+                        <IndexPanel Vm="vm" SearchValues="SearchValues" />
+                    }
+                </LeftContent>
+
+                <ChildContent>
+
+                    @switch(vm.LastResult.QueryType)
+                    {
+                        case QueryControllerQueryType.Table:
+                        case QueryControllerQueryType.Sublist:
+                            <div class="search-panel-spacer">&nbsp;</div>
+                            break;
+                    }
+
+                    <div class="common-lead-spacer">&nbsp;</div>
+
+                    <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
+
+                    @if (vm.LastResult.Exception != null)
+                    {
+                        <div class="alert alert-danger">
+                            <div class="mb-2">
+                                The database sent an unexpected error, this is likely a bug.
+                            </div>
+
+                            <pre class="mb-0">
+                                @foreach (System.Data.SqlClient.SqlError msg in vm.LastResult.Exception.Errors)
+                                {
+                                    <div>@msg.Message</div>
+                                }
+                            </pre>
+                        </div>
+                    }
+
+                    @if (vm.DisplayedEntity != null)
+                    {
+                        <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsOk))">
+                            <EntityContentView Entity="@vm.DisplayedEntity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
+                        </div>
+
+                        @switch (vm.CanLoadMore())
+                        {
+                            case CanLoadMoreStatus.Can:
+                                if (vm.LastRequest.ListLimit < Settings.LoadMoreLimit)
+                                {
+                                    <div class="my-4">
+                                        <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@Settings.LoadMoreLimit</span> at once</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="my-4">
+                                        <em class="btn">...and more (maximum load size reached)</em>
+                                    </div>
+                                }
+                                break;
+                            case CanLoadMoreStatus.Complete:
+                            case CanLoadMoreStatus.Unavailable:
+                            default:
+                                break;
+                        }
+
+                        <div class="common-lead-spacer">&nbsp;</div>
+                    }
+
+                    <Modal OnClose="SqlModalSubscription">
+                        <Title>SQL Query</Title>
+                        <HeaderExtra>
+                            <small>
+                                <p class="mt-2 mr-4">
+                                    Each page's data is requested in only one query. The query is textually long, but
+                                    executes efficiently as it relies only on a series of nested table seeks. (This isn't
+                                    quite guaranteed yet, but a future version of SQuiL will make sure that it is.)
+                                </p>
+                                <p>
+                                    Although this query uses the nonstandard XML query syntax of SQL Server, a similar
+                                    query can be created for other database engines - although this may look even more
+                                    convoluted for those.
+                                </p>
+
+                            </small>
+                        </HeaderExtra>
+                        <Body>
+                            <pre><CopyableContent>@(vm.LastResult?.Ledger.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
+                        </Body>
+                    </Modal>
+
+                </ChildContent>
+            </SidebarLayout>
+        </CascadingValue>
+    </ChildContent>
+</DefaultLayout>
+
+<RerenderHelper Observable="@SearchValues.Backing" OnChange="@HandleSeekValuesChanged" />
+
+@code {
+
+    [Parameter]
+    public String ConnectionName { get; set; }
+
+    [Parameter]
+    public String Path { get; set; }
+
+    AppSettings Settings => Options.Value;
+
+    Int32 renderCount, queryCount;
+
+    IMap<String, String> SearchValues { get; set; } = new ExpandoObject().AsMap(withDefaults: true).Convert(o => o as String, o => o);
+
+    LocationQueryVm vm = null;
+
+    QueryContext QueryContext { get; set; }
+
+    void OpenSqlModal() => SqlModalSubscription = () => SqlModalSubscription = null;
+
+    Action SqlModalSubscription { get; set; }
+
+    void RunQuery(Boolean isLocationChange = true, Int32? listLimit = null)
+    {
+        var query = new Uri(NavigationManager.Uri).Query;
+
+        var queryParams = HttpUtility.ParseQueryString(query);
+
+        var request = new LocationQueryRequest(Path, queryParams, SearchValues.ToNameValueCollection())
+        {
+            ListLimit = listLimit ?? Settings.InitialLimit
+        };
+
+        var result = Runner.Query(ConnectionName, request);
+
+        ++queryCount;
+
+        if (isLocationChange)
+        {
+            vm = new LocationQueryVm(request, result);
+
+            QueryContext = new QueryContext(new UrlRenderer($"/query/{ConnectionName}"));
+
+            QueryContext.InDebug = queryParams["debug"] != null;
+        }
+        else
+        {
+            vm.Update(request, result);
+        }
+
+        StateHasChanged();
+    }
+
+    void HandleSeekValuesChanged()
+    {
+        StateHasChanged();
+
+        RunQuery(false);
+    }
+
+    void HandleLoadMoreClick()
+    {
+        RunQuery(false, Settings.LoadMoreLimit + 1);
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        RunQuery(true);
+    }
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += LocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(Boolean firstRender)
+    {
+        await Js.InvokeVoidAsync("initBootstrapContent");
+    }
+
+    void LocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        RunQuery(true);
+    }
+
+    void IDisposable.Dispose()
+    {
+        NavigationManager.LocationChanged -= LocationChanged;
+    }
+}

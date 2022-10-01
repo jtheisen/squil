@@ -3,10 +3,27 @@
     "Squil": {
       "commandName": "Project",
       "launchBrowser": true,
+      "launchUrl": "query/playground/%5bdbo%5d.%5bdep%5d/IX_dep_principalid?$PrincipalId=6C4EF329-4BA1-4D76-B7DD-2D9936293CF4&from=D_FK_Principal",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:50289;http://localhost:50290"
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7293;http://localhost:5293"
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  },
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:64060",
+      "sslPort": 44396
     }
   }
 }

@@ -1,0 +1,31 @@
+﻿@using System.Xml.Linq
+@using Humanizer
+
+@{
+    var end = RelationEnd;
+
+    var tableName = end.Table.Name;
+
+    var parts = tableName.GetDistinguishedParts(end.OtherEnd.Table.Name);
+
+    if (parts.Length == 0) throw new Exception("Unexpectedly no parts for relation name");
+
+    var fk = end.GetForeignKey()?.Name;
+}
+
+<span class="entity-relation-name-view">
+    @foreach (var (p, i) in parts.Reverse().Select((p, i) => (p, i)))
+    {
+        <span>@(i == 0 && !end.IsMany ? p.Singularize() : p)</span>
+    }
+
+    @if (!end.IsUniquelyTyped && !String.IsNullOrWhiteSpace(fk))
+    {
+        <span class="entity-relation-name-fk">@fk</span>
+    }
+</span>
+
+@code {
+    [Parameter]
+    public CMRelationEnd RelationEnd { get; set; }
+}

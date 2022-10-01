@@ -1,0 +1,8 @@
+﻿.content-with-tooltip {
+    cursor: pointer;
+}
+
+.content,
+.template {
+    display: none;
+}

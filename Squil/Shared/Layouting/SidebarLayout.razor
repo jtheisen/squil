@@ -1,0 +1,36 @@
+﻿
+<div class="layout">
+    <div class="left">
+        <div>
+            <SquilErrorBoundary>
+                @LeftContent
+            </SquilErrorBoundary>
+        </div>
+    </div>
+    <div class="middle">
+        <div class="squil-container">
+            <SquilErrorBoundary>
+                @ChildContent
+            </SquilErrorBoundary>
+        </div>
+    </div>
+    <div class="right">
+        <div>
+            <SquilErrorBoundary>
+                @RightContent
+            </SquilErrorBoundary>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment LeftContent { get; set; }
+
+    [Parameter]
+    public RenderFragment RightContent { get; set; }
+}
+

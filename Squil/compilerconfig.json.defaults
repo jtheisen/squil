@@ -4,6 +4,7 @@
       "autoPrefix": "",
       "cssComb": "none",
       "ieCompat": true,
+      "math": null,
       "strictMath": false,
       "strictUnits": false,
       "relativeUrls": true,
@@ -14,11 +15,18 @@
     },
     "sass": {
       "autoPrefix": "",
+      "loadPaths": "",
+      "style": "expanded",
+      "relativeUrls": true,
+      "sourceMap": false
+    },
+    "nodesass": {
+      "autoPrefix": "",
       "includePath": "",
       "indentType": "space",
       "indentWidth": 2,
       "outputStyle": "nested",
-      "Precision": 5,
+      "precision": 5,
       "relativeUrls": true,
       "sourceMapRoot": "",
       "lineFeed": "",

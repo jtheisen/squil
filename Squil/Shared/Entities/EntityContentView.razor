@@ -1,0 +1,133 @@
+﻿
+@{
+    var fieldsets = ProduceFieldsets(Entity, ParentCollection);
+
+    var table = ParentCollection?.RelationEnd.Table;
+}
+
+@if (table != null)
+{
+    <EntityHeaderView Table="@table" Entity="@Entity" />
+}
+
+@foreach (var fs in fieldsets)
+{
+    var emptyClass = fs.items.FirstOrDefault() == null ? "fieldset-empty" : null;
+
+    <fieldset class="@emptyClass" data-name="@fs.legend" data-layout="@fs.layout">
+        <legend>@fs.legend</legend>
+        @foreach (var field in fs.items)
+        {
+            if (field is EntityColumnFieldUi c)
+            {
+                <EntityColumnView Entity="c.Entity" Table="c.Table" Column="c.Column" Cls="c.RenderClass" />
+            }
+            else if (field is EntityRelationFieldUi r)
+            {
+                <EntityRelationView Ui="r" HideHeader="HideHeaders" />
+            }
+            else
+            {
+                <div class="alert">Unknown ui element</div>
+            }
+        }
+    </fieldset>
+}
+
+@code {
+    [Parameter]
+    public Entity Entity { get; set; }
+
+    [Parameter]
+    public Boolean HideHeaders { get; set; }
+
+    [Parameter]
+    public RelatedEntities ParentCollection { get; set; }
+
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+
+    struct Fieldset
+    {
+        public String legend;
+        public String layout;
+        public IEnumerable<EntityFieldUi> items;
+    }
+
+    ColumnRenderClass GetRenderClass(CMTable table, CMColumn column)
+    {
+        if (table.PrimaryKey?.Columns.Select(c => c.c).Contains(column) ?? false) return ColumnRenderClass.PrimaryKey;
+
+        return ColumnRenderClass.Data;
+    }
+
+    Boolean IsColumnRenderedInFlavor(CMColumn column, ExtentFlavorType flavorType, HashSet<String> extraColumns)
+    {
+        switch (flavorType)
+        {
+            case ExtentFlavorType.Breadcrumb:
+                return false;
+            case ExtentFlavorType.Page:
+                return true;
+            default:
+                return extraColumns.Contains(column.Name);
+        }
+    }
+
+    IEnumerable<Fieldset> ProduceFieldsets(Entity entity, RelatedEntities parentCollection = null)
+    {
+        var table = parentCollection?.RelationEnd.Table;
+
+        var flavor = parentCollection?.Extent.Flavor;
+
+        var columns = (parentCollection?.Extent?.Columns ?? Enumerable.Empty<String>())
+            .Select(cn => table.Columns[cn]).ToLookup(c => GetRenderClass(table, c));
+
+        var extraColumns = new HashSet<String>();
+
+        var flavorType = flavor?.type;
+
+        var isBlockLevel = flavorType == ExtentFlavorType.Block;
+
+        if (isBlockLevel)
+        {
+            extraColumns.AddRange(table?.PrimaryKey?.Columns.Select(c => c.c.Name));
+            extraColumns.AddRange(parentCollection?.Extent?.Order?.Select(c => c.c));
+        }
+
+        var showAll = false;
+
+        showAll |= parentCollection?.Extent.ScanValue != null;
+        showAll |= isBlockLevel && table?.PrimaryKey == null;
+
+        var columnClasses = Enum.GetValues(typeof(ColumnRenderClass)) as ColumnRenderClass[];
+
+        var groups =
+            from cl in columnClasses
+            from c in columns[cl]
+            where showAll || IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page, extraColumns)
+            group c by cl into g
+            select new Fieldset { legend = g.Key.ToString().ToLower(), layout = "grid3", items = g.Select(c => new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = g.Key }) }
+            ;
+
+        
+        var relations = (from r in entity.Related where !r.Extent.IgnoreOnRender group r by r.RelationEnd.IsMany).ToArray();
+
+        var singulars = relations.FirstOrDefault(r => !r.Key)?.ToArray();
+        var plurals = relations.FirstOrDefault(r => r.Key)?.ToArray();
+
+        var groupsList = groups.ToList();
+
+        if (singulars != null)
+        {
+            groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
+        }
+
+        if (plurals != null)
+        {
+            groupsList.Add(new Fieldset { legend = "plurals", items = plurals.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
+        }
+
+        return groupsList;
+    }
+}

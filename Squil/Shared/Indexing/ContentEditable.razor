@@ -1,0 +1,65 @@
+﻿@inject IJSRuntime Js
+
+<span @ref="element" class="@Class" contenteditable="@IsActive" @oninput="HandleChange">&nbsp;</span>
+
+@code {
+    [Parameter]
+    public String Class { get; set; }
+
+    [Parameter]
+    public Boolean IsActive { get; set; }
+
+    [Parameter]
+    public String Value { get; set; }
+
+    [Parameter]
+    public Boolean Focus { get; set; }
+
+    [Parameter]
+    public EventCallback<String> ValueChanged { get; set; }
+
+
+
+    ElementReference element;
+
+    Boolean wasActive;
+
+    String DesiredInnerText => Value ?? "";
+
+    String innerText;
+
+    public ValueTask FocusAsync() => element.FocusAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!wasActive && IsActive && Focus)
+        {
+            await FocusAsync();
+        }
+
+        wasActive = IsActive;
+
+        if (innerText != DesiredInnerText)
+        {
+            //await js.InvokeVoidAsync("console.info", $"server: set value of '{element}' to '{DesiredInnerText}' in {firstRender}");
+
+            await Js.InvokeVoidAsync("setInnerText", element, DesiredInnerText);
+
+            innerText = DesiredInnerText;
+        }
+    }
+
+    async Task HandleChange(ChangeEventArgs e)
+    {
+        var innerTextFromElement = await Js.InvokeAsync<String>("getInnerText", element);
+
+        innerText = innerTextFromElement.Replace('\u00a0', ' ');
+
+        var newValue = innerText == "" ? null : innerText;
+
+        if (newValue != Value)
+        {
+            await ValueChanged.InvokeAsync(newValue);
+        }
+    }
+}

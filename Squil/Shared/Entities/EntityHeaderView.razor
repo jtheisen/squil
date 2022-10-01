@@ -1,0 +1,29 @@
+﻿@{
+    var table = Table;
+
+    var name = table?.PrimaryNameColumn?.Apply(nc => Entity.ColumnValues[nc.Name]);
+}
+
+<header>
+    <a href="@Context.RenderEntityUrl(table, Entity).If(ShowLink)">
+        <span class="entity-thumb">@table.Abbreviation</span>
+        @if (name != null)
+        {
+            <span class="entity-name">@name</span>
+        }
+    </a>
+</header>
+
+@code {
+    [Parameter]
+    public Entity Entity { get; set; }
+
+    [Parameter]
+    public CMTable Table { get; set; }
+
+    [Parameter]
+    public Boolean ShowLink { get; set; } = true;
+
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+}

@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
@@ -28,7 +21,28 @@ public class MultipleElementsException : InvalidOperationException
     }
 }
 
-public static class Extensions
+public class Empties<T>
+{
+    public static readonly T[] Array = new T[0];
+
+    public static readonly IEnumerable<T> Enumerable = Array;
+}
+
+public class Empties<K, T>
+{
+    public static readonly Dictionary<K, T> Dictionary = new Dictionary<K, T>();
+
+    public static readonly IMap<K, T> Map = new DefaultMap<K, T>();
+
+    public static readonly ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
+}
+
+public static class RazorHelpers
+{
+    public static String ClassNames(params String[] classes) => String.Join(' ', classes);
+}
+
+public static partial class Extensions
 {
     static readonly XmlWriterSettings xmlWriterSettings = new XmlWriterSettings { Indent = true };
 
@@ -42,11 +56,6 @@ public static class Extensions
             return stringWriter.GetStringBuilder().ToString();
         }
     }
-
-    static Regex sqlServerNameEscapePattern = new Regex("_x([0-9A-Fa-f]{4})_");
-
-    public static String UnescapeSqlServerXmlName(this String name)
-        => sqlServerNameEscapePattern.Replace(name, m => Char.ConvertFromUtf32(Int32.Parse(m.Groups[1].Value, NumberStyles.HexNumber)));
 
     public static IEnumerable<T> ToSingleton<T>(this T value)
     {
@@ -68,6 +77,19 @@ public static class Extensions
     }
 
     [DebuggerHidden]
+    public static T SingleOrDefault<T>(this IEnumerable<T> source, String error)
+    {
+        try
+        {
+            return source.SingleOrDefault();
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new MultipleElementsException(error, ex);
+        }
+    }
+
+    [DebuggerHidden]
     public static T Get<K, T>(this IDictionary<K, T> dict, K key, String error)
     {
         try
@@ -79,6 +101,34 @@ public static class Extensions
             throw new KeyNotFoundException(error, ex);
         }
     }
+
+    [DebuggerHidden]
+    public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key)
+    {
+        if (dict.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+        else
+        {
+            return default;
+        }
+    }
+
+    [DebuggerHidden]
+    public static void AddRange<T>(this ICollection<T> target, IEnumerable<T> source)
+    {
+        if (source == null) return;
+
+        foreach (var item in source)
+        {
+            target.Add(item);
+        }
+    }
+
+    [DebuggerHidden]
+    public static T GetOrDefault<T>(this T[] source, Int32 index)
+        => source.Length <= index ? default : source[index];
 
     [DebuggerHidden]
     public static void Apply<S>(this S source, Action<S> func)
@@ -114,6 +164,8 @@ public static class Extensions
             }
         }
     }
+
+    public static T If<T>(this T source, Boolean predicate) => predicate ? source : default;
 
     [DebuggerHidden]
     public static T Assert<T>(this T value, Predicate<T> predicate, String message = null)

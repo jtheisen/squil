@@ -1,0 +1,112 @@
+﻿@inject IOptions<AppSettings> Options
+
+@switch (QueryType)
+{
+    case QueryControllerQueryType.Root:
+        <h6>The root</h6>
+        <p>
+            At the root of the database, you see a list of tables with
+            a few of their rows loaded - but presented as cards side-by-side.
+            Some of those "rows" will have further related data already
+            loaded for better orientation.
+        </p>
+        <p>
+            How much data is loaded is decided entirely by a fixed set of heuristics - SQuiL has
+            no special logic or configuration to cater to a specific
+            database schema. It simply recurses all table relationships and takes an
+            educated guess at what and how much data would be appropriate.
+        </p>
+        <p>
+            Likewise, the names for the rows are derived from a suitable column, and
+            the two-letter code that precedes the name (the "tag") is derived from
+            the table name. These are not hard-coded to the specific schema
+            you're looking at.
+        </p>
+        <p>
+            That's what makes SQuiL unique: As long as your database schema is
+            well-designed, a semi-decent UI just drops off without any further work.
+        </p>
+        <p>
+            Try navigating to a specific row by clicking on a tag or name.
+            (This is only possible when the respective table has a primary key.)
+        </p>
+        break;
+    case QueryControllerQueryType.Single:
+        <h6>A row detail</h6>
+        <p>
+            Detail views are divided into sections. All the information in the
+            data section comes from columns in the selected row. The other
+            sections display data from other, related rows.
+        </p>
+        <p>
+            Related data can be related in a to-one or a to-many fashion. Captions
+            of data related in a to-many fashion link to a list view showing a
+            filtered view of the table.
+        </p>
+        <p>
+            Try moving around until you find a non-empty to-many entry and click on
+            the label to get to one. You can move back to the root by clicking
+            on the database name in the header.
+        </p>
+        break;
+    case QueryControllerQueryType.Table:
+        <h6>A table list</h6>
+        <p>
+            Lists show table rows with slightly less information than detail views,
+            therefore not requiring section labels.
+        </p>
+        <p>
+            This list shows the beginning of an <em>entire table</em>.
+        </p>
+        break;
+    case QueryControllerQueryType.Sublist:
+        <h6>A related list</h6>
+        <p>
+            Lists show table rows with slightly less information than detail views,
+            therefore not requiring section labels.
+        </p>
+        <p>
+            This list <em>is already filtered</em> to show only data related to a row from
+            which you arrived here.
+        </p>
+        <p>
+            Look at the breadcrumbs above the results to check if you are looking
+            at only a part of a table and which other table row this subset relates to.
+        </p>
+        break;
+}
+
+@switch (QueryType)
+{
+    case QueryControllerQueryType.Table:
+    case QueryControllerQueryType.Sublist:
+        <h6>Search</h6>
+        <p>
+            Searching on lists works via indexes. On the left you see input fields
+            generated from viable indexes and an expandable report for all indexes
+            that are unavailable for searching with the respective reasons.
+        </p>
+        <p>
+            Searching along indexes is called <em>seeking</em> and this is the only
+            method of search currently supported. A future version of SQuiL will
+            support <em>scanning</em>, which is potentially inefficient as it works
+            by walking the entirety of the candidate rows to find the matches.
+        </p>
+        <h6>Loading more</h6>
+        <p>
+            Loading more rows than the initial @Settings.InitialLimit results is also
+            currently restricted to a single reloading of @Settings.LoadMoreLimit entries.
+        </p>
+        <p>
+            A future version will keep auto-loading on scroll for tables that have
+            suitable indexes.
+        </p>
+        break;
+}
+
+@code {
+    [Parameter]
+    public QueryControllerQueryType QueryType { get; set; }
+
+    AppSettings Settings => Options.Value;
+}

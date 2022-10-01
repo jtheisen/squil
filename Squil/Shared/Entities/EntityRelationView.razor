@@ -1,0 +1,130 @@
+﻿@using ColorHelper
+
+@{
+    var entities = Ui.RelatedEntities;
+    var extent = entities.Extent;
+    var parentEntity = Ui.Entity;
+
+    var lastIndex = entities.Extent.Limit?.Apply(l => l - 1);
+
+    var classes = new List<String>();
+
+    classes.Add("entity-relation");
+    classes.Add(entities.RelationEnd.IsMany ? "entity-relation-plural" : "entity-relation-singular");
+    if (entities.List.Length == 0) classes.Add("is-empty");
+
+    var isLeaf = !entities.Extent.Children.Any();
+
+    var styleForHue = GetStyleForHue(entities.RelationEnd.Table.Hue);
+
+    var flavor = entities.Extent.Flavor.Apply(f => f.GetCssValue(isLeaf));
+
+    var ai = Ui.RelatedEntities.GetListAnnotationInfo();
+
+    var hadOnlyMatching = true;
+}
+
+<div class="@String.Join(' ', classes)" style="@styleForHue">
+    @if (!HideHeader)
+    {
+        <label>
+            <a href="@Context.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
+                <EntityRelationNameView RelationEnd="@entities.RelationEnd" />
+            </a>
+        </label>
+    }
+    @if (Context.InDebug)
+    {
+        <DebugTooltip IsOpen="true">
+            <RelationInfoView End0="@entities.RelationEnd" Index="@entities.Extent.IndexName" />
+        </DebugTooltip>
+    }
+    <ol data-flavor="@flavor">
+        @if (entities.List.Length == 0)
+        {
+            if (ai.wasSearch)
+            {
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>@ai.direction.GetPrettyOperator()</span> <span>@ai.value</span>
+                </li>
+            }
+            else
+            {
+                <li class="list-marker list-marker-empty">
+                    This table or related slice is empty.
+                </li>
+            }
+        }
+
+        @if (ai.wasSearch && ai.matchCount > 0)
+        {
+            if (ai.afterCount == 0)
+            {
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>=</span> <span>@ai.value</span>
+                </li>
+            }
+            else
+            {
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>=</span> <span>@ai.value</span>
+                </li>
+            }
+        }
+
+        @for (var i = 0; i < entities.List.Length; ++i)
+        {
+            var entity = entities.List[i];
+
+            var isLast = i == lastIndex;
+
+            if (ai.wasSearch && hadOnlyMatching && entity.IsMatching == false)
+            {
+                hadOnlyMatching = false;
+
+                <li class="list-marker list-marker-border">
+                    <span>@ai.column</span> <span>@ai.direction.GetStrictPrettyOperator()</span> <span>@ai.value</span>
+                </li>
+            }
+
+            if (isLast && entities.List.Length == entities.Extent.Limit)
+            {
+                <li class="list-marker list-marker-ellipsis" />
+            }
+            else
+            {
+                <li>
+                    <EntityContentView Entity="entity" ParentCollection="entities" />
+                </li>
+            }
+        }
+    </ol>
+</div>
+
+@code {
+    [Parameter]
+    public EntityRelationFieldUi Ui { get; set; }
+
+    [Parameter]
+    public Boolean HideHeader { get; set; }
+
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+
+    String GetColorForHue(Double hue, Int32 s, Int32 l)
+    {
+        var hsl = new HSL((int)hue, (byte)s, (byte)l);
+
+        return ColorConverter.HslToHex(hsl).Value;
+    }
+
+    String GetStyleForHue(Double hue)
+    {
+        String style = "";
+
+        style += $"--entity-bg-1: #{GetColorForHue(hue, 20, 90)};";
+        style += $"--entity-bg-0: #{GetColorForHue(hue, 20, 95)};";
+
+        return style;
+    }
+}

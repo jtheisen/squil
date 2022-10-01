@@ -1,0 +1,56 @@
+﻿<div class="entity-column" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType">
+    <label>
+        <span>
+            @Column.Name
+@*          Doesn't work - the hovering is blocked by the outer style change on hover  
+            @if (Column.Comment != null)
+            {
+                <span data-toggle="tooltip" title="@Column.Comment">
+                    &nbsp;
+                    <span class="fa fa-xs fa-info" />
+                </span>
+            }
+*@        </span>
+    </label>
+    <div>
+        <a>
+            @{
+                var value = Entity.ColumnValues[Column.Name];
+
+                if (value == null)
+                {
+                    <span class="null-value" />
+                }
+                else if (value.Length == 0)
+                {
+                    <span class="empty-value" />
+                }
+                else if (String.IsNullOrWhiteSpace(value))
+                {
+                    <span class="ws-value" />
+                }
+                else
+                {
+                    <text>@value</text>
+                }
+            }
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Entity Entity { get; set; }
+
+    [Parameter]
+    public CMTable Table { get; set; }
+
+    [Parameter]
+    public CMColumn Column { get; set; }
+
+    [Parameter]
+    public ColumnRenderClass Cls { get; set; }
+
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+}

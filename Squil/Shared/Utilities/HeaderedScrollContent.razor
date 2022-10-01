@@ -1,0 +1,18 @@
+﻿<section>
+    <header>@HeaderContent</header>
+    <div style="max-height: @MaxHeight; height: @Height">@ChildContent</div>
+</section>
+
+@code {
+    [Parameter]
+    public RenderFragment HeaderContent { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public String MaxHeight { get; set; }
+
+    [Parameter]
+    public String Height { get; set; }
+}

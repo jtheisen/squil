@@ -1,0 +1,41 @@
+﻿<header class="header bg-white border-bottom box-shadow mb-3">
+    <SidebarLayout>
+        <LeftContent>
+            <nav class="header-height navbar navbar-expand d-none d-md-block text-muted">
+                <div class="d-flex align-self-start h-100">
+                    <Logo />
+                </div>
+            </nav>
+        </LeftContent>
+        <ChildContent>
+            <div class="header-height d-flex flex-column justify-content-center">
+                <Breadcrumbs>
+                    @NavItems
+                </Breadcrumbs>
+            </div>
+        </ChildContent>
+        <RightContent>
+            <nav class="header-height navbar navbar-expand position-absolute right">
+                <div class="d-flex align-self-start">
+                    @ActionItems
+                </div>
+            </nav>
+        </RightContent>
+    </SidebarLayout>
+</header>
+
+<main class="main">
+    <div class="d-flex" />
+    @ChildContent
+</main>
+
+@code {
+    [Parameter]
+    public RenderFragment NavItems { get; set; }
+
+    [Parameter]
+    public RenderFragment ActionItems { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

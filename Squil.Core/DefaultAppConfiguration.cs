@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using NLog;
-using System;
 using System.Reflection;
 
 public static class DefaultAppConfiguration

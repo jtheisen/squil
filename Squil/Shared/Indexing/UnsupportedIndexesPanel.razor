@@ -1,0 +1,30 @@
+﻿@if (Indexes.Any())
+{
+    <ExpandableHeaderedContent>
+        <Header>Expected a missing seek option?</Header>
+        <Body>
+            <p class="small" style="max-width: 25em">
+                Here you see all indexes declared on the table that are not available for seeking grouped by the reason why.
+            </p>
+
+            <ul class="indexes-unsupported">
+                @foreach (var group in Indexes)
+                {
+                    <li class="unsupported-index">
+                        <div class="unsupported-tag">@group.Reason.Tag</div>
+                        <div class="unsupported-reason">@group.Reason.Reason; concerns</div>
+                        @foreach (var i in group.Indexes)
+                        {
+                            <div class="index-name">@i.Index.Name</div>
+                        }
+                    </li>
+                }
+            </ul>
+        </Body>
+    </ExpandableHeaderedContent>
+}
+
+@code {
+    [Parameter]
+    public UnsuitableIndexesVm[] Indexes { get; set; }
+}

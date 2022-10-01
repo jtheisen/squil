@@ -1,0 +1,86 @@
+﻿@using System.Diagnostics
+
+<div class="@ClassNames("text-muted", "search-panel", "show".If(showSearchOptions))">
+    <button type="button" class="close w-100 float-none text-right search-panel-close-button" @onclick="@HideSearchOptions" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+
+    <h5 class="font-weight-bold border-bottom mb-4">Search</h5>
+
+    <h6 class="text-right mt-4">
+        <ContentWithTooltip InlineStringClass="text-decoration-underline" InlineString="scanning" Placement="right" TooltipInnerClass="max-w-prose text-left">
+            <p><em>Scanning</em> is the default search option for small tables.</p>
+            <p>Enter text here to perform a scan over supported column types.</p>
+            <p>
+                Text columns with limited length use a substring search
+                If the entered text is a number, integer columns will be scanned for an exact match of the value.
+            </p>
+        </ContentWithTooltip>
+    </h6>
+
+    @if (Vm.ScanOption != null)
+    {
+        <div class="indexes-form">
+            <IndexLine Vm="@Vm" Option="@Vm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+        </div>
+    }
+    else
+    {
+        <p>@Vm.NoScanOptionReason</p>
+    }
+
+    <h6 class="text-right mt-4">
+        <ContentWithTooltip InlineStringClass="text-decoration-underline" InlineString="seeking" Placement="right" TooltipInnerClass="max-w-prose text-left">
+            <p><em>Seeking</em> is the default search option for large tables.</p>
+            <p>Seeking requires indexes and can only be done using the column (or columns) the index is defined on.</p>
+            <p>
+                In the single-column case, the database will seek to the position the entered search term would be at and
+                return all rows greater or equal to that value.
+            </p>
+            <p>
+                In the multiple-column case, the above still applies to the column you supplied non-empty search text for.
+                All previous columns, however, will be using an equality match.
+            </p>
+        </ContentWithTooltip>
+    </h6>
+
+    <div class="indexes-form mb-4">
+        @if (Vm.SearchOptions.Length > 0)
+        {
+            foreach (var option in Vm.SearchOptions)
+            {
+                if (!option.Index.IsSupported) continue;
+
+                <IndexLine Vm="@Vm" Option="@option" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            }
+        }
+        else if (Vm.ScanOption?.IsCurrent ?? false == false)
+        {
+            <IndexLine Vm="@Vm" Option="@Vm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+        }
+    </div>
+
+    @if (Vm.SearchOptions.Length == 0)
+    {
+        <p>There are no suitable indexes to seek by.</p>
+    }
+
+    <UnsupportedIndexesPanel Indexes="@Vm.UnsuitableIndexes" />
+
+</div>
+
+@code {
+    Boolean showSearchOptions;
+
+    Action ShowSearchOptions => () => showSearchOptions = true;
+    Action HideSearchOptions => () => showSearchOptions = false;
+
+    [CascadingParameter]
+    public QueryContext QueryContext { get; set; }
+
+    [Parameter]
+    public LocationQueryVm Vm { get; set; }
+
+    [Parameter]
+    public IMap<String, String> SearchValues { get; set; }
+}

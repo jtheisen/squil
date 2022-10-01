@@ -1,0 +1,12 @@
+﻿
+<ErrorBoundary @key="Location.Location">
+    @ChildContent
+</ErrorBoundary>
+
+@code {
+    [CascadingParameter]
+    public CurrentLocation Location { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

@@ -25,7 +25,7 @@ $bg-light-2: #e7e5e4;
 
 @mixin grid-base {
     display: grid;
-    column-gap: sz(2);
+    column-gap: sz(8);
     row-gap: sz(2);
 }
 
@@ -65,10 +65,37 @@ $bg-light-2: #e7e5e4;
     }
 }
 
+.relation-debug-info {
+    display: grid;
+    gap: .25em 1.5em;
+    grid-template-columns: 1fr 1fr;
+
+    > * {
+        white-space: nowrap;
+    }
+
+    > div:nth-child(2n+1) {
+        text-align: right;
+    }
+
+    ul {
+        list-style: none;
+        font-size: .75em;
+
+        > li.selected {
+            font-weight: bold;
+        }
+    }
+}
+
 .entity-context {
     --entity-bg-prev: white;
 
-    li.ellipsis {
+    &.entity-invalid {
+        opacity: .5;
+    }
+
+    li.list-marker {
         display: none;
     }
 
@@ -87,7 +114,7 @@ $bg-light-2: #e7e5e4;
                 outline: 2px solid white;
                 isolation: isolate;
 */
-                :after {
+                &:after {
                     position: absolute;
                     top: 0;
                     right: 0;
@@ -140,8 +167,37 @@ $bg-light-2: #e7e5e4;
         position: relative;
     }
 
+    ol[data-flavor=block] {
+        > li.list-marker.list-marker-border {
+            padding-top: 0;
+            padding-bottom: 0;
+
+            span:nth-child(1) {
+                display: block;
+                border-bottom: 1px solid black;
+                font-variant: small-caps;
+                text-transform: lowercase;
+                font-weight: bold;
+                color: #ccc;
+                margin: 0 -25px;
+                padding: 0 25px;
+            }
+
+            @media (min-width: 768px) {
+                span:nth-child(1) {
+                    margin: 0 -5px;
+                    padding: 0 5px;
+                }
+            }
+        }
+    }
+
     ol[data-flavor=block],
     ol[data-flavor=page] {
+        > li.list-marker {
+            display: block;
+        }
+
         > li:not(:first-child) {
             margin-top: 2em;
         }
@@ -150,17 +206,25 @@ $bg-light-2: #e7e5e4;
             margin-top: .5em;
         }
 
+        > li:not(.list-marker) {
+            background-color: var(--entity-bg-0);
+            --entity-bg-prev: var(--entity-bg-0);
+        }
+
         > li {
             margin: -10px;
             padding: 10px;
             border-radius: 5px;
-            background-color: var(--entity-bg-0);
-            --entity-bg-prev: var(--entity-bg-0);
-
 
             > header {
                 font-size: 2em;
                 font-weight: 200;
+            }
+
+            > fieldset {
+                &[data-layout=grid3] {
+                    @include grid-3;
+                }
             }
         }
     }
@@ -183,10 +247,6 @@ $bg-light-2: #e7e5e4;
                 width: 5em;
                 margin-left: -5em;
             }
-
-            &[data-layout=grid3] {
-                @include grid-3;
-            }
         }
 
         > li > fieldset > .entity-relation.is-empty > ol:before {
@@ -202,14 +262,14 @@ $bg-light-2: #e7e5e4;
 
     label {
         display: block; /* labels are inline by default */
+        margin-bottom: 0;
         font-variant: small-caps;
         text-transform: lowercase;
         color: #ccc;
         font-weight: bold;
-        margin-bottom: 0;
     }
 
-    .entity-relation > label {
+    .entity-relation-name-view {
         span:not(:first-child) {
             font-size: .75em;
 
@@ -227,6 +287,11 @@ $bg-light-2: #e7e5e4;
         > label {
             font-size: .8em;
             margin-bottom: -.5em;
+        }
+
+        &[data-css-type=guid] > div {
+            font-size: .7em;
+            margin-top: .3em;
         }
 
         > div {
@@ -258,50 +323,32 @@ $bg-light-2: #e7e5e4;
 
     ol[data-flavor=block] {
         > li {
-            &.potentially-last {
+            &.list-marker-ellipsis {
                 display: none;
-            }
-
-            &.ellipsis {
-                display: block;
-                background: none;
-
-                &:after {
-                    font-style: italic;
-                    content: "...and more (load more not implemented yet)";
-                }
             }
         }
     }
 
-
-    ol[data-flavor=inline] {
-        @include grid-3;
+    ol[data-flavor=breadcrumb],
+    ol[data-flavor=inline],
+    ol[data-flavor=flow1],
+    ol[data-flavor=flow3] {
         @include hide-labels-and-legends;
+    }
 
+    ol[data-flavor=flow3] {
+        @include grid-3;
+    }
+
+    ol[data-flavor=flow3],
+    ol[data-flavor=flow1] {
         > li {
             background-color: var(--entity-bg-1);
             padding: .125em .5em;
             @include border(5px);
             @include stretched-link;
 
-            ol[data-flavor=inline2] {
-                font-size: .75em;
-
-                > li {
-                    &:before {
-                        content: "in ";
-                    }
-
-                    * {
-                        display: inline;
-                    }
-
-                    @include text-ellipsis;
-                }
-            }
-
-            &.ellipsis {
+            &.list-marker-ellipsis {
                 background-color: var(--entity-bg-prev);
                 height: 32px;
                 width: 32px;
@@ -314,61 +361,20 @@ $bg-light-2: #e7e5e4;
             }
         }
     }
-    /* old inline */
-    ol[data-flavor=inline-old] {
-        > li {
-            display: inline-block;
 
-            header {
-                max-width: 8em;
+    ol[data-flavor=inline] {
+        font-size: .75em;
+
+        > li {
+            &:before {
+                content: "in ";
             }
-        }
 
-        > li {
             * {
                 display: inline;
             }
 
-            header {
-                display: inline-flex;
-            }
-        }
-
-        li {
-            &:not(:last-child):after {
-                content: ", ";
-                margin-right: 4px;
-            }
-        }
-
-        li.potentially-last {
-            * {
-                display: none !important;
-                /*width: 0;
-            height: 0;
-            overflow: hidden;*/
-            }
-
-            &:after {
-                content: "..."
-            }
-        }
-        /* No labels and legends, and without labels unproper content is meaningless. */
-        label, legend, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
-            display: none;
-        }
-
-        ol[data-flavor=inline2] {
-            font-size: .75em;
-
-            > li:before {
-                margin-left: .2em;
-                content: "in "
-            }
-
-            > li:not(:last-child):after {
-                content: ", "
-            }
+            @include text-ellipsis;
         }
     }
 

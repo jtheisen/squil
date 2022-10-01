@@ -1,27 +1,45 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Blazor.Analytics;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Squil;
+using System.Dynamic;
 
-namespace Squil
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.ConfigureAppConfiguration(DefaultAppConfiguration.ConfigureConfigurationBuilder);
+
+var services = builder.Services;
+var configuration = builder.Configuration;
+
+services.Configure<AppSettings>(configuration);
+services.Configure<List<ConnectionConfiguration>>(configuration.GetSection("Connections"));
+
+services.AddRazorPages();
+services.AddServerSideBlazor();
+services.AddSingleton<ConnectionManager>();
+services.AddSingleton<LocationQueryRunner>();
+
+var googleAnalyticsToken = configuration["GoogleAnalyticsToken"];
+if (!String.IsNullOrEmpty(googleAnalyticsToken))
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(DefaultAppConfiguration.ConfigureConfigurationBuilder)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+    services.AddGoogleAnalytics(googleAnalyticsToken);
 }
+
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+
+app.Run();

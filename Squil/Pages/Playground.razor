@@ -1,0 +1,20 @@
+﻿@page "/playground2/{foo}/{bar}"
+@page "/playground/{*pageroute}"
+
+<PageTitle>Playground</PageTitle>
+
+<p role="status">combined: @PageRoute</p>
+
+<p role="status">separate: @Foo // @Bar</p>
+
+@code {
+    [Parameter]
+    public string PageRoute { get; set; }
+
+    [Parameter]
+    public string Foo { get; set; }
+
+    [Parameter]
+    public string Bar { get; set; }
+
+}

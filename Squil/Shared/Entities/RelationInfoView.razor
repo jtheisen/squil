@@ -1,0 +1,56 @@
+﻿
+<div class="relation-debug-info">
+    <div><span>@End0.Name</span></div>
+    <div><span>@End1.Name</span></div>
+
+    <div><span>@End0.Table.Name.Simple</span></div>
+    <div><span>@End1.Table.Name.Simple</span></div>
+
+    <div><span>@End0.Key.Name</span></div>
+    <div><span>@End1.Key.Name</span></div>
+
+    @if (End0.IsPrincipalEnd)
+    {
+        <div></div>
+    }
+    <div>
+        @if (DEnd.Key is CMForeignKey fk)
+        {
+            var indexes = fk.BackingIndexes;
+
+            if (indexes.Any())
+            {
+                <ul>
+                    @foreach (var index in indexes)
+                    {
+                        var isSelected = index.Name == Index;
+
+                        <li class="@ClassNames("selected".If(isSelected))">
+                            @index.Name
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <em>no backing indexes</em>
+            }
+        }
+    </div>
+    @if (End1.IsPrincipalEnd)
+    {
+        <div></div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public CMRelationEnd End0 { get; set; }
+
+    [Parameter]
+    public String Index { get; set; }
+
+    CMRelationEnd End1 => End0.OtherEnd;
+
+    CMRelationEnd DEnd => End0.IsPrincipalEnd ? End1 : End0;
+}

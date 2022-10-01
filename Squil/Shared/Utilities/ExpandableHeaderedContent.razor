@@ -1,0 +1,23 @@
+﻿<div>
+    <div class="header" @onclick="HandleClick">@(isOpen ? "▾" : "▸") @Header</div>
+
+    @if (isOpen)
+    {
+        @Body
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment Header { get; set; }
+
+    [Parameter]
+    public RenderFragment Body { get; set; }
+
+    Boolean isOpen = false;
+
+    void HandleClick()
+    {
+        isOpen = !isOpen;
+    }
+}

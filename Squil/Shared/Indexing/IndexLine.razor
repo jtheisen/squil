@@ -1,0 +1,119 @@
+﻿@inject NavigationManager Nav
+
+@{
+    var fields = Option.Fields;
+    var validation = Option.ValidationValues;
+}
+
+<a class="@ClassNames("index", "current".If(Option.IsCurrent), "no-index".If(noOption))" href="@Url" @onclick="HandleClick" @onclick:preventDefault>
+    <fieldset>
+        <div class="index-columns d-flex">
+            @for (var i = 0; i < fields.Length; ++i)
+            {
+                var f = fields[i];
+                var isInvalid = validation?[i].isInvalid ?? false;
+
+                var first = i == 0;
+
+                <span class="index-column index-column-text d-flex flex-column @ClassNames("index-column-error".If(isInvalid), "no-index-column".If(noOption))">
+                    @switch (Option.OptionType)
+                    {
+                        case SearchOptionType.Seek:
+                            <span class="index-column-name" type="text">@f.DisplayName</span>
+
+                            @if (Option.IsCurrent)
+                            {
+                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Option.IsCurrent" @bind-Value="@SearchValues[f.ColumnName]" />
+                            }
+                            break;
+                        case SearchOptionType.Scan:
+                            <span class="index-column-name" type="text"><em>scan</em></span>
+
+                            @if (Option.IsCurrent)
+                            {
+                                <InputEditable Class="index-column-value outline-none" Focus="@first" IsActive="@Option.IsCurrent" @bind-Value="@SearchValues[""]" />
+                            }
+                            break;
+                        case SearchOptionType.NoOption:
+                            <span class="align-self-center text-muted">no suitable search option</span>
+                            break;
+                    }
+                </span>
+            }
+        </div>
+    </fieldset>
+
+    @if (Option.IsCurrent)
+    {
+        <div class="validation-area">
+            @if (!Vm.LastResult.IsValidationOk)
+            {
+                <div class="validation-display">
+                    @foreach (var c in Vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
+                    {
+                        <div>
+                            @c.Error
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="more-search-options-button" @onclick="ShowSearchOptions">
+                    › search options
+                </div>
+            }
+        </div>
+    }
+</a>
+
+@code {
+    [CascadingParameter]
+    public QueryContext Context { get; set; }
+
+    [Parameter]
+    public LocationQueryVm Vm { get; set; }
+
+    [Parameter]
+    public SearchOptionVm Option { get; set; }
+
+    [Parameter]
+    public Int32 HiddenPrefixLength { get; set; }
+
+    [Parameter]
+    public IMap<String, String> SearchValues { get; set; }
+
+    [Parameter]
+    public Action ShowSearchOptions { get; set; }
+
+    Boolean noOption => Option.OptionType == SearchOptionType.NoOption;
+
+    String Url
+    {
+        get
+        {
+            if (Option.IsCurrent) return null;
+
+            var result = Vm.LastResult;
+
+            var keys = Vm.LastRequest.KeyParams.AsMap();
+
+            switch (Option.OptionType)
+            {
+                case SearchOptionType.Seek:
+                    return Context.RenderIndexOrTableUrl(result.Table, Option.Index, keys, Vm.LastRequest.BackRelation, QuerySearchMode.Seek);
+                case SearchOptionType.Scan:
+                    return Context.RenderIndexOrTableUrl(result.Table, result.Index, keys, Vm.LastRequest.BackRelation, QuerySearchMode.Scan);
+                default:
+                    throw new Exception($"Unexpected option type {Option.OptionType}");
+            }
+        }
+    }
+
+    void HandleClick()
+    {
+        if (Option.IsCurrent) return;
+
+        Nav.NavigateTo(Url, replace: true);
+    }
+}
