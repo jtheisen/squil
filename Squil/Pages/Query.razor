@@ -180,13 +180,13 @@
                             <small>
                                 <p class="mt-2 mr-4">
                                     Each page's data is requested in only one query. The query is textually long, but
-                                    executes efficiently as it relies only on a series of nested table seeks. (This isn't
-                                    quite guaranteed yet, but a future version of SQuiL will make sure that it is.)
+                                    executes efficiently as it relies only on a series of nested table seeks.
+                                    This is guaranteed unless you use the scanning search or you hit a bug.
                                 </p>
                                 <p>
                                     Although this query uses the nonstandard XML query syntax of SQL Server, a similar
-                                    query can be created for other database engines - although this may look even more
-                                    convoluted for those.
+                                    query can be created for most other database engines. However, these may look even more
+                                    convoluted then.
                                 </p>
 
                             </small>
