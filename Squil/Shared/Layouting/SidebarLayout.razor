@@ -2,17 +2,23 @@
 <div class="layout">
     <div class="left">
         <div>
-            @LeftContent
+            <SquilErrorBoundary>
+                @LeftContent
+            </SquilErrorBoundary>
         </div>
     </div>
     <div class="middle">
         <div class="squil-container">
-            @ChildContent
+            <SquilErrorBoundary>
+                @ChildContent
+            </SquilErrorBoundary>
         </div>
     </div>
     <div class="right">
         <div>
-            @RightContent
+            <SquilErrorBoundary>
+                @RightContent
+            </SquilErrorBoundary>
         </div>
     </div>
 </div>
@@ -27,3 +33,4 @@
     [Parameter]
     public RenderFragment RightContent { get; set; }
 }
+

@@ -1,5 +1,7 @@
 ﻿namespace Squil;
 
+public record CurrentLocation(String Location);
+
 public static class Extensions
 {
     public static RelatedEntities GetRelatedEntities(this RelatedEntities[] relatedEntities, String alias)

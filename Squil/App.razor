@@ -1,19 +1,47 @@
 ﻿@inject IOptions<AppSettings> Settings
+@inject NavigationManager Nav
 
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(StaticLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(StaticLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+<CascadingValue Value="@Location">
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(StaticLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(StaticLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingValue>
 
 @if (!String.IsNullOrEmpty(Settings.Value.GoogleAnalyticsToken))
 {
     <NavigationTracker />
+}
+
+@code {
+    public CurrentLocation Location { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += HandleLocationChanged;
+
+        Location = new CurrentLocation("");
+
+        base.OnInitialized();
+    }
+
+    void HandleLocationChanged(Object sender, LocationChangedEventArgs a)
+    {
+        Location = new CurrentLocation(a.Location);
+
+        StateHasChanged();
+    }
+
+    protected override void OnAfterRender(Boolean firstRender)
+    {
+        base.OnAfterRender(firstRender);
+    }
 }
