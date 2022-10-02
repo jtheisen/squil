@@ -13,7 +13,8 @@ namespace Squil
     public class ConnectionManager
     {
         private readonly List<ConnectionConfiguration> configurations;
-        private readonly Dictionary<String, Lazy<SquilContext>> contextsByName;
+        private readonly Dictionary<String, SquilContext> contextsByName;
+        private readonly Dictionary<String, ConnectionConfiguration> configurationsByName;
         private readonly IOptions<AppSettings> options;
 
         public AppSettings AppSettings => options.Value;
@@ -22,24 +23,33 @@ namespace Squil
         {
             this.configurations = configurationsOption.Value;
 
-            contextsByName = configurations.ToDictionary(c => c.Name, c => new Lazy<SquilContext>(() => new SquilContext(c.ConnectionString)));
+            contextsByName = new Dictionary<String, SquilContext>();
+            configurationsByName = configurations.ToDictionary(c => c.Name, c => c);
+
             this.options = options;
         }
 
         public IEnumerable<(ConnectionConfiguration config, String error)> GetConnnections()
         {
-            return configurations.Select(c => (c, (String)default));
+            return configurations.Select(c => (c, (String)default)).ToArray();
         }
 
         public SquilContext GetContext(String name)
         {
-            if (contextsByName.TryGetValue(name, out var context))
+            lock (this)
             {
-                return context.Value;
-            }
-            else
-            {
-                throw new Exception("No such connection");
+                if (contextsByName.TryGetValue(name, out var context))
+                {
+                    return context;
+                }
+                else if (configurationsByName.TryGetValue(name, out var configuration))
+                {
+                    return contextsByName[name] = context = new SquilContext(configuration.ConnectionString);
+                }
+                else
+                {
+                    throw new Exception($"No connection found with name '{name}'");
+                }
             }
         }
 

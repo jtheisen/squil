@@ -112,8 +112,9 @@ public class LocationQueryResult
     public CMRelationEnd PrincipalRelation { get; set; }
     public Boolean IsValidationOk { get; set; }
     public ValidationResult[] ValidatedColumns { get; set; }
+
     public TaskLedger Ledger { get; set; }
-    public SqlException Exception { get; set; }
+    public Exception Exception { get; set; }
 
     public Boolean IsOk => IsValidationOk && Exception == null;
 }
@@ -137,20 +138,41 @@ public class LocationQueryRunner
 
     public LocationQueryResult Query(String connectionName, LocationQueryRequest request)
     {
+        using var ledger = InstallTaskLedger();
+
+        LocationQueryResult result = null;
+
         try
         {
-            return QueryInternal(connectionName, request);
+            result = QueryInternal0(connectionName, request);
+        }
+        catch (Exception ex)
+        {
+            result = new LocationQueryResult();
+            result.Exception = ex;
+        }
+        finally
+        {
+            result.Ledger = ledger;
+        }
+
+        return result;
+    }
+
+    public LocationQueryResult QueryInternal0(String connectionName, LocationQueryRequest request)
+    {
+        try
+        {
+            return QueryInternal1(connectionName, request);
         }
         catch (SchemaChangedException)
         {
-            return QueryInternal(connectionName, request);
+            return QueryInternal1(connectionName, request);
         }
     }
 
-    LocationQueryResult QueryInternal(String connectionName, LocationQueryRequest request)
+    LocationQueryResult QueryInternal1(String connectionName, LocationQueryRequest request)
     {
-        using var ledger = InstallTaskLedger();
-
         var context = connections.GetContext(connectionName);
 
         var schema = request.Schema;
@@ -254,10 +276,6 @@ public class LocationQueryRunner
             result.Exception = ex;
 
             return result;
-        }
-        finally
-        {
-            result.Ledger = ledger;
         }
 
         if (!isRoot)

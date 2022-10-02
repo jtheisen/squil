@@ -5,7 +5,10 @@ using System.Xml.Linq;
 
 namespace Squil;
 
-public record QuerySql(String Sql);
+public record QuerySql(String Sql) : TaskLedgering.IReportResult
+{
+    public String ToReportString() => Sql;
+}
 
 public class QueryGenerator
 {

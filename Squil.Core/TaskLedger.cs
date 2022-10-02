@@ -2,6 +2,11 @@
 
 namespace TaskLedgering;
 
+public interface IReportResult
+{
+    String ToReportString();
+}
+
 public class TimedScope : IDisposable
 {
     private readonly Stopwatch watch;
@@ -99,4 +104,23 @@ public class TaskLedger : IDisposable
     }
 
     public TimedScope TimedScope(String name) => new TimedScope(this, name, watch);
+}
+
+public static class LedgerExtensions
+{
+    public static String GetReportString(this Object o)
+    {
+        if (o is String s)
+        {
+            return s;
+        }
+        else if (o is IReportResult r)
+        {
+            return r.ToReportString();
+        }
+        else
+        {
+            return null;
+        }
+    }
 }

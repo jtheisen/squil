@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+using TaskLedgering;
 
 namespace Squil;
 
@@ -20,5 +18,21 @@ public static class MiscExtensions
     public static String ToSqlServerLikeLiteralContent(this String s)
     {
         return s.Replace("'", "''").Replace("[", "[[").Replace("%", "[%]").Replace("_", "[_]");
+    }
+
+    public static String GetReportString(this Object o)
+    {
+        if (o is String s)
+        {
+            return s;
+        }
+        else if (o is IReportResult r)
+        {
+            return r.ToReportString();
+        }
+        else
+        {
+            return null;
+        }
     }
 }

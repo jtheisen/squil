@@ -18,7 +18,7 @@ public static class SqlConnectionExtensions
 
     public static String QueryXmlString(this SqlConnection connection, String sql)
     {
-        using var _ = GetCurrentLedger().TimedScope("query");
+        using var scope = GetCurrentLedger().TimedScope("query");
 
         var command = connection.CreateSqlCommandFromSql($"select ({sql})");
 
@@ -26,13 +26,13 @@ public static class SqlConnectionExtensions
 
         reader.Read();
 
-        return reader.GetString(0);
+        return scope.SetResult(reader.GetString(0));
     }
 
     public static X Parse<X>(String xml)
         where X : class
     {
-        using var _ = GetCurrentLedger().TimedScope("parsing-and-binding");
+        using var scope = GetCurrentLedger().TimedScope("parsing-and-binding");
 
         var serializer = new XmlSerializer(typeof(X));
 
@@ -40,13 +40,15 @@ public static class SqlConnectionExtensions
 
         var result = serializer.Deserialize(reader);
 
-        return result as X;
+        return scope.SetResult(result as X);
     }
 
     public static X QueryAndParseXml<X>(this SqlConnection connection, String sql)
         where X : class
     {
-        return connection.QueryAndParseXmlSeparately<X>(sql);
+        using var scope = GetCurrentLedger().TimedScope("querying-parsing-and-binding");
+
+        return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql));
     }
 
     public static X QueryAndParseXmlSeparately<X>(this SqlConnection connection, String sql)
