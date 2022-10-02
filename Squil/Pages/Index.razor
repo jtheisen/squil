@@ -1,9 +1,6 @@
 ﻿@page "/"
 @inject ConnectionManager connections
-
-@{
-    var showDemoText = true;
-}
+@inject IOptions<AppSettings> Options
 
 <PageTitle>Select database</PageTitle>
 
@@ -11,7 +8,7 @@
     <div class="container">
         <h1 class="display-4 mt-4 mb-4">Welcome,</h1>
 
-        @if (showDemoText)
+        @if (Options.Value.ShowDemoText)
         {
             <p>this is the demo hosting of the SQuiL prototype: a generic UI for relational databases.</p>
 
@@ -19,6 +16,11 @@
                 If you click on a choice of datasource below, you will be able to browse that database with something that
                 looks like a custom user interface - but there's nothing custom about it: Everything is derived
                 from the database schema itself by using foreign key information and sensible heuristics.
+            </p>
+
+            <p>
+                Most sample databases are so small that scanning will be the default search option. Only
+                the StackOverflow sample is quite large (about 20GB) so that indexed search can shine over scanning.
             </p>
         }
         else

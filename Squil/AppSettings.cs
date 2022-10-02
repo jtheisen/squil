@@ -12,4 +12,6 @@ public class AppSettings
 
     // Something is off about how SQL Server reports the sizes, they seem to large.
     public Int32 PreferScanningUnderKb { get; set; } = 100000;
+
+    public Boolean ShowDemoText { get; set; }
 }
