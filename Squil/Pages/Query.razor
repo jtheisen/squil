@@ -271,6 +271,11 @@
 
         var result = Runner.Query(ConnectionName, request);
 
+        if (result.Exception != null && result.Exception is not SqlException)
+        {
+            Js.InvokeVoidAsync("console.log", result.Exception.ToString());
+        }
+
         ++queryCount;
 
         if (isLocationChange)

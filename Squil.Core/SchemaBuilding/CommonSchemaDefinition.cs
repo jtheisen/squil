@@ -132,15 +132,17 @@ public static class CsdExtensions
 
                 var csdColumns = (
                     from c in table.Columns
-                    let usertype = c.UserTypes.Single("Unexpectedly no unique usertype at column")
-                    let systemtype = c.SystemTypes.SingleOrDefault("Unexpectedly no unique systemtype at column")
+                    // Likely a bug in SQL Server, a mere dbdatareader can't read custom user types as seen in the AdventureWorks 2019 LT on SalesLT.Address.StateProvince
+                    // Let's hope we always have a system type in such cases
+                    let usertype = c.UserTypes.SingleOrDefault($"Unexpectedly no unique usertype at column {schema.Name}.{table.Name}.{c.Name}")
+                    let systemtype = c.SystemTypes.SingleOrDefault($"Unexpectedly no unique systemtype at column {schema.Name}.{table.Name}.{c.Name}")
                     select new CsdColumn
                     {
                         Name = c.Name,
-                        DataTypeAlias = usertype.Name,
-                        DataType = (systemtype ?? usertype).Name,
+                        DataTypeAlias = usertype?.Name,
+                        DataType = (systemtype ?? usertype)?.Name ?? throw new Exception($"Neither user type nor system type found"),
                         IsSystemType = systemtype != null,
-                        IsAssemblyType = usertype.IsAssemblyType,
+                        IsAssemblyType = usertype?.IsAssemblyType ?? false,
                         IsNullable = c.IsNullable,
                         ColumnId = c.ColumnId,
                         Comment = c.Comment
