@@ -177,7 +177,7 @@ public class ExtentFactory
             case ExtentFlavorType.Page:
                 return end.IsMany ? (ExtentFlavorType.Flow3, 1) : (ExtentFlavorType.Flow1, 1);
             case ExtentFlavorType.Block:
-                return (ExtentFlavorType.None, 0);
+                return end.IsMany ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Flow1, 1);
             case ExtentFlavorType.Flow1:
             case ExtentFlavorType.Flow3:
             case ExtentFlavorType.Breadcrumb:

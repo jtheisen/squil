@@ -98,7 +98,7 @@
         var showAll = false;
 
         showAll |= parentCollection?.Extent.ScanValue != null;
-        showAll |= isBlockLevel && table?.PrimaryKey == null;
+        showAll |= isBlockLevel;
 
         var columnClasses = Enum.GetValues(typeof(ColumnRenderClass)) as ColumnRenderClass[];
 
@@ -120,7 +120,7 @@
 
         if (singulars != null)
         {
-            groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
+            groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page || flavorType == ExtentFlavorType.Block), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
         }
 
         if (plurals != null)
