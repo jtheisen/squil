@@ -172,7 +172,7 @@ public class QueryGenerator
 
         var base64Option = columns.Any(c => c.Type is BinaryColumnType) ? ", binary base64" : "";
 
-        var indexLine = extent.IndexName?.Apply(i => $"{ipspace}with (index ({i}))\n");
+        var indexLine = extent.IndexName?.Apply(i => $"{ipspace}with (index ({i.EscapeNamePart()}))\n");
 
         var sql = @$"(select{topClause}{comment}
 {selectsClause}
