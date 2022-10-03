@@ -422,7 +422,7 @@ public class CMRelationEnd
     // the respective table on the other in the singular.
     public Boolean IsUniquelyTyped => AmbiguouslyTypedWitness == null;
 
-    public CMRelationEnd AmbiguouslyTypedWitness => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => !r.IsMany && r != this).FirstOrDefault();
+    public CMRelationEnd AmbiguouslyTypedWitness => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => IsMany == r.IsMany && r != this).FirstOrDefault();
 
     public CMIndexlike GetIndex() => Key is CMForeignKey fk ? fk.BackingIndexes.FirstOrDefault() : Key as CMIndexlike;
 
