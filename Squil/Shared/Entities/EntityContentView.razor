@@ -20,11 +20,11 @@
         {
             if (field is EntityColumnFieldUi c)
             {
-                <EntityColumnView Entity="c.Entity" Table="c.Table" Column="c.Column" Cls="c.StringLengthClass" />
+                <EntityColumnView Entity="@c.Entity" Table="@c.Table" Column="@c.Column" Cls="@c.StringLengthClass" IsFocusColumn="@c.IsFocusColumn" Url="@c.FocusColumnUrl" />
             }
             else if (field is EntityRelationFieldUi r)
             {
-                <EntityRelationView Ui="r" HideHeader="HideHeaders" />
+                <EntityRelationView Ui="@r" HideHeader="@HideHeaders" />
             }
             else
             {
@@ -88,15 +88,25 @@
         }
     }
 
-    Fieldset GetFieldset(CMTable table, Entity entity, ColumnRenderClass rc, IEnumerable<CMColumn> columns)
+    Fieldset GetFieldset(Extent extent, CMTable table, Entity entity, ColumnRenderClass rc, IEnumerable<CMColumn> columns)
     {
+        EntityColumnFieldUi GetUi(CMColumn c, StringLengthClass slc) => new EntityColumnFieldUi
+        {
+            Table = table,
+            Entity = entity,
+            Column = c,
+            StringLengthClass = slc,
+            IsFocusColumn = c.Name == extent?.FocusColumn,
+            FocusColumnUrl = slc > StringLengthClass.Short ? Context.RenderEntityUrl(table, entity, c.Name) : null
+        };
+
         var legend = rc.ToString().ToLower();
 
         var fields = (
             from c in columns
             let slc = GetStringLengthClass(c)
             orderby slc, c.OrderInPrimaryKey
-            select new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = rc, StringLengthClass = slc }
+            select GetUi(c, slc)
         ).ToArray();
 
         var layout = GetLayoutStringForRenderClass(rc);
@@ -126,10 +136,13 @@
     {
         var table = parentCollection?.RelationEnd.Table;
 
-        var flavor = parentCollection?.Extent.Flavor;
+        var extent = parentCollection?.Extent;
 
-        var columns = (parentCollection?.Extent?.Columns ?? Enumerable.Empty<String>())
-            .Select(cn => table.Columns[cn]).ToLookup(c => GetRenderClass(table, c));
+        var flavor = extent?.Flavor;
+
+        var columns = (extent?.Columns ?? Enumerable.Empty<String>())
+            .Select(cn => table.Columns[cn])
+            .ToLookup(c => GetRenderClass(table, c));
 
         var extraColumns = new HashSet<String>();
 
@@ -140,12 +153,17 @@
         if (isBlockLevel)
         {
             extraColumns.AddRange(table?.PrimaryKey?.Columns.Select(c => c.c.Name));
-            extraColumns.AddRange(parentCollection?.Extent?.Order?.Select(c => c.c));
+            extraColumns.AddRange(extent?.Order?.Select(c => c.c));
+        }
+
+        if (extent?.FocusColumn != null)
+        {
+            extraColumns.Add(extent.FocusColumn);
         }
 
         var showAll = false;
 
-        showAll |= parentCollection?.Extent.ScanValue != null;
+        showAll |= extent?.ScanValue != null;
         showAll |= isBlockLevel;
 
         var columnClasses = Enum.GetValues(typeof(ColumnRenderClass)) as ColumnRenderClass[];
@@ -155,7 +173,7 @@
             from c in columns[cl]
             where showAll || IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page, extraColumns)
             group c by cl into g
-            select GetFieldset(table, entity, g.Key, g)
+            select GetFieldset(extent, table, entity, g.Key, g)
             ;
 
         

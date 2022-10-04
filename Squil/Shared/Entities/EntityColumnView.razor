@@ -1,6 +1,6 @@
-﻿<div class="entity-column" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()">
+﻿<div class="entity-column" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
     <label>
-        <span>
+        <a href="@Url">
             @Column.Name
 @*          Doesn't work - the hovering is blocked by the outer style change on hover  
             @if (Column.Comment != null)
@@ -10,7 +10,7 @@
                     <span class="fa fa-xs fa-info" />
                 </span>
             }
-*@        </span>
+*@        </a>
     </label>
     <div>
         <a>
@@ -29,6 +29,10 @@
                 {
                     <span class="ws-value" />
                 }
+                else if (IsFocusColumn)
+                {
+                    <CopyableContent>@value</CopyableContent>
+                }
                 else
                 {
                     <text>@value</text>
@@ -46,10 +50,16 @@
     public CMTable Table { get; set; }
 
     [Parameter]
+    public String Url { get; set; }
+
+    [Parameter]
     public CMColumn Column { get; set; }
 
     [Parameter]
     public StringLengthClass Cls { get; set; }
+
+    [Parameter]
+    public Boolean IsFocusColumn { get; set; }
 
     [CascadingParameter]
     public QueryContext Context { get; set; }

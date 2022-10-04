@@ -32,7 +32,7 @@
             (This is only possible when the respective table has a primary key.)
         </p>
         break;
-    case QueryControllerQueryType.Single:
+    case QueryControllerQueryType.Row:
         <h6>A row detail</h6>
         <p>
             Detail views are divided into sections. All the information in the
@@ -60,7 +60,7 @@
             This list shows the beginning of an <em>entire table</em>.
         </p>
         break;
-    case QueryControllerQueryType.Sublist:
+    case QueryControllerQueryType.TableSlice:
         <h6>A related list</h6>
         <p>
             Lists show table rows with slightly less information than detail views,
@@ -80,7 +80,7 @@
 @switch (QueryType)
 {
     case QueryControllerQueryType.Table:
-    case QueryControllerQueryType.Sublist:
+    case QueryControllerQueryType.TableSlice:
         <h6>Search</h6>
         <p>
             Searching on lists works via indexes when the table is large.

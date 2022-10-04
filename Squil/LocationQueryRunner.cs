@@ -7,9 +7,10 @@ namespace Squil;
 public enum QueryControllerQueryType
 {
     Root,
-    Single,
+    Row,
     Table,
-    Sublist
+    TableSlice,
+    Column
 }
 
 public class LocationQueryRequest
@@ -17,6 +18,7 @@ public class LocationQueryRequest
     public String Schema { get; }
     public String Table { get; }
     public String Index { get; }
+    public String Column { get; set; }
 
     public QuerySearchMode? SearchMode { get; set; }
 
@@ -36,7 +38,9 @@ public class LocationQueryRequest
 
         String Get(Int32 i)
         {
-            return segments.GetOrDefault(i)?.TrimEnd('/');
+            var segment = segments.GetOrDefault(i)?.TrimEnd('/');
+
+            return segment != UrlRenderer.BlazorDefeatingDummySegment ? segment : null;
         }
 
         var section = Get(1);
@@ -48,16 +52,13 @@ public class LocationQueryRequest
                 Schema = Get(2);
                 Table = Get(3);
                 Index = Get(4);
+                Column = Get(5);
                 break;
             case "indexes":
                 Schema = Get(2);
                 Index = Get(3);
+                Column = Get(4);
                 break;
-        }
-
-        if (Index == UrlRenderer.BlazorDefeatingDummySegment)
-        {
-            Index = null;
         }
 
         if (Enum.TryParse<QuerySearchMode>(queryParams["search"], true, out var searchMode))
@@ -245,18 +246,56 @@ public class LocationQueryRunner
                 return searchMode;
             }
 
+            ExtentFlavorType GetExtentFlavor()
+            {
+                if (isSingletonQuery)
+                {
+                    if (request.Column != null)
+                    {
+                        return ExtentFlavorType.ColumnPageList;
+                    }
+                    else
+                    {
+                        return ExtentFlavorType.PageList;
+                    }
+                }
+                else
+                {
+                    return ExtentFlavorType.BlockList;
+                }
+            }
+
             var searchMode = GetSearchMode();
 
             var scanValue = searchMode == QuerySearchMode.Scan ? request.SearchValues[""] ?? "" : null;
 
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
-                isSingletonQuery ? ExtentFlavorType.PageList : ExtentFlavorType.BlockList,
+                GetExtentFlavor(),
                 cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
-                principalLocation, scanValue
+                principalLocation, scanValue, request.Column
             );
 
-            result.QueryType = isSingletonQuery ? QueryControllerQueryType.Single : (keyValueCount ?? 0) == 0 ? QueryControllerQueryType.Table : QueryControllerQueryType.Sublist;
+            QueryControllerQueryType GetQueryType()
+            {
+                if (isSingletonQuery)
+                {
+                    if (request.Column != null)
+                    {
+                        return QueryControllerQueryType.Column;
+                    }
+                    else
+                    {
+                        return QueryControllerQueryType.Row;
+                    }
+                }
+
+                if ((keyValueCount ?? 0) == 0) return QueryControllerQueryType.Table;
+
+                return QueryControllerQueryType.TableSlice;
+            }
+
+            result.QueryType = GetQueryType();
             result.SearchMode = searchMode;
             result.ValidatedColumns = columnValues;
             result.IsValidationOk = columnValues?.All(r => r.IsOk) ?? true;

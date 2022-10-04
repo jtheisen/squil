@@ -32,13 +32,14 @@
             }
             else
             {
+                var entity = vm.Result.PrimaryEntities?.List.FirstOrDefault();
+
                 switch (vm.Result.QueryType)
                 {
                     case QueryControllerQueryType.Table:
                         <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></span>
                         break;
-                    case QueryControllerQueryType.Single:
-                        var entity = vm.Result.PrimaryEntities.List.FirstOrDefault();
+                    case QueryControllerQueryType.Row:
 
                         <BreadcrumbItem>
                             <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></a>
@@ -50,8 +51,24 @@
                             </span>
                         </BreadcrumbItem>
                         break;
-                    case QueryControllerQueryType.Sublist:
-                        <span>sublist</span>
+                    case QueryControllerQueryType.Column:
+                        <BreadcrumbItem>
+                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></a>
+                        </BreadcrumbItem>
+
+                        <BreadcrumbItem>
+                            <a class="text-muted entity-context" href="@QueryContext.RenderEntityUrl(vm.Result.Table, entity)">
+                                <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
+                            </a>
+                        </BreadcrumbItem>
+
+                        <BreadcrumbItem>
+                            <span>@vm.LastRequest.Column</span>
+                        </BreadcrumbItem>
+                        break;
+                    case QueryControllerQueryType.TableSlice:
+                        @* Should have been handled above by having a principal entity *@
+                        <i>some slice</i>
                         break;
                     case QueryControllerQueryType.Root:
                     default:
@@ -120,7 +137,7 @@
                     @switch(vm.LastResult.QueryType)
                     {
                         case QueryControllerQueryType.Table:
-                        case QueryControllerQueryType.Sublist:
+                        case QueryControllerQueryType.TableSlice:
                             <div class="search-panel-spacer">&nbsp;</div>
                             break;
                     }

@@ -11,19 +11,19 @@ public class QueryContext
         UrlRenderer = urlRenderer;
     }
 
-    public String RenderEntityUrl(CMTable table, Entity entity)
+    public String RenderEntityUrl(CMTable table, Entity entity, String focusColumn = null)
     {
         if (table == null) return null;
 
-        return table.PrimaryKey?.Apply(k => RenderEntityUrl(entity, k));
+        return table.PrimaryKey?.Apply(k => RenderEntityUrl(entity, k, focusColumn));
     }
 
-    public String RenderEntityUrl(Entity entity, CMIndexlike key)
+    public String RenderEntityUrl(Entity entity, CMIndexlike key, String focusColumn = null)
     {
         var (schema, table) = key.Table.Name;
 
         var url = UrlRenderer.RenderUrl(
-            new[] { "tables", schema, table, key.Name },
+            new[] { "tables", schema, table, key.Name, focusColumn },
             from c in key.Columns select ("$", c.c.Name, entity.ColumnValues[c.c.Name])
         );
 
@@ -37,7 +37,8 @@ public class QueryContext
         IMap<String, String> columnValueSource,
         CMIndexlike index = null,
         String backRelation = null,
-        QuerySearchMode? mode = null
+        QuerySearchMode? mode = null,
+        String focusColumn = null
     )
     {
         var query = new List<(String prefix, String key, String value)>();
@@ -63,7 +64,7 @@ public class QueryContext
 
         var (schema, tableName) = table.Name;
 
-        var url = UrlRenderer.RenderUrl(new[] { "tables", schema, tableName, index?.Name }, query);
+        var url = UrlRenderer.RenderUrl(new[] { "tables", schema, tableName, index?.Name, focusColumn }, query);
 
         return url;
     }

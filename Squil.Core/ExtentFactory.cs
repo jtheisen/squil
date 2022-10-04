@@ -16,7 +16,7 @@ public class ExtentFactory
     public Extent CreateRootExtentForTable(
         CMTable table, ExtentFlavorType primaryFlavor,
         CMIndexlike index = null, DirectedColumnName[] order = null, String[] values = null, Int32? keyValueCount = null,
-        Int32? listLimit = null, PrincipalLocation principal = null, String scanValue = null
+        Int32? listLimit = null, PrincipalLocation principal = null, String scanValue = null, String focusColumn = null
     )
     {
         Debug.Assert(table.Root.RootTable != table);
@@ -51,6 +51,7 @@ public class ExtentFactory
         primaryExtent.RelationAlias = "primary";
         primaryExtent.KeyValueCount = keyValueCount ?? 0;
         primaryExtent.Limit = listLimit ?? primaryExtent.Limit;
+        primaryExtent.FocusColumn = focusColumn;
 
         ScanMatchOption GetScanMatchOptionOrNull(CMColumn c)
         {
@@ -154,10 +155,12 @@ public class ExtentFactory
                 return 4;
             case ExtentFlavorType.Block:
             case ExtentFlavorType.Page:
+            case ExtentFlavorType.ColumnPage:
                 return 4;
             case ExtentFlavorType.BlockList:
                 return 10;
             case ExtentFlavorType.PageList:
+            case ExtentFlavorType.ColumnPageList:
                 return 2;
             default:
                 return totalLimit ?? 2;
@@ -174,6 +177,8 @@ public class ExtentFactory
                 return (ExtentFlavorType.Page, 1);
             case ExtentFlavorType.BlockList:
                 return (ExtentFlavorType.Block, 1);
+            case ExtentFlavorType.ColumnPageList:
+                return (ExtentFlavorType.ColumnPage, 1);
             case ExtentFlavorType.Page:
                 return end.IsMany ? (ExtentFlavorType.Flow3, 1) : (ExtentFlavorType.Flow1, 1);
             case ExtentFlavorType.Block:
@@ -183,6 +188,7 @@ public class ExtentFactory
             case ExtentFlavorType.Breadcrumb:
                 return end.IsMany || !end.IsUniquelyTyped ? (ExtentFlavorType.None, 0) : (ExtentFlavorType.Inline, 1);
             case ExtentFlavorType.Inline:
+            case ExtentFlavorType.ColumnPage:
             default:
                 return (ExtentFlavorType.None, 0);
         }

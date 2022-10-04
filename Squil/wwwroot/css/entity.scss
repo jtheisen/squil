@@ -198,7 +198,8 @@ $bg-light-2: #e7e5e4;
     }
 
     ol[data-flavor=block],
-    ol[data-flavor=page] {
+    ol[data-flavor=page],
+    ol[data-flavor=column-page] {
         > li.list-marker {
             display: block;
         }
@@ -238,7 +239,8 @@ $bg-light-2: #e7e5e4;
         }
     }
 
-    ol[data-flavor=page] {
+    ol[data-flavor=page],
+    ol[data-flavor=column-page] {
         > li > fieldset {
             margin-top: 1em;
 
@@ -264,7 +266,8 @@ $bg-light-2: #e7e5e4;
         }
     }
 
-    .entity-relation.is-empty > ol[data-flavor=page]:before {
+    .entity-relation.is-empty > ol[data-flavor=page]:before,
+    .entity-relation.is-empty > ol[data-flavor=column-page]:before {
         font-style: italic;
         content: "no results";
     }
@@ -305,6 +308,10 @@ $bg-light-2: #e7e5e4;
         > div {
             @include text-ellipsis;
             line-height: 1.25em;
+        }
+
+        &[data-is-focus-column] > div {
+            white-space: pre-wrap;
         }
     }
 

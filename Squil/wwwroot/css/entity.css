@@ -108,51 +108,61 @@
   }
 }
 .entity-context ol[data-flavor=block] > li.list-marker,
-.entity-context ol[data-flavor=page] > li.list-marker {
+.entity-context ol[data-flavor=page] > li.list-marker,
+.entity-context ol[data-flavor=column-page] > li.list-marker {
   display: block;
 }
 .entity-context ol[data-flavor=block] > li:not(:first-child),
-.entity-context ol[data-flavor=page] > li:not(:first-child) {
+.entity-context ol[data-flavor=page] > li:not(:first-child),
+.entity-context ol[data-flavor=column-page] > li:not(:first-child) {
   margin-top: 2em;
 }
 .entity-context ol[data-flavor=block] > li:first-child,
-.entity-context ol[data-flavor=page] > li:first-child {
+.entity-context ol[data-flavor=page] > li:first-child,
+.entity-context ol[data-flavor=column-page] > li:first-child {
   margin-top: 0.5em;
 }
 .entity-context ol[data-flavor=block] > li:not(.list-marker),
-.entity-context ol[data-flavor=page] > li:not(.list-marker) {
+.entity-context ol[data-flavor=page] > li:not(.list-marker),
+.entity-context ol[data-flavor=column-page] > li:not(.list-marker) {
   background-color: var(--entity-bg-0);
   --entity-bg-prev: var(--entity-bg-0);
 }
 .entity-context ol[data-flavor=block] > li,
-.entity-context ol[data-flavor=page] > li {
+.entity-context ol[data-flavor=page] > li,
+.entity-context ol[data-flavor=column-page] > li {
   margin: -10px;
   padding: 10px;
   border-radius: 5px;
 }
 .entity-context ol[data-flavor=block] > li > header,
-.entity-context ol[data-flavor=page] > li > header {
+.entity-context ol[data-flavor=page] > li > header,
+.entity-context ol[data-flavor=column-page] > li > header {
   font-size: 2em;
   font-weight: 200;
 }
 .entity-context ol[data-flavor=block] > li > fieldset[data-layout=grid3],
-.entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid3] {
+.entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid3],
+.entity-context ol[data-flavor=column-page] > li > fieldset[data-layout=grid3] {
   display: grid;
   column-gap: 1em;
   row-gap: 0.25em;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 .entity-context ol[data-flavor=block] > li > fieldset[data-layout=grid1],
-.entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid1] {
+.entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid1],
+.entity-context ol[data-flavor=column-page] > li > fieldset[data-layout=grid1] {
   display: grid;
   column-gap: 1em;
   row-gap: 0.25em;
   grid-template-columns: minmax(0, 1fr);
 }
-.entity-context ol[data-flavor=page] > li > fieldset {
+.entity-context ol[data-flavor=page] > li > fieldset,
+.entity-context ol[data-flavor=column-page] > li > fieldset {
   margin-top: 1em;
 }
-.entity-context ol[data-flavor=page] > li > fieldset > legend {
+.entity-context ol[data-flavor=page] > li > fieldset > legend,
+.entity-context ol[data-flavor=column-page] > li > fieldset > legend {
   position: absolute;
   font-variant: small-caps;
   top: 0;
@@ -162,15 +172,18 @@
   margin-left: -5em;
 }
 @media (min-width: 1200px) {
-  .entity-context ol[data-flavor=page] > li > fieldset > legend {
+  .entity-context ol[data-flavor=page] > li > fieldset > legend,
+.entity-context ol[data-flavor=column-page] > li > fieldset > legend {
     display: block;
   }
 }
-.entity-context ol[data-flavor=page] > li > fieldset > .entity-relation.is-empty > ol:before {
+.entity-context ol[data-flavor=page] > li > fieldset > .entity-relation.is-empty > ol:before,
+.entity-context ol[data-flavor=column-page] > li > fieldset > .entity-relation.is-empty > ol:before {
   font-style: italic;
   content: "none";
 }
-.entity-context .entity-relation.is-empty > ol[data-flavor=page]:before {
+.entity-context .entity-relation.is-empty > ol[data-flavor=page]:before,
+.entity-context .entity-relation.is-empty > ol[data-flavor=column-page]:before {
   font-style: italic;
   content: "no results";
 }
@@ -204,6 +217,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.25em;
+}
+.entity-context .entity-column[data-is-focus-column] > div {
+  white-space: pre-wrap;
 }
 .entity-context .null-value:before {
   font-style: italic;

@@ -43,7 +43,7 @@ body {
     display: grid;
     padding: 0;
     list-style: none;
-    grid-template-columns: min-content minmax(0, max-content) minmax(0, max-content) minmax(0, max-content);
+    grid-template-columns: min-content minmax(0, max-content) minmax(0, max-content) minmax(0, max-content) minmax(0, max-content);
 }
 
     .squil-breadcrumbs > * {

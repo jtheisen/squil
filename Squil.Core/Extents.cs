@@ -68,6 +68,10 @@ public class Extent
 
     public String[] Columns { get; set; }
 
+    // A bit hacky, this will hopefully go once extents contain more information
+    // about selected columns that merely their names.
+    public String FocusColumn { get; set; }
+
     public SqlSelectable[] SqlSelectables { get; set; }
 
     public DirectedColumnName[] Order { get; set; }
@@ -118,9 +122,11 @@ public enum ExtentFlavorType
     Breadcrumb,
     Block,
     Page,
+    ColumnPage,
     BreadcrumbList,
     BlockList,
-    PageList
+    PageList,
+    ColumnPageList
 }
 
 public class Relation

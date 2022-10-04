@@ -36,6 +36,10 @@ public class EntityColumnFieldUi : EntityFieldUi
     public ColumnRenderClass RenderClass { get; set; }
 
     public StringLengthClass StringLengthClass { get; set; }
+
+    public Boolean IsFocusColumn { get; set; }
+
+    public String FocusColumnUrl { get; set; }
 }
 
 public static class UiExtensions
