@@ -39,6 +39,11 @@ $bg-light-2: #e7e5e4;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+@mixin grid-1 {
+    @include grid-base;
+    grid-template-columns: minmax(0, 1fr);
+}
+
 @mixin hide-labels-and-legends {
     label, legend, .relation.is-empty > ul, .relation.is-empty > ol, .null-value, .empty-value, .ws-value {
         display: none;
@@ -225,6 +230,10 @@ $bg-light-2: #e7e5e4;
                 &[data-layout=grid3] {
                     @include grid-3;
                 }
+
+                &[data-layout=grid1] {
+                    @include grid-1;
+                }
             }
         }
     }
@@ -286,7 +295,6 @@ $bg-light-2: #e7e5e4;
     .entity-column {
         > label {
             font-size: .8em;
-            margin-bottom: -.5em;
         }
 
         &[data-css-type=guid] > div {
@@ -296,6 +304,7 @@ $bg-light-2: #e7e5e4;
 
         > div {
             @include text-ellipsis;
+            line-height: 1.25em;
         }
     }
 

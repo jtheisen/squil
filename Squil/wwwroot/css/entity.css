@@ -142,6 +142,13 @@
   row-gap: 0.25em;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
+.entity-context ol[data-flavor=block] > li > fieldset[data-layout=grid1],
+.entity-context ol[data-flavor=page] > li > fieldset[data-layout=grid1] {
+  display: grid;
+  column-gap: 1em;
+  row-gap: 0.25em;
+  grid-template-columns: minmax(0, 1fr);
+}
 .entity-context ol[data-flavor=page] > li > fieldset {
   margin-top: 1em;
 }
@@ -187,7 +194,6 @@
 }
 .entity-context .entity-column > label {
   font-size: 0.8em;
-  margin-bottom: -0.5em;
 }
 .entity-context .entity-column[data-css-type=guid] > div {
   font-size: 0.7em;
@@ -197,6 +203,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.25em;
 }
 .entity-context .null-value:before {
   font-style: italic;
