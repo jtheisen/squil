@@ -20,7 +20,7 @@
         {
             if (field is EntityColumnFieldUi c)
             {
-                <EntityColumnView Entity="c.Entity" Table="c.Table" Column="c.Column" Cls="c.RenderClass" />
+                <EntityColumnView Entity="c.Entity" Table="c.Table" Column="c.Column" Cls="c.StringLengthClass" />
             }
             else if (field is EntityRelationFieldUi r)
             {
@@ -58,8 +58,22 @@
     {
         if (table.PrimaryKey?.Columns.Select(c => c.c).Contains(column) ?? false) return ColumnRenderClass.PrimaryKey;
 
+        if (column.IsString)
+        {
+            var slc = GetStringLengthClass(column.MaxLength);
+
+            if (slc != StringLengthClass.Short) return ColumnRenderClass.Text;
+        }
+
         return ColumnRenderClass.Data;
     }
+
+    StringLengthClass GetStringLengthClass(Int32 maxLength) => maxLength switch
+    {
+        -1 or > 200 => StringLengthClass.Large,
+        > 80 => StringLengthClass.Medium,
+        _ => StringLengthClass.Short
+    };
 
     Boolean IsColumnRenderedInFlavor(CMColumn column, ExtentFlavorType flavorType, HashSet<String> extraColumns)
     {
@@ -73,6 +87,40 @@
                 return extraColumns.Contains(column.Name);
         }
     }
+
+    Fieldset GetFieldset(CMTable table, Entity entity, ColumnRenderClass rc, IEnumerable<CMColumn> columns)
+    {
+        var legend = rc.ToString().ToLower();
+
+        var fields = (
+            from c in columns
+            let slc = GetStringLengthClass(c)
+            orderby slc, c.OrderInPrimaryKey
+            select new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = rc, StringLengthClass = slc }
+        ).ToArray();
+
+        var layout = GetLayoutStringForRenderClass(rc);
+
+        return new Fieldset { legend = legend, items = fields, layout = layout };
+    }
+
+    StringLengthClass GetStringLengthClass(CMColumn column)
+    {
+        if (!column.IsString)
+        {
+            return StringLengthClass.NoString;
+        }
+        else
+        {
+            return GetStringLengthClass(column.MaxLength);
+        }
+    }
+
+    String GetLayoutStringForRenderClass(ColumnRenderClass rc) => rc switch
+    {
+        ColumnRenderClass.Text => "grid1",
+        _ => "grid3"
+    };
 
     IEnumerable<Fieldset> ProduceFieldsets(Entity entity, RelatedEntities parentCollection = null)
     {
@@ -107,7 +155,7 @@
             from c in columns[cl]
             where showAll || IsColumnRenderedInFlavor(c, flavor?.type ?? ExtentFlavorType.Page, extraColumns)
             group c by cl into g
-            select new Fieldset { legend = g.Key.ToString().ToLower(), layout = "grid3", items = g.Select(c => new EntityColumnFieldUi { Table = table, Entity = entity, Column = c, RenderClass = g.Key }) }
+            select GetFieldset(table, entity, g.Key, g)
             ;
 
         

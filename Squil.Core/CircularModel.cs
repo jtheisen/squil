@@ -77,6 +77,7 @@ public class CMRoot
                     IsNullable = c.IsNullable,
                     IsAssemblyType = c.IsAssemblyType,
                     Type = TypeRegistry.Instance.GetTypeOrNull(c.DataType),
+                    MaxLength = c.MaxLength,
                     IsString = c.DataType.EndsWith("char", StringComparison.InvariantCultureIgnoreCase)
                 }).ToArray();
 
@@ -111,6 +112,7 @@ public class CMRoot
                     ObjectName = i.Name,
                     IsUnique = i.IsUnique,
                     IsPrimary = i.Type == CsdKeyishType.Pk,
+                    IsClustered = i.IsClustered,
                     Table = table,
                     UnsupportedReason = support,
                     Columns = columns,
@@ -126,6 +128,28 @@ public class CMRoot
                 .ToDictionary(t => t.Name, t => t);
 
             table.PrimaryKey = table.UniqueIndexlikes.Values.FirstOrDefault(i => i.IsPrimary);
+
+            if (table.PrimaryKey != null)
+            {
+                var cs = table.PrimaryKey.Columns;
+
+                for (var i = 0; i < cs.Length; ++i)
+                {
+                    cs[i].c.OrderInPrimaryKey = i;
+                }
+            }
+
+            var clusti = table.Indexes.Values.FirstOrDefault(i => i.IsClustered);
+
+            if (clusti != null)
+            {
+                var cs = clusti.Columns;
+
+                for (var i = 0; i < cs.Length; ++i)
+                {
+                    cs[i].c.OrderInClusteredIndex = i;
+                }
+            }
 
             foreach (var key in table.UniqueIndexlikes)
             {
@@ -389,6 +413,8 @@ public class CMIndexlike : CMColumnTuple, IWithUsedKb
 
     public Boolean IsUnique { get; set; }
 
+    public Boolean IsClustered { get; set; }
+
     public Int32? UsedKb { get; set; }
 
     public Boolean IsSupported => UnsupportedReason == null;
@@ -445,6 +471,10 @@ public class CMColumn
 
     public String SqlType { get; set; }
 
+    public Int32 OrderInPrimaryKey { get; set; }
+
+    public Int32 OrderInClusteredIndex { get; set; }
+
     public String Escaped => Name.EscapeNamePart();
 
     public Boolean IsNullable { get; set; }
@@ -452,6 +482,8 @@ public class CMColumn
     public Boolean IsAssemblyType { get; set; }
 
     public ColumnType Type { get; set; }
+
+    public Int32 MaxLength { get; set; }
 
     public Boolean IsString { get; set; }
 

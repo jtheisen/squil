@@ -102,17 +102,32 @@ public class SysColumn : SysWithComment
     [XmlAttribute("column_id")]
     public Int32 ColumnId { get; set; }
 
+    [XmlAttribute("name")]
+    public String Name { get; set; }
+
+    [XmlAttribute("is_nullable")]
+    public Boolean IsNullable { get; set; }
+
     [XmlAttribute("user_type_id")]
     public Int32 UserTypeId { get; set; }
 
     [XmlAttribute("system_type_id")]
     public Int32 SystemTypeId { get; set; }
 
-    [XmlAttribute("name")]
-    public String Name { get; set; }
+    [XmlAttribute("max_length")]
+    public Int32 MaxLength { get; set; }
 
-    [XmlAttribute("is_nullable")]
-    public Boolean IsNullable { get; set; }
+    [XmlAttribute("precision")]
+    public Int32 Precision { get; set; }
+
+    [XmlAttribute("scale")]
+    public Int32 Scale { get; set; }
+
+    [XmlAttribute("is_identity")]
+    public Int32 IsIdentity { get; set; }
+
+    [XmlAttribute("is_computed")]
+    public Int32 IsComputed { get; set; }
 
     [XmlArray("systemtype")]
     public SysType[] SystemTypes { get; set; } = Empties<SysType>.Array;
@@ -213,6 +228,9 @@ public class SysIndexColumn
 
     [XmlAttribute("index_id")]
     public Int32 IndexId { get; set; }
+
+    [XmlAttribute("key_ordinal")]
+    public Int32 KeyOrdinal { get; set; }
 
     [XmlAttribute("index_column_id")]
     public Int32 IndexColumnId { get; set; }

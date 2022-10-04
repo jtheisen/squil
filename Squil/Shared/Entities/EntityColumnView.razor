@@ -1,4 +1,4 @@
-﻿<div class="entity-column" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType">
+﻿<div class="entity-column" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()">
     <label>
         <span>
             @Column.Name
@@ -49,7 +49,7 @@
     public CMColumn Column { get; set; }
 
     [Parameter]
-    public ColumnRenderClass Cls { get; set; }
+    public StringLengthClass Cls { get; set; }
 
     [CascadingParameter]
     public QueryContext Context { get; set; }

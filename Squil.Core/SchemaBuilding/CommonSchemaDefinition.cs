@@ -52,6 +52,12 @@ public class CsdColumn : CsdBase
 
     public String DataType { get; set; }
 
+    public Int32 MaxLength { get; set; }
+
+    public Int32 Precision { get; set; }
+
+    public Int32 Scale { get; set; }
+
     public Boolean IsSystemType { get; set; }
 
     public Boolean IsAssemblyType { get; set; }
@@ -82,6 +88,8 @@ public class CsdKeyish : CsdBase
     public ObjectName Name { get; set; }
 
     public CsdKeyishType Type { get; set; }
+
+    public Boolean IsClustered { get; set; }
 
     public DirectedColumnName[] Columns { get; set; }
 }
@@ -141,6 +149,9 @@ public static class CsdExtensions
                         Name = c.Name,
                         DataTypeAlias = usertype?.Name,
                         DataType = (systemtype ?? usertype)?.Name ?? throw new Exception($"Neither user type nor system type found"),
+                        MaxLength = c.MaxLength,
+                        Precision = c.Precision,
+                        Scale = c.Scale,
                         IsSystemType = systemtype != null,
                         IsAssemblyType = usertype?.IsAssemblyType ?? false,
                         IsNullable = c.IsNullable,
@@ -168,7 +179,7 @@ public static class CsdExtensions
 
                     var directedColumnNames = (
                         from ic in index.Columns
-                        where !ic.IsIncludedColumn
+                        where !ic.IsIncludedColumn && ic.KeyOrdinal != 0
                         let c = table.Columns.Single(c2 => c2.ColumnId == ic.ColumnId)
                         let d = ic.IsDescendingKey ? IndexDirection.Desc : IndexDirection.Asc
                         select new DirectedColumnName(c.Name, d)
@@ -186,6 +197,7 @@ public static class CsdExtensions
                         Columns = directedColumnNames,
                         IsUnique = index.IsUnique,
                         Type = index.GetCsdType(),
+                        IsClustered = index.Type == 1,
                         UsedKb = index.UsedPages * 8,
                         UnsupportedReason = intrinsicallyUnsupported
                     });

@@ -161,7 +161,7 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
                                         {
                                             new Extent
                                             {
-                                                Order = new DirectedColumnName[] { "index_column_id" },
+                                                Order = new DirectedColumnName[] { "key_ordinal", "index_column_id" },
                                                 RelationName = "columns",
                                                 Alias = "ix_c"
                                             }
