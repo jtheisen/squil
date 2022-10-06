@@ -8,6 +8,7 @@ namespace Squil
         public String LongName { get; set; }
         public String ConnectionString { get; set; }
         public String Description { get; set; }
+        public String DescriptionSnippetType { get; set; }
     }
 
     public class ConnectionManager

@@ -221,7 +221,10 @@ public static class CsdExtensions
 
                     var referencedIndexlike = new ObjectName(referencedSchema.Name, referencedTable.Name, referencedIndex.Name);
 
-                    var intrinsicallyUnsupported = fk.CheckIntrinsicSupport()?.Apply(t => new CsdUnsupportedReason(t.tag, t.reason, t.specific));
+                    // For now, we ignore fks being disabled or untrusted
+                    //var intrinsicallyUnsupported = fk.CheckIntrinsicSupport()?.Apply(t => new CsdUnsupportedReason(t.tag, t.reason, t.specific));
+
+                    if (fk.Name == "FK_Votes_Posts__PostId") Debugger.Break();
 
                     csdKeyishs.Add(new CsdForeignKey
                     {
@@ -229,7 +232,7 @@ public static class CsdExtensions
                         Columns = directedColumnNames,
                         Type = CsdKeyishType.Fk,
                         ReferencedIndexlike = referencedIndexlike,
-                        UnsupportedReason = intrinsicallyUnsupported
+                        //UnsupportedReason = intrinsicallyUnsupported
                     });
                 }
 

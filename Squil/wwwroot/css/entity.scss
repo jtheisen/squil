@@ -259,7 +259,11 @@ $bg-light-2: #e7e5e4;
                 margin-left: -5em;
             }
         }
+    }
 
+    ol[data-flavor=page],
+    ol[data-flavor=column-page],
+    ol[data-flavor=block] {
         > li > fieldset > .entity-relation.is-empty > ol:before {
             font-style: italic;
             content: "none";

@@ -178,7 +178,8 @@
   }
 }
 .entity-context ol[data-flavor=page] > li > fieldset > .entity-relation.is-empty > ol:before,
-.entity-context ol[data-flavor=column-page] > li > fieldset > .entity-relation.is-empty > ol:before {
+.entity-context ol[data-flavor=column-page] > li > fieldset > .entity-relation.is-empty > ol:before,
+.entity-context ol[data-flavor=block] > li > fieldset > .entity-relation.is-empty > ol:before {
   font-style: italic;
   content: "none";
 }
