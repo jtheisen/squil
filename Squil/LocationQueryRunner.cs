@@ -130,9 +130,9 @@ public enum CanLoadMoreStatus
 public class LocationQueryRunner
 {
     private readonly ObjectNameParser parser = new ObjectNameParser();
-    private readonly ConnectionManager connections;
+    private readonly LiveConfiguration connections;
 
-    public LocationQueryRunner(ConnectionManager connections)
+    public LocationQueryRunner(LiveConfiguration connections)
     {
         this.connections = connections;
     }

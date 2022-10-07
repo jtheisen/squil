@@ -1,6 +1,6 @@
 ﻿@page "/info/{connectionName}"
 
-@inject ConnectionManager Connections
+@inject LiveConfiguration Connections
 
 @{
     var connection = Connections.GetContext(ConnectionName);

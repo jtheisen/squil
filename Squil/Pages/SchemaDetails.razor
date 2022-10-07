@@ -1,0 +1,42 @@
+﻿@page "/schema-details/{connectionName}"
+
+@inject LiveConfiguration Connections
+
+@{
+    var connection = Connections.GetContext(ConnectionName);
+
+    var report = PointsOfInterestManager.Instance.GetReport(connection.CircularModel);
+}
+
+<DefaultLayout>
+    <ChildContent>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Table</th>
+                    <th>Index</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var table in connection.CircularModel.GetTables())
+                {
+                    @foreach (var index in table.Indexes.Values)
+                    {
+                        <tr>
+                            <td>@table.Name.Simple</td>
+                            <td>@index.Name</td>
+                            <td>@index.UsedKb?.ToString("n0") KB</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </ChildContent>
+</DefaultLayout>
+
+
+@code {
+    [Parameter]
+    public String ConnectionName { get; set; }
+}

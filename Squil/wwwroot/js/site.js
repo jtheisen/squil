@@ -65,7 +65,6 @@ function showEphemeralTooltip(element) {
     $(element).tooltip("show");
 
     setTimeout(() => {
-        window["dummy_element"] = element;
         $(element).tooltip("hide");
     }, 1000);
 }

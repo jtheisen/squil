@@ -11,23 +11,25 @@ public class SchemaChangedException : Exception
     { }
 }
 
-public class SquilContext
+public class ConnectionContext
 {
-    private readonly string connectionString;
+    readonly string connectionString;
 
-    private volatile Model currentModel;
+    volatile Model currentModel;
+
+    Exception exceptionOnModelBuilding;
 
     record Model(CMRoot CMRoot, QueryGenerator QueryGenerator);
+
+    public Exception ExceptionOnModelBuilding => exceptionOnModelBuilding;
 
     public CMRoot CircularModel => currentModel.CMRoot;
 
     public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
 
-    public SquilContext(String connectionString)
+    public ConnectionContext(String connectionString)
     {
         this.connectionString = connectionString;
-
-        UpdateModel();
     }
 
     public SqlConnection GetConnection()
@@ -48,9 +50,13 @@ public class SquilContext
         return connection;
     }
 
-
     public Entity Query(SqlConnection connection, Extent extent)
     {
+        if (currentModel == null)
+        {
+            UpdateModel();
+        }
+
         Entity entity;
 
         try
@@ -83,13 +89,24 @@ public class SquilContext
 
     void UpdateModel()
     {
-        using var connection = GetConnection();
+        try
+        {
+            using var connection = GetConnection();
 
-        var cmRoot = connection.GetCircularModel();
+            var cmRoot = connection.GetCircularModel();
 
-        var qg = new QueryGenerator(cmRoot);
+            var qg = new QueryGenerator(cmRoot);
 
-        currentModel = new Model(cmRoot, qg);
+            currentModel = new Model(cmRoot, qg);
+        }
+        catch (Exception ex)
+        {
+            exceptionOnModelBuilding = ex;
+
+            throw;
+        }
+
+        exceptionOnModelBuilding = null;
     }
 
     Boolean CheckAndUpdateIfApplicable()

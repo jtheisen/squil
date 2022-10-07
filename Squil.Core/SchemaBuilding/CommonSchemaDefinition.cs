@@ -224,8 +224,6 @@ public static class CsdExtensions
                     // For now, we ignore fks being disabled or untrusted
                     //var intrinsicallyUnsupported = fk.CheckIntrinsicSupport()?.Apply(t => new CsdUnsupportedReason(t.tag, t.reason, t.specific));
 
-                    if (fk.Name == "FK_Votes_Posts__PostId") Debugger.Break();
-
                     csdKeyishs.Add(new CsdForeignKey
                     {
                         Name = name,

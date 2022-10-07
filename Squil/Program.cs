@@ -1,8 +1,5 @@
 using Blazor.Analytics;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Squil;
-using System.Dynamic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +13,8 @@ services.Configure<List<ConnectionConfiguration>>(configuration.GetSection("Conn
 
 services.AddRazorPages();
 services.AddServerSideBlazor();
-services.AddSingleton<ConnectionManager>();
+services.AddSingleton<ISquilConfigStore, LocalFileSquilConfigStore>();
+services.AddSingleton<LiveConfiguration>();
 services.AddSingleton<LocationQueryRunner>();
 
 var googleAnalyticsToken = configuration["GoogleAnalyticsToken"];

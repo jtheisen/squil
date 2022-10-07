@@ -1,5 +1,5 @@
 ﻿@page "/"
-@inject ConnectionManager connections
+@inject LiveConfiguration configuration
 @inject IOptions<AppSettings> Options
 
 <PageTitle>Select database</PageTitle>
@@ -29,10 +29,8 @@
         }
 
         <div class="row mt-5">
-            @foreach (var e in connections.GetConnnections())
+            @foreach (var c in configuration.GetConnnectionConfigurations())
             {
-                var c = e.config;
-
                 var hasLinks = c.DescriptionSnippetType is String;
 
                 <div class="col-12 col-lg-6 py-3">
@@ -55,7 +53,52 @@
                     </div>
                 </div>
             }
+
+            <button class="btn" @onclick="@(() => EditModalSubscription(null))">add new</button>
         </div>
+
+        <ServerModal OnClose="editModalSubscription">
+            <Title>Add connection</Title>
+            <Body>
+                <EditForm Model="@editee" OnValidSubmit="@HandleEditSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <InputText class="form-control" id="name" @bind-Value="editee.Name" />
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Long name</label>
+                    <InputText class="form-control" id="long-name" @bind-Value="editee.LongName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Connection string</label>
+                        <InputText class="form-control" id="connection-string" @bind-Value="editee.ConnectionString" />
+                    </div>
+
+                    <button class="btn btn-primary float-right" type="submit">Submit</button>
+                </EditForm>
+            </Body>
+        </ServerModal>
 
     </div>
 </DefaultLayout>
+
+@code {
+    Action editModalSubscription;
+
+    ConnectionConfiguration editee;
+
+    void EditModalSubscription(ConnectionConfiguration editee)
+    {
+        this.editee = editee ?? new ConnectionConfiguration { Name = "new-connection" };
+
+        editModalSubscription = () => editModalSubscription = null;
+    }
+
+    void HandleEditSubmit()
+    {
+        configuration.AddConnection(editee);
+    }
+}

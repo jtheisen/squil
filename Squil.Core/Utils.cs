@@ -32,6 +32,8 @@ public class Empties<K, T>
 {
     public static readonly Dictionary<K, T> Dictionary = new Dictionary<K, T>();
 
+    public static readonly AssocList<K, T> AssocList = new AssocList<K, T>();
+
     public static readonly IMap<K, T> Map = new DefaultMap<K, T>();
 
     public static readonly ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
@@ -103,7 +105,59 @@ public static partial class Extensions
     }
 
     [DebuggerHidden]
+    public static T Get<K, T>(this IReadOnlyDictionary<K, T> dict, K key, String error)
+    {
+        try
+        {
+            return dict[key];
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new KeyNotFoundException(error, ex);
+        }
+    }
+
+    [DebuggerHidden]
+    public static T Get<K, T>(this Dictionary<K, T> dict, K key, String error)
+    {
+        try
+        {
+            return dict[key];
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new KeyNotFoundException(error, ex);
+        }
+    }
+
+    [DebuggerHidden]
     public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key)
+    {
+        if (dict.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+        else
+        {
+            return default;
+        }
+    }
+
+    [DebuggerHidden]
+    public static T GetOrDefault<K, T>(this IReadOnlyDictionary<K, T> dict, K key)
+    {
+        if (dict.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+        else
+        {
+            return default;
+        }
+    }
+
+    [DebuggerHidden]
+    public static T GetOrDefault<K, T>(this Dictionary<K, T> dict, K key)
     {
         if (dict.TryGetValue(key, out var value))
         {

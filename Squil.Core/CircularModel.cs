@@ -9,8 +9,8 @@ public class CMRoot
 {
     String name;
     CMTable rootTable;
-    Dictionary<ObjectName, CMTable> tables;
-    Dictionary<ObjectName, CMIndexlike> keys;
+    AssocList<ObjectName, CMTable> tables;
+    AssocList<ObjectName, CMIndexlike> keys = new AssocList<ObjectName, CMIndexlike>();
 
     public DateTime TimeStamp { get; private set; }
 
@@ -20,12 +20,11 @@ public class CMRoot
         select i;
 
     public CMTable GetTable(ObjectName name) => tables[name];
+    public IEnumerable<CMTable> GetTables() => tables.Values;
 
     public CMRoot(String name)
     {
         this.name = name;
-        tables = new Dictionary<ObjectName, CMTable>();
-        keys = new Dictionary<ObjectName, CMIndexlike>();
     }
 
     public CMTable RootTable => rootTable;
@@ -54,7 +53,7 @@ public class CMRoot
             Comment = t.Comment,
             UsedKb = t.UsedKb
         }
-        ).ToDictionary(t => t.Name, t => t);
+        ).ToAssocList(t => t.Name);
 
         foreach (var a in new Abbreviator().Calculate(tables.Values.Select(t => t.Name).ToArray()))
         {
@@ -121,11 +120,11 @@ public class CMRoot
                     UsedKb = i.UsedKb
                     
                 }
-            ).ToDictionary(i => i.Name, i => i);
+            ).ToAssocList(i => i.Name);
 
             table.UniqueIndexlikes = table.Indexes.Values
                 .Where(i => i.IsUnique)
-                .ToDictionary(t => t.Name, t => t);
+                .ToAssocList(t => t.Name, "unique indexlike");
 
             table.PrimaryKey = table.UniqueIndexlikes.Values.FirstOrDefault(i => i.IsPrimary);
 
@@ -153,7 +152,7 @@ public class CMRoot
 
             foreach (var key in table.UniqueIndexlikes)
             {
-                keys.Add(key.Value.ObjectName, key.Value);
+                keys.Append(key.Value.ObjectName, key.Value);
             }
         }
 
@@ -173,12 +172,12 @@ public class CMRoot
                     SerializedColumnNames = c.Columns.SerializeColumnNames(),
                     UnsupportedReason = c.UnsupportedReason
                 })
-                .ToDictionary(c => c.Name, c => c);
+                .ToAssocList(c => c.Name, "foreign key");
 
-            table.ColumnTuples = new Dictionary<String, CMColumnTuple>();
-
-            foreach (var p in table.UniqueIndexlikes) table.ColumnTuples[p.Key] = p.Value;
-            foreach (var p in table.ForeignKeys) table.ColumnTuples[p.Key] = p.Value;
+            table.ColumnTuples =
+                table.UniqueIndexlikes.Values.Cast<CMColumnTuple>()
+                .Concat(table.ForeignKeys.Values)
+                .ToAssocList(t => t.Name);
 
             foreach (var tuple in table.ColumnTuples.Values)
             {
@@ -223,19 +222,22 @@ public class CMRoot
             Dependent = new RelationEnd { Name = null, TableName = table.Name, KeyName = "" },
         }).ToArray();
 
-        rootTable = tables[ObjectName.RootName] = new CMTable { Name = ObjectName.RootName, Root = this };
+        rootTable = new CMTable { Name = ObjectName.RootName, Root = this };
 
-        rootTable.ColumnTuples = new Dictionary<String, CMColumnTuple>();
-        rootTable.UniqueIndexlikes = new Dictionary<String, CMIndexlike>();
-        rootTable.ForeignKeys = new Dictionary<String, CMForeignKey>();
+        tables.Prepend(ObjectName.RootName, rootTable);
 
-        var rootKey = rootTable.UniqueIndexlikes[""] = new CMIndexlike() { Name = "", IsPrimary = true, Columns = new CMDirectedColumn[0], Table = rootTable };
+        rootTable.ColumnTuples = new AssocList<String, CMColumnTuple>();
+        rootTable.UniqueIndexlikes = new AssocList<String, CMIndexlike>();
+        rootTable.ForeignKeys = new AssocList<String, CMForeignKey>();
 
-        rootTable.ColumnTuples[""] = rootKey;
+        var rootKey = new CMIndexlike() { Name = "", IsPrimary = true, Columns = new CMDirectedColumn[0], Table = rootTable };
+
+        rootTable.UniqueIndexlikes.Prepend("", rootKey);
+        rootTable.ColumnTuples.Append("", rootKey);
 
         foreach (var table in tables.Values)
         {
-            table.ForeignKeys.Add("", new CMForeignKey
+            table.ForeignKeys.Append("", new CMForeignKey
             {
                 Name = "",
                 Principal = rootKey,
@@ -379,10 +381,10 @@ public class CMTable : IWithUsedKb
 
     public CMIndexlike PrimaryKey { get; set; }
 
-    public Dictionary<String, CMIndexlike> Indexes { get; set; } = Empties<String, CMIndexlike>.Dictionary;
-    public Dictionary<String, CMColumnTuple> ColumnTuples { get; set; }
-    public Dictionary<String, CMIndexlike> UniqueIndexlikes { get; set; }
-    public Dictionary<String, CMForeignKey> ForeignKeys { get; set; }
+    public AssocList<String, CMIndexlike> Indexes { get; set; } = new AssocList<String, CMIndexlike>();
+    public AssocList<String, CMColumnTuple> ColumnTuples { get; set; } = new AssocList<String, CMColumnTuple>();
+    public AssocList<String, CMIndexlike> UniqueIndexlikes { get; set; } = new AssocList<String, CMIndexlike>();
+    public AssocList<String, CMForeignKey> ForeignKeys { get; set; } = new AssocList<String, CMForeignKey>();
 }
 
 [DebuggerDisplay("{Name}")]
