@@ -46,4 +46,9 @@
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Squil.Core\Squil.Core.csproj" />
+      <ProjectReference Include="..\Squil.Razor\Squil.Razor.csproj" />
+    </ItemGroup>
+
 </Project>
