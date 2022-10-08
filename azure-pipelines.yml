@@ -5,18 +5,19 @@ pool:
   vmImage: windows-latest
 
 steps:
-- task: CmdLine@2
+- task: DotNetCoreCLI@2
   inputs:
-    script:
-      dotnet publish Squil.Maui -o $(Build.BinariesDirectory) -f windows10.0.19041.0
+    command: 'publish'
+    projects: 'Squil.Maui'
+    arguments: '-o publish'
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(Build.BinariesDirectory)'
+    rootFolderOrFile: 'publish'
     includeRootFolder: false
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     replaceExistingArchive: true
 - task: PublishBuildArtifacts@1    
-  displayName: 'Publish Artifact: web'
+  displayName: 'Publish Artifact: maui'
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
