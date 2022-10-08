@@ -5,8 +5,9 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: CmdLine@2
+- task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
   inputs:
+<<<<<<< HEAD
 <<<<<<< HEAD
     script:
       dotnet publish Squil -o publish
@@ -28,6 +29,12 @@ steps:
     projects: 'Nucleus/Squil.Web'
     arguments: '-o $(Build.ArtifactStagingDirectory)'
 >>>>>>> parent of d4bcc00 (Update azure-pipelines.yml for Azure Pipelines)
+=======
+    workingDirectory: 'Nucleus'
+    command: 'publish'
+    projects: 'Squil.Web'
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
+>>>>>>> origin/maui
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
   inputs:
