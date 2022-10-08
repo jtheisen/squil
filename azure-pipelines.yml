@@ -2,22 +2,25 @@ trigger:
 - master
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
 - task: CmdLine@2
   inputs:
     script:
-      dotnet publish Squil -o $(Build.ArtifactStagingDirectory)
+      dotnet publish Squil -o publish
 # - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
 #   inputs:
 #     command: 'publish'
 #     projects: 'Squil'
 #     arguments: '-o $(Build.ArtifactStagingDirectory)'
-- task: CmdLine@2
+- task: ArchiveFiles@2
   inputs:
-    script:
-      dotnet publish Squil.Maui -o maui-out -f windows10.0.19041.0
+    rootFolderOrFile: 'publish'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
 
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
