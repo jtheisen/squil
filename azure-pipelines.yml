@@ -8,6 +8,11 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'custom'
+    arguments: '--version'
+    
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'custom'
     custom: 'workload restore'
 
 - task: DotNetCoreCLI@2
