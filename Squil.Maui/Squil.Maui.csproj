@@ -44,8 +44,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Squil.Core\Squil.Core.csproj" />
-      <ProjectReference Include="..\Squil.Razor\Squil.Razor.csproj" />
+      <ProjectReference Include="..\Nucleus\Squil.Core\Squil.Core.csproj" />
+      <ProjectReference Include="..\Nucleus\Squil.Razor\Squil.Razor.csproj" />
     </ItemGroup>
 
 </Project>
