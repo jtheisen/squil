@@ -8,11 +8,14 @@ steps:
 - task: CmdLine@2
   inputs:
     script: 'dotnet --version'
-    
-- task: DotNetCoreCLI@2
+
+- task: CmdLine@2
   inputs:
-    command: 'custom'
-    custom: 'workload restore'
+    script: 'dotnet workload restore'
+
+- task: CmdLine@2
+  inputs:
+    script: 'dotnet build'
 
 - task: DotNetCoreCLI@2
   inputs:
