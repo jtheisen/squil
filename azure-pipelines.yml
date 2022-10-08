@@ -12,8 +12,8 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
+    projects: 'Squil.Web'
     arguments: '-o $(Build.ArtifactStagingDirectory)'
-    publishWebProjects: true
 
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
