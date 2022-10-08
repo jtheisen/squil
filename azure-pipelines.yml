@@ -5,11 +5,9 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: DotNetCoreCLI@2
+- task: CmdLine@2
   inputs:
-    command: 'custom'
-    custom: ''
-    arguments: '--version'
+    script: 'dotnet --version'
     
 - task: DotNetCoreCLI@2
   inputs:
