@@ -9,12 +9,11 @@ steps:
   inputs:
     script:
       dotnet publish Squil -o $(Build.ArtifactStagingDirectory)
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'publish'
-    projects: 'Squil'
-    arguments: '-o $(Build.ArtifactStagingDirectory)'
-
+# - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
+#   inputs:
+#     command: 'publish'
+#     projects: 'Squil'
+#     arguments: '-o $(Build.ArtifactStagingDirectory)'
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
   inputs:
