@@ -5,23 +5,11 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: CmdLine@2
+- task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
   inputs:
-    script:
-      dotnet publish Squil -o publish
-# - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
-#   inputs:
-#     command: 'publish'
-#     projects: 'Squil'
-#     arguments: '-o $(Build.ArtifactStagingDirectory)'
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: 'publish'
-    includeRootFolder: true
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    replaceExistingArchive: true
-
+    command: 'publish'
+    projects: 'Nucleus/Squil.Web'
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
   inputs:
