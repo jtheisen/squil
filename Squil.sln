@@ -4,7 +4,7 @@ VisualStudioVersion = 17.3.32721.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Core", "Squil.Core\Squil.Core.csproj", "{FE5F16B4-F465-4124-84F1-EB8D25C57009}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Web", "Squil\Squil.Web.csproj", "{50D60173-879A-40A8-89AB-341820AA8BF8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Web", "Squil.Web\Squil.Web.csproj", "{50D60173-879A-40A8-89AB-341820AA8BF8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Tests", "Squil.Tests\Squil.Tests.csproj", "{626D8A42-7255-42BD-9B9F-5B5E69182241}"
 EndProject
