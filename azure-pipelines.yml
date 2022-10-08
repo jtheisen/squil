@@ -7,6 +7,11 @@ pool:
 steps:
 - task: DotNetCoreCLI@2
   inputs:
+    command: 'custom'
+    custom: 'workload restore'
+
+- task: DotNetCoreCLI@2
+  inputs:
     command: 'publish'
     arguments: '-o $(Build.ArtifactStagingDirectory)'
     publishWebProjects: true
