@@ -5,17 +5,15 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+- task: DeleteFiles@1
+  inputs:
+    SourceFolder: 
+    Contents: 'Squil.Maui'
 - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
   inputs:
-<<<<<<< HEAD
-<<<<<<< HEAD
-    script:
-      dotnet publish Squil -o publish
-# - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
-#   inputs:
-#     command: 'publish'
-#     projects: 'Squil'
-#     arguments: '-o $(Build.ArtifactStagingDirectory)'
+    command: 'publish'
+    projects: 'Squil'
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: 'publish'
@@ -23,19 +21,3 @@ steps:
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     replaceExistingArchive: true
-
-=======
-    command: 'publish'
-    projects: 'Nucleus/Squil.Web'
-    arguments: '-o $(Build.ArtifactStagingDirectory)'
->>>>>>> parent of d4bcc00 (Update azure-pipelines.yml for Azure Pipelines)
-=======
-    workingDirectory: 'Nucleus'
-    command: 'publish'
-    projects: 'Squil.Web'
-    arguments: '-o $(Build.ArtifactStagingDirectory)'
->>>>>>> origin/maui
-- task: PublishBuildArtifacts@1    
-  displayName: 'Publish Artifact: web'
-  inputs:
-    PathtoPublish: '$(build.artifactstagingdirectory)'
