@@ -8,17 +8,14 @@ steps:
 - task: CmdLine@2
   inputs:
     script:
-      dotnet publish Squil -o $(Build.ArtifactStagingDirectory)
-# - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
-#   inputs:
-#     command: 'publish'
-#     projects: 'Squil'
-#     arguments: '-o $(Build.ArtifactStagingDirectory)'
-- task: CmdLine@2
+      dotnet publish Squil.Maui -o $(Build.BinariesDirectory) -f windows10.0.19041.0
+- task: ArchiveFiles@2
   inputs:
-    script:
-      dotnet publish Squil.Maui -o maui-out -f windows10.0.19041.0
-
+    rootFolderOrFile: '$(Build.BinariesDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
   inputs:
