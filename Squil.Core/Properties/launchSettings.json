@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Squil.Core": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:63010;http://localhost:63011"
+    }
+  }
+}

@@ -13,7 +13,8 @@ services.Configure<List<ConnectionConfiguration>>(configuration.GetSection("Conn
 
 services.AddRazorPages();
 services.AddServerSideBlazor();
-services.AddSingleton<ISquilConfigStore, LocalFileSquilConfigStore>();
+services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
+//services.AddSingleton<ISquilConfigStore, LocalFileSquilConfigStore>();
 services.AddSingleton<LiveConfiguration>();
 services.AddSingleton<LocationQueryRunner>();
 

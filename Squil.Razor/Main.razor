@@ -2,7 +2,7 @@
 @inject NavigationManager Nav
 
 <CascadingValue Value="@Location">
-    <Router AppAssembly="@typeof(App).Assembly">
+    <Router AppAssembly="@typeof(Main).Assembly">
         <Found Context="routeData">
             <RouteView RouteData="@routeData" DefaultLayout="@typeof(StaticLayout)" />
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
