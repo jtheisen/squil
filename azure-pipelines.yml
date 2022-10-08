@@ -2,20 +2,13 @@ trigger:
 - master
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
-- task: CmdLine@2
-  inputs:
-    script: 'dotnet --version'
-
-- task: CmdLine@2
-  inputs:
-    script: 'dotnet build'
-
 - task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
+    projects: 'Squil'
     arguments: '-o $(Build.ArtifactStagingDirectory)'
     publishWebProjects: true
 
