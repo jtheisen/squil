@@ -23,7 +23,18 @@ public class ConnectionContext
 
     public Exception ExceptionOnModelBuilding => exceptionOnModelBuilding;
 
-    public CMRoot CircularModel => currentModel.CMRoot;
+    public CMRoot CircularModel
+    {
+        get
+        {
+            if (currentModel == null)
+            {
+                UpdateModel();
+            }
+
+            return currentModel.CMRoot;
+        }
+    }
 
     public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
 

@@ -65,7 +65,7 @@ public static class LedgerControl
 {
     static AsyncLocal<TaskLedger> current = new();
 
-    public static TaskLedger GetCurrentLedger() => current.Value;
+    public static TaskLedger GetCurrentLedger() => current.Value ?? new TaskLedger(() => { });
 
     public static TaskLedger InstallTaskLedger()
     {
