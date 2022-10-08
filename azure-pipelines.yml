@@ -9,14 +9,7 @@ steps:
   inputs:
     command: 'publish'
     projects: 'Squil.Maui'
-    arguments: '-o publish'
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: 'publish'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    replaceExistingArchive: true
+    arguments: '-o $(Build.ArtifactStagingDirectory) -f windows10.0.19041.0'
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: maui'
   inputs:
