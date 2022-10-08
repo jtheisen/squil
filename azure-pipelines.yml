@@ -7,8 +7,9 @@ pool:
 steps:
 - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
   inputs:
+    workingDirectory: 'Nucleus'
     command: 'publish'
-    projects: 'Nucleus/Squil.Web'
+    projects: 'Squil.Web'
     arguments: '-o $(Build.ArtifactStagingDirectory)'
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
