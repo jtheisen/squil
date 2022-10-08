@@ -7,6 +7,7 @@ pool:
 steps:
 - task: CmdLine@2
   inputs:
+<<<<<<< HEAD
     script:
       dotnet publish Squil -o publish
 # - task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
@@ -22,6 +23,11 @@ steps:
     archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     replaceExistingArchive: true
 
+=======
+    command: 'publish'
+    projects: 'Nucleus/Squil.Web'
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
+>>>>>>> parent of d4bcc00 (Update azure-pipelines.yml for Azure Pipelines)
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
   inputs:
