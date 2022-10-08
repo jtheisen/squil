@@ -9,15 +9,13 @@ steps:
   inputs:
     SourceFolder: 
     Contents: 'Squil.Maui'
-- task: DotNetCoreCLI@2 # Doesn't ignore Maui for some reason
+- task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
-    projects: 'Squil'
     arguments: '-o $(Build.ArtifactStagingDirectory)'
-- task: ArchiveFiles@2
+    publishWebProjects: true
+
+- task: PublishBuildArtifacts@1    
+  displayName: 'Publish Artifact: web'
   inputs:
-    rootFolderOrFile: 'publish'
-    includeRootFolder: true
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    replaceExistingArchive: true
+    PathtoPublish: '$(build.artifactstagingdirectory)'
