@@ -18,6 +18,8 @@ services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
 services.AddSingleton<LiveConfiguration>();
 services.AddSingleton<LocationQueryRunner>();
 
+services.AddCommonSquilServices();
+
 var googleAnalyticsToken = configuration["GoogleAnalyticsToken"];
 if (!String.IsNullOrEmpty(googleAnalyticsToken))
 {

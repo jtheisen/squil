@@ -88,6 +88,52 @@ public static class SqlConnectionExtensions
         return scope.SetResult(rootRow);
     }
 
+    [XmlRoot("results")]
+    public class ResultRoot<T>
+    {
+        [XmlArray("items")]
+        public T[] Results { get; set; }
+    }
+
+    [XmlType("i")]
+    public class SqlCatalog
+    {
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+
+        [XmlAttribute("has_dbaccess")]
+        public Boolean HasAccess { get; set; }
+
+        [XmlAttribute("is_system_object")]
+        public Boolean IsSystemObject { get; set; }
+    }
+
+    public static String WrapSimpleQuery(String sql)
+    {
+        return @$"
+select (
+{sql}
+for xml auto, type
+) items for xml path ('results')
+";
+    }
+
+    public static SqlCatalog[] QueryCatalogs(this SqlConnection connection)
+    {
+        var sql = @"
+select
+	name,
+    has_dbaccess(name) has_dbaccess,
+	cast(case when i.name in ('master','model','msdb','tempdb') then 1 else i.is_distributor end as bit) is_system_object
+from
+	sys.databases i
+";
+
+        var result = connection.QueryAndParseXml<ResultRoot<SqlCatalog>>(WrapSimpleQuery(sql));
+
+        return result.Results;
+    }
+
     public static CMIndexlike ChooseIndex(this RelatedEntities relatedEntities)
     {
         var end = relatedEntities.RelationEnd;

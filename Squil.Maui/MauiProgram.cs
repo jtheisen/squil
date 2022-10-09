@@ -24,6 +24,8 @@ public static class MauiProgram
         services.AddSingleton<LiveConfiguration>();
         services.AddSingleton<LocationQueryRunner>();
 
+        services.AddCommonSquilServices();
+
         return builder.Build();
     }
 }

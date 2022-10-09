@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
 
 namespace Squil;
 
@@ -10,6 +11,22 @@ public class ConnectionConfiguration
     public String ConnectionString { get; set; }
     public String Description { get; set; }
     public String DescriptionSnippetType { get; set; }
+}
+
+public class SqlServerConnectionConfiguration
+{
+    [Required]
+    public String Name { get; set; } = "new";
+
+    [Required]
+    public String Host { get; set; } = ".\\";
+
+    public Boolean UseWindowsAuthentication { get; set; } = true;
+
+    public String User { get; set; }
+    public String Password { get; set; }
+
+    public String Catalog { get; set; }
 }
 
 public class SquilConfiguration

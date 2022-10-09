@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Squil.Core\Squil.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Shared\Menus\" />
+  </ItemGroup>
+
 </Project>

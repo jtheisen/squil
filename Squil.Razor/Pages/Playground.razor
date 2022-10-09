@@ -1,20 +1,14 @@
-﻿@page "/playground2/{foo}/{bar}"
-@page "/playground/{*pageroute}"
+﻿@page "/playground/{*pageroute}"
 
 <PageTitle>Playground</PageTitle>
 
-<p role="status">combined: @PageRoute</p>
-
-<p role="status">separate: @Foo // @Bar</p>
+<DefaultLayout>
+    <SidebarLayout>
+        <EditSqlServerConnection />
+    </SidebarLayout>
+</DefaultLayout>
 
 @code {
     [Parameter]
     public string PageRoute { get; set; }
-
-    [Parameter]
-    public string Foo { get; set; }
-
-    [Parameter]
-    public string Bar { get; set; }
-
 }
