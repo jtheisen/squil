@@ -8,10 +8,5 @@ namespace Squil.Maui
         {
             InitializeComponent();
         }
-
-        private void Button_Clicked(Object sender, EventArgs e)
-        {
-            //Blazor.Reload();
-        }
     }
 }
