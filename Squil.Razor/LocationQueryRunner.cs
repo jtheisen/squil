@@ -174,7 +174,7 @@ public class LocationQueryRunner
 
     LocationQueryResult QueryInternal1(String connectionName, LocationQueryRequest request)
     {
-        var context = connections.GetContext(connectionName);
+        var context = connections.GetLiveSource(connectionName);
 
         var schema = request.Schema;
         var table = request.Table;

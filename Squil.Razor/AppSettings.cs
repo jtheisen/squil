@@ -14,4 +14,6 @@ public class AppSettings
     public Int32 PreferScanningUnderKb { get; set; } = 100000;
 
     public Boolean ShowDemoText { get; set; }
+
+    public Boolean UseProminentSources { get; set; } = false;
 }

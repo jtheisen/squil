@@ -8,13 +8,22 @@ builder.Host.ConfigureAppConfiguration(DefaultAppConfiguration.ConfigureConfigur
 var services = builder.Services;
 var configuration = builder.Configuration;
 
+var settings = configuration.Get<AppSettings>();
+
 services.Configure<AppSettings>(configuration);
-services.Configure<List<ConnectionConfiguration>>(configuration.GetSection("Connections"));
+
+if (settings.UseProminentSources)
+{
+    services.Configure<List<ProminentSourceConfiguration>>(configuration.GetSection("Connections"));
+    services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
+}
+else
+{
+    services.AddSingleton<ISquilConfigStore, LocalFileSquilConfigStore>();
+}
 
 services.AddRazorPages();
 services.AddServerSideBlazor();
-services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
-//services.AddSingleton<ISquilConfigStore, LocalFileSquilConfigStore>();
 services.AddSingleton<LiveConfiguration>();
 services.AddSingleton<LocationQueryRunner>();
 

@@ -1,0 +1,50 @@
+﻿@inject LiveConfiguration configuration
+
+@{
+    var hosts = configuration.GetLiveSqlServerHosts();
+}
+
+<button @onclick="AddHost">
+    new
+</button>
+
+@foreach (var host in hosts)
+{
+    <button @onclick="() => EditHost(host)">edit</button>
+
+    <SqlServerHost @key="host.Name" Host="host" />
+}
+
+<ServerModal OnClose="@editModalSubscription">
+    <Title>Add connection</Title>
+    <Body>
+        <EditSqlServerHost Model="@editedHostConfiguration" OnSubmit="@SaveHost" />
+    </Body>
+</ServerModal>
+
+<RerenderHelper Observable="configuration.ObservableSqlServerHosts" OnChange="StateHasChanged" />
+
+@code {
+    SqlServerHostConfiguration editedHostConfiguration;
+
+    Action editModalSubscription;
+
+    void AddHost()
+    {
+        EditHost(configuration.CreateLiveServerHost());
+    }
+
+    void EditHost(LiveSqlServerHost host)
+    {
+        editedHostConfiguration = host.Configuration;
+        editModalSubscription = () => { editModalSubscription = null; editedHostConfiguration = null; StateHasChanged(); };
+        StateHasChanged();
+    }
+
+    void SaveHost(SqlServerHostConfiguration hostConfiguration)
+    {
+        configuration.UpdateSqlServerHost(hostConfiguration);
+        editModalSubscription = null; editedHostConfiguration = null;
+        StateHasChanged();
+    }
+}

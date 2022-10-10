@@ -3,7 +3,7 @@
 @inject LiveConfiguration Connections
 
 @{
-    var connection = Connections.GetContext(ConnectionName);
+    var connection = Connections.GetLiveSource(ConnectionName);
 
     var report = PointsOfInterestManager.Instance.GetReport(connection.CircularModel);
 }

@@ -11,7 +11,7 @@ public class SchemaChangedException : Exception
     { }
 }
 
-public class ConnectionContext
+public class LiveSource
 {
     readonly string connectionString;
 
@@ -38,7 +38,7 @@ public class ConnectionContext
 
     public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
 
-    public ConnectionContext(String connectionString)
+    public LiveSource(String connectionString)
     {
         this.connectionString = connectionString;
     }

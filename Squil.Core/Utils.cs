@@ -39,6 +39,49 @@ public class Empties<K, T>
     public static readonly ILookup<K, T> Lookup = Empties<(K, T)>.Array.ToLookup(p => p.Item1, p => p.Item2);
 }
 
+public static class Maybe
+{
+    public static Maybe<T> Try<T>(Func<T> func)
+    {
+        try
+        {
+            return new Maybe<T>(func(), null);
+        }
+        catch (Exception ex)
+        {
+            return new Maybe<T>(default, ex);
+        }
+    }
+
+    public static async Task<Maybe<T>> Try<T>(this Task<T> task)
+    {
+        try
+        {
+            var result = await task;
+
+            return new Maybe<T>(result, null);
+        }
+        catch (Exception ex)
+        {
+            return new Maybe<T>(default, ex);
+        }
+    }
+}
+
+public struct Maybe<T>
+{
+    public readonly T value;
+    public readonly Exception exception;
+
+    public Maybe(T value, Exception exception)
+    {
+        this.value = value;
+        this.exception = exception;
+    }
+}
+
+//public record Maybe<T>(T value, Exception exception);
+
 public static class RazorHelpers
 {
     public static String ClassNames(params String[] classes) => String.Join(' ', classes);
@@ -220,6 +263,8 @@ public static partial class Extensions
     }
 
     public static T If<T>(this T source, Boolean predicate) => predicate ? source : default;
+
+    public static void Ignore(this Task _) { }
 
     [DebuggerHidden]
     public static T Assert<T>(this T value, Predicate<T> predicate, String message = null)

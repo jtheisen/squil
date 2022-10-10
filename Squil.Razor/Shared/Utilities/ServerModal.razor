@@ -43,6 +43,8 @@
 
     ElementReference ModalReference { get; set; }
 
+    Boolean isOpen;
+
     void HandleClose(HiddenBsModalEventArgs a)
     {
         OnClose?.Invoke();
@@ -50,9 +52,11 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (OnClose != null)
+        var shouldBeOpen = OnClose != null;
+
+        if (shouldBeOpen != isOpen)
         {
-            await Js.InvokeVoidAsync("openBoostrapModal", ModalReference, OnClose != null);
+            await Js.InvokeVoidAsync("openBoostrapModal", ModalReference, isOpen = shouldBeOpen);
         }
     }
 

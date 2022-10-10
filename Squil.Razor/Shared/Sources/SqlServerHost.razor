@@ -1,0 +1,36 @@
+﻿<div @key="Host.Name">
+    <div>
+        @Host.Name
+
+        @if (Host.IsLoading)
+        {
+            <span>loading</span>
+        }
+    </div>
+
+    @if (Host.Catalogs != null)
+    {
+        foreach (var catalog in Host.Catalogs)
+        {
+            <div>
+                @catalog.Name
+            </div>
+        }
+    }
+    else if (Host.Error != null)
+    {
+        @Host.Error
+    }
+</div>
+
+<RerenderHelper Observable="Host" OnChange="StateHasChanged" />
+
+@code {
+    [Parameter]
+    public LiveSqlServerHost Host { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Host.Refresh().Ignore();
+    }
+}
