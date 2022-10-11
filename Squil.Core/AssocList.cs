@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Channels;
 using System.Xml.Linq;
 
 public interface IAssocList<K, V> : IReadOnlyDictionary<K, V>
@@ -106,6 +107,14 @@ public class AssocList<K, V> : ObservableObject, IAssocList<K, V>
 
     public void Clear()
     {
+        if (Changed != null)
+        {
+            foreach (var p in pairs)
+            {
+                Changed(false, p.Key, p.Value);
+            }
+        }
+
         pairs.Clear();
         dict.Clear();
         NotifyChange();
@@ -116,6 +125,7 @@ public class AssocList<K, V> : ObservableObject, IAssocList<K, V>
         if (dict.ContainsKey(key)) throw new Exception($"An {name ?? "item"} already exists under '{key}'");
         pairs.Insert(0, KeyValuePair.Create(key, value));
         dict[key] = value;
+        Changed?.Invoke(true, key, value);
         NotifyChange();
     }
 
@@ -124,6 +134,7 @@ public class AssocList<K, V> : ObservableObject, IAssocList<K, V>
         if (dict.ContainsKey(key)) throw new Exception($"An {name ?? "item"} already exists under '{key}'");
         pairs.Add(KeyValuePair.Create(key, value));
         dict[key] = value;
+        Changed?.Invoke(true, key, value);
         NotifyChange();
     }
 
@@ -147,14 +158,22 @@ public class AssocList<K, V> : ObservableObject, IAssocList<K, V>
 
         if (i < 0) throw new Exception();
 
+        var oldValue = pairs[i].Value;
         pairs[i] = KeyValuePair.Create(key, value);
         dict[key] = value;
+
+        if (Changed != null)
+        {
+            Changed(false, key, oldValue);
+            Changed(true, key, value);
+        }
+
         NotifyChange();
     }
 
     public void Remove(K key)
     {
-        if (!dict.Remove(key)) throw new Exception($"No {name ?? "item"} found to remove under '{key}'");
+        if (!dict.Remove(key, out var oldValue)) throw new Exception($"No {name ?? "item"} found to remove under '{key}'");
 
         var i = pairs.FindIndex(p => p.Key.Equals(key));
 
@@ -162,8 +181,12 @@ public class AssocList<K, V> : ObservableObject, IAssocList<K, V>
 
         pairs.RemoveAt(i);
 
+        Changed?.Invoke(false, key, oldValue);
+
         NotifyChange();
     }
+
+    public event Action<Boolean, K, V> Changed;
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

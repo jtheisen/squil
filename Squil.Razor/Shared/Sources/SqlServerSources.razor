@@ -12,7 +12,7 @@
 {
     <button @onclick="() => EditHost(host)">edit</button>
 
-    <SqlServerHost @key="host.Name" Host="host" />
+    <SqlServerHost @key="host.Id" Host="host" />
 }
 
 <ServerModal OnClose="@editModalSubscription">
