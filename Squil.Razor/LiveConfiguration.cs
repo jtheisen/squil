@@ -81,7 +81,13 @@ public class LiveSqlServerHost : ObservableObject
 
     public Exception Error => lastError;
 
-    public SqlConnectionExtensions.SqlCatalog[] Catalogs => lastGreetResult?.Catalogs;
+    public SqlConnectionExtensions.SqlCatalog[] AllCatalogs => lastGreetResult?.Catalogs;
+
+    public SqlConnectionExtensions.SqlCatalog[] FilteredCatalogs
+        => lastGreetResult?.Catalogs.Where(IsCatalogEligible).ToArray();
+
+    Boolean IsCatalogEligible(SqlConnectionExtensions.SqlCatalog catalog)
+        => !catalog.IsSystemObject && catalog.HasAccess;
 
     public LiveSource GetSourceContext(String catalog)
     {

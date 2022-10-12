@@ -4,15 +4,19 @@
     var hosts = configuration.GetLiveSqlServerHosts();
 }
 
-<button @onclick="AddHost">
-    new
+<button class="btn btn-sm" @onclick="AddHost">
+    <i class="far fa-plus me-1" />new
 </button>
 
 @foreach (var host in hosts)
 {
-    <button @onclick="() => EditHost(host)">edit</button>
+    var h = host;
 
-    <SqlServerHost @key="host.Id" Host="host" />
+    <SqlServerHost @key="host.Id" Host="host">
+        <Actions>
+            <button class="btn btn-sm" @onclick="() => EditHost(h)"><i class="fas fa-edit align-baseline" /></button>
+        </Actions>
+    </SqlServerHost>
 }
 
 <ServerModal OnClose="@editModalSubscription">

@@ -16,8 +16,16 @@ function translateEvent(element, oldName, newName) {
 }
 
 function openBoostrapModal(element, show) {
-    $(element).modal({ show: false });
-    $(element).modal(show ? 'show' : 'hide');
+    const modal = new bootstrap.Modal(element, { show: false })
+
+    if (show) {
+        modal.show();
+    } else {
+        modal.hide();
+    }
+
+//    $(element).modal({ show: false });
+//    $(element).modal(show ? 'show' : 'hide');
 }
 
 

@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    <button class="btn btn-primary float-right" type="button" @onclick="RefreshCatalogs">Fetch catalogs</button>
+    <button class="btn btn-primary float-end" type="button" @onclick="RefreshCatalogs">Fetch catalogs</button>
 
     @if (liveHost?.Error is Exception exception)
     {
@@ -57,7 +57,7 @@
         </div>
     }
 
-    @if (liveHost?.Catalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
+    @if (liveHost?.AllCatalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
     {
         @foreach (var catalog in catalogs)
         {
@@ -69,7 +69,7 @@
         }
     }
 
-    <button class="btn btn-primary float-right" type="submit">Submit</button>
+    <button class="btn btn-primary float-end" type="submit">Submit</button>
 
 </EditForm>
 

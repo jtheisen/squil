@@ -6,7 +6,7 @@
 
 <DefaultLayout>
     <div class="container">
-        <h1 class="display-4 mt-4 mb-4">Welcome,</h1>
+        <div class="display-4 mt-4 mb-4">Welcome,</div>
 
         @if (Options.Value.ShowDemoText)
         {
@@ -50,7 +50,7 @@
                                 {
                                     <p>@d</p>
                                 }
-                                <a href="/query/@c.Name" class="btn btn-outline-dark float-right @ClassNames("stretched-link".If(!hasLinks))">🞂 enter</a>
+                                <a href="/query/@c.Name" class="btn btn-outline-dark float-end @ClassNames("stretched-link".If(!hasLinks))">🞂 enter</a>
                             </div>
                         </div>
                     </div>

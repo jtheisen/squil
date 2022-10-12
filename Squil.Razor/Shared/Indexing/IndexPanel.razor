@@ -1,14 +1,14 @@
 ﻿@using System.Diagnostics
 
 <div class="@ClassNames("text-muted", "search-panel", "show".If(showSearchOptions))">
-    <button type="button" class="close w-100 float-none text-right search-panel-close-button" @onclick="@HideSearchOptions" aria-label="Close">
+    <button type="button" class="close w-100 float-none text-end search-panel-close-button" @onclick="@HideSearchOptions" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
 
     <h5 class="font-weight-bold border-bottom mb-4">Search</h5>
 
-    <h6 class="text-right mt-4">
-        <ContentWithTooltip InlineStringClass="text-decoration-underline" InlineString="scanning" Placement="right" TooltipInnerClass="max-w-prose text-left">
+    <h6 class="text-end mt-4">
+        <ContentWithTooltip InlineStringClass="text-decoration-underline" InlineString="scanning" Placement="right" TooltipInnerClass="max-w-prose text-start">
             <p><em>Scanning</em> is the default search option for small tables.</p>
             <p>Enter text here to perform a scan over supported column types.</p>
             <p>
@@ -29,8 +29,8 @@
         <p>@Vm.NoScanOptionReason</p>
     }
 
-    <h6 class="text-right mt-4">
-        <ContentWithTooltip InlineStringClass="text-decoration-underline" InlineString="seeking" Placement="right" TooltipInnerClass="max-w-prose text-left">
+    <h6 class="text-end mt-4">
+        <ContentWithTooltip InlineStringClass="text-decoration-underline" InlineString="seeking" Placement="right" TooltipInnerClass="max-w-prose text-start">
             <p><em>Seeking</em> is the default search option for large tables.</p>
             <p>Seeking requires indexes and can only be done using the column (or columns) the index is defined on.</p>
             <p>
