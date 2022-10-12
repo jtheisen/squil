@@ -4,23 +4,21 @@
     var hosts = configuration.GetLiveSqlServerHosts();
 }
 
-<button class="btn btn-sm" @onclick="AddHost">
-    <i class="far fa-plus me-1" />new
+<button class="btn btn-outline-dark btn-sm position-absolute end-0 top-0" @onclick="AddHost">
+    <i class="far fa-plus-circle me-2" />Add host
 </button>
 
-@foreach (var host in hosts)
-{
-    var h = host;
+<div class="list-group">
+    @foreach (var host in hosts)
+    {
+        var h = host;
 
-    <SqlServerHost @key="host.Id" Host="host">
-        <Actions>
-            <button class="btn btn-sm" @onclick="() => EditHost(h)"><i class="fas fa-edit align-baseline" /></button>
-        </Actions>
-    </SqlServerHost>
-}
+        <SqlServerHost @key="host.Id" Host="host" OnEdit="EditHost" />
+    }
+</div>
 
 <ServerModal OnClose="@editModalSubscription">
-    <Title>Add connection</Title>
+    <Title>@EditModalTitleVerb host connection</Title>
     <Body>
         <EditSqlServerHost Model="@editedHostConfiguration" OnSubmit="@SaveHost" />
     </Body>
@@ -32,6 +30,10 @@
     SqlServerHostConfiguration editedHostConfiguration;
 
     Action editModalSubscription;
+
+    Boolean IsAdding => editedHostConfiguration?.Id == Guid.Empty;
+
+    String EditModalTitleVerb => IsAdding ? "Add" : "Edit";
 
     void AddHost()
     {
@@ -47,7 +49,7 @@
 
     void SaveHost(SqlServerHostConfiguration hostConfiguration)
     {
-        configuration.UpdateSqlServerHost(hostConfiguration);
+        configuration.AddOrUpdateSqlServerHost(hostConfiguration);
         editModalSubscription = null; editedHostConfiguration = null;
         StateHasChanged();
     }

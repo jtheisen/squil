@@ -1,30 +1,33 @@
-﻿<details @key="Host.Name">
-    <summary>
-        @Host.Name
+﻿<div class="list-group-item bg-light d-flex">
+    <div class="me-auto"><i class="text-muted fas fa-server me-2" />@Host.Name</div>
 
-        @Actions
-
-        @if (Host.IsLoading)
-        {
-            <span>loading</span>
-        }
-    </summary>
-
-
-    @if (Host.AllCatalogs != null)
+    @if (Host.IsLoading)
     {
-        foreach (var catalog in Host.AllCatalogs)
+        <div class="spinner-border spinner-border-sm" />
+    }
+
+    <div class="d-flex gap-3">
+        <a class="cursor-pointer" @onclick="Refresh"><i class="text-muted fas fa-redo-alt" /></a>
+        @if (OnEdit != null)
         {
-            <div>
-                @catalog.Name
-            </div>
+            <a class="cursor-pointer" @onclick="() => OnEdit(Host)"><i class="text-muted fas fa-pen" /></a>
         }
-    }
-    else if (Host.Error != null)
+    </div>
+</div>
+
+@if (Host.FilteredCatalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
+{
+    foreach (var catalog in catalogs)
     {
-        @Host.Error
+        <a @key="catalog" href="/query/@catalog.Name@@@Host.Name" class="list-group-item list-group-item-action">
+            <i class="text-muted fas fa-database ms-2 me-2" />@catalog.Name
+        </a>
     }
-</details>
+}
+else if (Host.Error != null)
+{
+    @Host.Error
+}
 
 <RerenderHelper Observable="Host" OnChange="StateHasChanged" />
 
@@ -35,7 +38,15 @@
     [Parameter]
     public RenderFragment Actions { get; set; }
 
+    [Parameter]
+    public Action<LiveSqlServerHost> OnEdit { get; set; }
+
     protected override void OnParametersSet()
+    {
+        Host.Refresh().Ignore();
+    }
+
+    void Refresh()
     {
         Host.Refresh().Ignore();
     }

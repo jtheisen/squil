@@ -6,10 +6,13 @@ public class QueryContext
 
     public UrlRenderer UrlRenderer { get; }
 
-    public QueryContext(UrlRenderer urlRenderer)
+    public QueryContext(String source)
     {
-        UrlRenderer = urlRenderer;
+        UrlRenderer = MakeUrlRenderer(source);
     }
+
+    public static UrlRenderer MakeUrlRenderer(String source)
+        => new UrlRenderer(source);
 
     public String RenderEntityUrl(CMTable table, Entity entity, String focusColumn = null)
     {

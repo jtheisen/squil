@@ -25,6 +25,13 @@ body {
     max-width: 40ex;
 }
 
+.tooltip-translate-right {
+    transform: translateX(10px);
+}
+
+/* Tailwind
+-------------------------------------------------- */
+
 .text-decoration-underline {
     text-decoration: underline;
 }
@@ -33,8 +40,8 @@ body {
     max-width: 65ch;
 }
 
-.tooltip-translate-right {
-    transform: translateX(10px);
+.cursor-pointer {
+    cursor: pointer;
 }
 
 /* Breadcrumbs
@@ -124,7 +131,7 @@ header.header {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1;
+    z-index: 2;
 }
 
     header.header > nav {

@@ -2,34 +2,40 @@
 @inject LiveConfiguration configuration
 @inject IOptions<AppSettings> Options
 
+@{
+    var usePs = Options.Value.UseProminentSources;
+
+
+}
+
 <PageTitle>Select database</PageTitle>
 
 <DefaultLayout>
-    <div class="container">
-        <div class="display-4 mt-4 mb-4">Welcome,</div>
-
-        @if (Options.Value.ShowDemoText)
-        {
-            <p>this is the demo hosting of the SQuiL prototype: a generic UI for relational databases.</p>
-
-            <p>
-                If you click on a choice of datasource below, you will be able to browse that database with something that
-                looks like a custom user interface - but there's nothing custom about it: Everything is derived
-                from the database schema itself by using foreign key information and sensible heuristics.
-            </p>
-
-            <p>
-                Most sample databases are so small that scanning will be the default search option. Only
-                the StackOverflow sample is quite large (about 20GB) so that indexed search can shine over scanning.
-            </p>
-        }
-        else
-        {
-            <p>Please select one of the connected data sources.</p>
-        }
-
+    <div class="container mt-4">
         @if (Options.Value.UseProminentSources)
         {
+            <div class="display-4 mt-4 mb-4">Welcome,</div>
+
+            @if (Options.Value.ShowDemoText)
+            {
+                <p>this is the demo hosting of the SQuiL prototype: a generic UI for relational databases.</p>
+
+                <p>
+                    If you click on a choice of datasource below, you will be able to browse that database with something that
+                    looks like a custom user interface - but there's nothing custom about it: Everything is derived
+                    from the database schema itself by using foreign key information and sensible heuristics.
+                </p>
+
+                <p>
+                    Most sample databases are so small that scanning will be the default search option. Only
+                    the StackOverflow sample is quite large (about 20GB) so that indexed search can shine over scanning.
+                </p>
+            }
+            else
+            {
+                <p>Please select one of the connected data sources.</p>
+            }
+
             <div class="row mt-5">
                 @foreach (var c in configuration.GetProminentSourceConfigurations())
                 {
@@ -59,7 +65,13 @@
         }
         else
         {
-            <SqlServerSources />
+            <div class="row">
+                <div class="offset-3 col-6 position-relative">
+                    <div class="h4 mb-4">Configured hosts and catalogs</div>
+
+                    <SqlServerSources />
+                </div>
+            </div>
         }
 
     </div>

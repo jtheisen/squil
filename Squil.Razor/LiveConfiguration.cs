@@ -15,10 +15,10 @@ public class ProminentSourceConfiguration
 
 public class SqlServerHostConfiguration
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
 
     [Required]
-    [RegularExpression(@"^[a-z-]$", ErrorMessage = "The name can only contain lower case ascii characters and the dash")]
+    [RegularExpression(@"^[a-z-]+$", ErrorMessage = "The name can only contain lower case ascii characters and the dash")]
     public String Name { get; set; } = "new";
 
     [Required]
@@ -246,8 +246,19 @@ public class LiveConfiguration
     public void AddSqlServerHost(SqlServerHostConfiguration configuration)
         => Modify(() => hosts.Append(configuration.Id, (configuration, new LiveSqlServerHost(configuration, sqlServerConnectionProvider))));
 
-    public void UpdateSqlServerHost(SqlServerHostConfiguration configuration)
-        => Modify(() => hosts.UpdateOrAppend(configuration.Id, (configuration, new LiveSqlServerHost(configuration, sqlServerConnectionProvider))));
+    public void AddOrUpdateSqlServerHost(SqlServerHostConfiguration configuration)
+    {
+        if (configuration.Id == default)
+        {
+            configuration.Id = Guid.NewGuid();
+
+            Modify(() => hosts.Append(configuration.Id, (configuration, new LiveSqlServerHost(configuration, sqlServerConnectionProvider))));
+        }
+        else
+        {
+            Modify(() => hosts.Update(configuration.Id, (configuration, new LiveSqlServerHost(configuration, sqlServerConnectionProvider))));
+        }
+    }
 
     public void RemoveSqlServerHost(Guid id)
         => Modify(() => hosts.Remove(id));
@@ -301,6 +312,8 @@ public class LiveConfiguration
 
                 foreach (var host in lastLoadedConfiguration.SqlServerHosts)
                 {
+                    if (host.Id == Guid.Empty) continue;
+
                     AddSqlServerHost(host);
                 }
             }

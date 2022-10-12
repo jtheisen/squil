@@ -1,4 +1,4 @@
-﻿@page "/query/{ConnectionName}/{*Path}"
+﻿@page "/query/{SourceName}/{*Path}"
 @using System.Data.SqlClient
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
@@ -81,7 +81,7 @@
     <ActionItems>
         @if (Settings.EnableDevMode)
         {
-            <a class="btn btn-outline-dark text-muted" href="/info/@ConnectionName">schema</a>
+            <a class="btn btn-outline-dark text-muted" href="/info/@SourceName">schema</a>
             <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">Report</button>
         }
         <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
@@ -252,7 +252,7 @@
 @code {
 
     [Parameter]
-    public String ConnectionName { get; set; }
+    public String SourceName { get; set; }
 
     [Parameter]
     public String Path { get; set; }
@@ -286,7 +286,7 @@
             ListLimit = listLimit ?? Settings.InitialLimit
         };
 
-        var result = Runner.Query(ConnectionName, request);
+        var result = Runner.Query(SourceName, request);
 
         if (result.Exception != null && result.Exception is not SqlException)
         {
@@ -299,7 +299,7 @@
         {
             vm = new LocationQueryVm(request, result);
 
-            QueryContext = new QueryContext(new UrlRenderer($"/query/{ConnectionName}"));
+            QueryContext = new QueryContext(SourceName);
 
             QueryContext.InDebug = queryParams["debug"] != null;
         }
