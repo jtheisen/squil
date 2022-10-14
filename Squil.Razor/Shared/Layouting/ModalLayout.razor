@@ -1,0 +1,39 @@
+﻿<div class="modal-content">
+    <div class="modal-header">
+        <div class="w-100">
+            <div class="d-flex w-100">
+                <h5>@Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            @HeaderExtra
+        </div>
+    </div>
+    <div class="modal-body">
+        @Body
+    </div>
+    <div class="modal-footer">
+        @if (Footer != null)
+        {
+            @Footer
+        }
+        else
+        {
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        }
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public RenderFragment Title { get; set; }
+
+    [Parameter]
+    public RenderFragment HeaderExtra { get; set; }
+
+    [Parameter]
+    public RenderFragment Body { get; set; }
+
+    [Parameter]
+    public RenderFragment Footer { get; set; }
+}

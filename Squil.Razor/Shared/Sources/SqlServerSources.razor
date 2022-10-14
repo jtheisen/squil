@@ -16,26 +16,20 @@
         {
             var h = host;
 
-            <SqlServerHost @key="host.Id" Host="host" OnEdit="@(h => EditHost(h.Configuration))" />
+            <SqlServerHost @key="host.Id" Host="host" OnEdit="@(h => editHostModel.SetModel(h.Configuration))" />
         }
     </div>
 }
 
-<ServerModal OnClose="@editModalSubscription">
-    <Title>@EditModalTitleVerb host connection</Title>
-    <Body>
-        <EditSqlServerHost Model="@editedHostConfiguration" OnSave="@SaveHost" OnDelete="@DeleteHost" />
-    </Body>
-</ServerModal>
+<EditSqlServerHostDialog ModalModel="@editHostModel" OnSaveClick="@SaveHost" OnDeleteClick="@DeleteHost" />
 
 @code {
-    SqlServerHostConfiguration editedHostConfiguration;
+    ModalModel<SqlServerHostConfiguration> editHostModel;
 
-    Action editModalSubscription;
-
-    Boolean IsAdding => editedHostConfiguration?.Id == Guid.Empty;
-
-    String EditModalTitleVerb => IsAdding ? "Add" : "Edit";
+    protected override void OnInitialized()
+    {
+        editHostModel = new ModalModel<SqlServerHostConfiguration>(StateHasChanged);
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -44,32 +38,20 @@
 
     void AddHost()
     {
-        EditHost(new SqlServerHostConfiguration());
+        editHostModel.SetModel(new SqlServerHostConfiguration());
     }
 
-    void EditHost(SqlServerHostConfiguration host)
+    async Task SaveHost()
     {
-        editedHostConfiguration = host;
-        editModalSubscription = () => { editModalSubscription = null; editedHostConfiguration = null; StateHasChanged(); };
-        StateHasChanged();
+        await configuration.UpdateLiveHosts(dbf => dbf.ReconcileAsync(editHostModel.Model, e => { }));
+
+        editHostModel.Model = null;
     }
 
-    async Task SaveHost(SqlServerHostConfiguration hostConfiguration)
+    async Task DeleteHost()
     {
-        //await configuration.UpdateLiveHosts(dbf => dbf.DoAsync(db => db.Add()));
-        await configuration.UpdateLiveHosts(dbf => dbf.ReconcileAsync(hostConfiguration, e => { }));
+        await configuration.UpdateLiveHosts(dbf => dbf.RemoveAsync(editHostModel.Model));
 
-        editModalSubscription = null; editedHostConfiguration = null;
-
-        StateHasChanged();
-    }
-
-    async Task DeleteHost(SqlServerHostConfiguration hostConfiguration)
-    {
-        await configuration.UpdateLiveHosts(dbf => dbf.RemoveAsync(hostConfiguration));
-
-        editModalSubscription = null; editedHostConfiguration = null;
-
-        StateHasChanged();
+        editHostModel.Model = null;
     }
 }

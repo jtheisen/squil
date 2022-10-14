@@ -1,0 +1,119 @@
+﻿@inject LiveConfiguration configuration
+
+@{
+    var labelClass = "col-sm-3";
+    var fieldClass = "col-sm-9";
+}
+
+<ModalFrame OnClose="@ModalModel.Close">
+    <div class="modal-dialog modal-lg" role="document">
+        <EditForm Model="@(Model ?? new SqlServerHostConfiguration())" OnValidSubmit="@OnSaveClick">
+            <ModalLayout>
+                <Title>@EditModalTitleVerb host connection</Title>
+                <Body>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group row align-items-baseline">
+                        <label class="@labelClass" for="name">Name</label>
+                        <div class="@fieldClass">
+                            <InputText class="form-control" id="name" @bind-Value="Model.Name" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row align-items-baseline mt-4">
+                        <label class="@labelClass" for="host">Host</label>
+                        <div class="@fieldClass">
+                            <InputText class="form-control form-control-sm" id="host" @bind-Value="Model.Host" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row mt-4">
+                        <div class="@labelClass">Authentication</div>
+                        <div class="@fieldClass">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" id="use-windows-auth" @bind-Value="Model.UseWindowsAuthentication" />
+                                <label class="form-check-label" for="use-windows-auth">
+                                    Use Windows authentication
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group row align-items-baseline mb-2">
+                        <label class="@labelClass">User name</label>
+                        <div class="@fieldClass">
+                            <InputText class="form-control form-control-sm" @bind-Value="Model.User" disabled="@Model.UseWindowsAuthentication" />
+                        </div>
+                    </div>
+                    <div class="form-group row align-items-baseline">
+                        <label class="@labelClass" for="name">Password</label>
+                        <div class="@fieldClass">
+                            <InputText class="form-control form-control-sm" id="connection-string" type="password" @bind-Value="Model.Password" disabled="@Model.UseWindowsAuthentication" />
+                        </div>
+                    </div>
+
+                    <div class="mb-4" />
+
+                    <button class="btn btn-secondary float-end w-dialog-button" type="button" @onclick="RefreshCatalogs">Fetch catalogs</button>
+
+                    @if (liveHost?.Error is Exception exception)
+                    {
+                        <div class="alert alert-danger">
+                            @exception.Message
+                        </div>
+                    }
+
+                    @if (liveHost?.AllCatalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
+                    {
+                        @foreach (var catalog in catalogs)
+                        {
+                            if (catalog.IsSystemObject) continue;
+
+                            <div>
+                                <span class="@ClassNames("text-muted".If(!catalog.HasAccess))">@catalog.Name</span>
+                            </div>
+                        }
+                    }
+                </Body>
+                <Footer>
+                    <button class="btn btn-danger me-auto w-dialog-button" type="button" @onclick="OnDeleteClick">Delete</button>
+
+                    <button type="button" class="btn btn-outline-dark w-dialog-button" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary w-dialog-button" type="submit">Save</button>
+                </Footer>
+            </ModalLayout>
+        </EditForm>
+    </div>
+</ModalFrame>
+
+@code {
+    [Parameter]
+    public ModalModel<SqlServerHostConfiguration> ModalModel { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnDeleteClick { get; set; }
+
+    SqlServerHostConfiguration Model => ModalModel.Model;
+
+    Boolean IsAdding => Model?.Id == Guid.Empty;
+
+    String EditModalTitleVerb => IsAdding ? "Add" : "Edit";
+
+    LiveSqlServerHost liveHost;
+
+    protected override void OnParametersSet()
+    {
+        liveHost = Model?.Apply(m => new LiveSqlServerHost(m.Clone(), configuration.SqlServerConnectionProvider));
+
+        base.OnParametersSet();
+    }
+
+    async Task RefreshCatalogs()
+    {
+        await liveHost.Refresh();
+    }
+}

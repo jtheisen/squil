@@ -29,6 +29,10 @@ body {
     transform: translateX(10px);
 }
 
+.w-dialog-button {
+    width: 8rem;
+}
+
 /* Tailwind
 -------------------------------------------------- */
 
@@ -42,6 +46,18 @@ body {
 
 .cursor-pointer {
     cursor: pointer;
+}
+
+.w-32 {
+    width: 8rem;
+}
+
+.w-36 {
+    width: 9rem;
+}
+
+.w-40 {
+    width: 10rem;
 }
 
 /* Breadcrumbs
