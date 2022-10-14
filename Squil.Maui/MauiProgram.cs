@@ -24,8 +24,12 @@ public static class MauiProgram
         services.AddSingleton<LiveConfiguration>();
         services.AddSingleton<LocationQueryRunner>();
 
-        services.AddCommonSquilServices();
+        services.AddCommonSquilServices(new AppSettings());
 
-        return builder.Build();
+        var app = builder.Build();
+
+        app.Services.InitializeDb();
+
+        return app;
     }
 }

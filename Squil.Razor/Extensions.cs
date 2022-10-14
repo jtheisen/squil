@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Squil;
 
@@ -11,9 +12,4 @@ public static class Extensions
 
     public static QuerySearchMode? GetDefaultSearchMode(this IWithUsedKb cmo, AppSettings settings)
         => cmo.UsedKb?.Apply(kb => kb <= settings.PreferScanningUnderKb ? QuerySearchMode.Scan : QuerySearchMode.Seek);
-
-    public static void AddCommonSquilServices(this IServiceCollection services)
-    {
-        services.AddSingleton<SqlServerConnectionProvider>();
-    }
 }

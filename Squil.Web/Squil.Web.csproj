@@ -14,11 +14,18 @@
 
   <ItemGroup>
     <PackageReference Include="Blazor-Analytics" Version="3.11.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Squil.Core\Squil.Core.csproj" />
     <ProjectReference Include="..\Squil.Razor\Squil.Razor.csproj" />
+    <ProjectReference Include="..\Squil.Storage.Migrations.Sqlite\Squil.Storage.Migrations.Sqlite.csproj" />
+    <ProjectReference Include="..\Squil.Storage.Migrations.SqlServer\Squil.Storage.Migrations.SqlServer.csproj" />
+    <ProjectReference Include="..\Squil.Storage\Squil.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

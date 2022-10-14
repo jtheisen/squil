@@ -1,0 +1,16 @@
+﻿
+<DefaultLayout>
+    <SidebarLayout>
+        <div class="common-lead-spacer">&nbsp;</div>
+
+        @ChildContent
+
+        <div class="common-lead-spacer">&nbsp;</div>
+    </SidebarLayout>
+</DefaultLayout>
+
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

@@ -1,0 +1,19 @@
+﻿@page "/storage-state"
+@inject IDbFactory DbFactory
+
+<SimpleLayout>
+    <div class="alert alert-info">
+        Found @count objects
+    </div>
+</SimpleLayout>
+
+@code {
+    int count;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var db = DbFactory.CreateDbContext();
+
+        count = await db.SqlServerHostConfigurations.CountAsync();
+    }
+}

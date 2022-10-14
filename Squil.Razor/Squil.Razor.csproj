@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -19,7 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Reconciler\Reconciler.csproj" />
     <ProjectReference Include="..\Squil.Core\Squil.Core.csproj" />
+    <ProjectReference Include="..\Squil.Storage\Squil.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

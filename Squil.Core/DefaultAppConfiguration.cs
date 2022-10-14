@@ -41,7 +41,8 @@ public static class DefaultAppConfiguration
         => c
         .AddJsonFile($"{GetHomePath()}/settings/global.settings.json", optional: true)
         .AddJsonFile($"{GetHomePath()}/settings/Squil.settings.json", optional: true)
-        .AddJsonFile($"{GetHomePath()}/settings/{GetConfigFileBaseNameFromCallingAssembly()}.settings.json", optional: true);
+        .AddJsonFile($"{GetHomePath()}/settings/{GetConfigFileBaseNameFromCallingAssembly()}.settings.json", optional: true)
+        ;
 
     private static string GetHomePath() => Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
 

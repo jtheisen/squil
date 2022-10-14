@@ -15,19 +15,15 @@ function translateEvent(element, oldName, newName) {
     })
 }
 
-function openBoostrapModal(element, show) {
-    const modal = new bootstrap.Modal(element, { show: false })
+function callBoostrapModal(element, show) {
+    const modal = bootstrap.Modal.getOrCreateInstance(element);
 
     if (show) {
         modal.show();
     } else {
         modal.hide();
     }
-
-//    $(element).modal({ show: false });
-//    $(element).modal(show ? 'show' : 'hide');
 }
-
 
 function getInnerText(element) {
     const result = element?.innerText ?? "";

@@ -1,0 +1,14 @@
+﻿
+Add-Migration Initial -Args "--provider Sqlite" -Project Squil.Storage.Migrations.Sqlite
+Add-Migration Initial -Args "--provider SqlServer" -Project Squil.Storage.Migrations.SqlServer
+
+Update-Database -Args "--provider Sqlite" -Project Squil.Storage.Migrations.Sqlite
+Update-Database -Args "--provider SqlServer" -Project Squil.Storage.Migrations.SqlServer
+
+The following command can be used to force the migrations to be created in Squil.Storage;
+this has to be done once when there are no migrations yet as ef doesn't recognize the
+migration assemblies if they are empty.
+
+Add-Migration Initial -Args "--provider Sqlite --ignore-assembly true" -Project Squil.Storage
+
+

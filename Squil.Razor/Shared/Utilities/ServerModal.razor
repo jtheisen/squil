@@ -49,7 +49,7 @@
         OnClose?.Invoke();
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         var shouldBeOpen = OnClose != null;
 
@@ -72,7 +72,7 @@
         {
             isChangePending = false;
 
-            await Js.InvokeVoidAsync("openBoostrapModal", ModalReference, isOpen = OnClose != null);
+            await Js.InvokeVoidAsync("callBoostrapModal", ModalReference, isOpen = OnClose != null);
         }
     }
 }

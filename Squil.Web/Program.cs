@@ -27,7 +27,8 @@ services.AddServerSideBlazor();
 services.AddSingleton<LiveConfiguration>();
 services.AddSingleton<LocationQueryRunner>();
 
-services.AddCommonSquilServices();
+services.AddSquilDb(settings, configuration);
+services.AddCommonSquilServices(settings);
 
 var googleAnalyticsToken = configuration["GoogleAnalyticsToken"];
 if (!String.IsNullOrEmpty(googleAnalyticsToken))
@@ -36,6 +37,8 @@ if (!String.IsNullOrEmpty(googleAnalyticsToken))
 }
 
 var app = builder.Build();
+
+app.Services.InitializeDb();
 
 if (!app.Environment.IsDevelopment())
 {

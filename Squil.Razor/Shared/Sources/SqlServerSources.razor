@@ -1,21 +1,25 @@
 ﻿@inject LiveConfiguration configuration
+@inject IDbFactory Dbf
 
 @{
-    var hosts = configuration.GetLiveSqlServerHosts();
+    var hosts = configuration.LiveSqlServerHosts;
 }
 
 <button class="btn btn-outline-dark btn-sm position-absolute end-0 top-0" @onclick="AddHost">
     <i class="far fa-plus-circle me-2" />Add host
 </button>
 
-<div class="list-group">
-    @foreach (var host in hosts)
-    {
-        var h = host;
+@if (hosts != null)
+{
+    <div class="list-group">
+        @foreach (var host in hosts)
+        {
+            var h = host;
 
-        <SqlServerHost @key="host.Id" Host="host" OnEdit="EditHost" />
-    }
-</div>
+            <SqlServerHost @key="host.Id" Host="host" OnEdit="@(h => EditHost(h.Configuration))" />
+        }
+    </div>
+}
 
 <ServerModal OnClose="@editModalSubscription">
     <Title>@EditModalTitleVerb host connection</Title>
@@ -23,8 +27,6 @@
         <EditSqlServerHost Model="@editedHostConfiguration" OnSubmit="@SaveHost" />
     </Body>
 </ServerModal>
-
-<RerenderHelper Observable="configuration.ObservableSqlServerHosts" OnChange="StateHasChanged" />
 
 @code {
     SqlServerHostConfiguration editedHostConfiguration;
@@ -35,22 +37,30 @@
 
     String EditModalTitleVerb => IsAdding ? "Add" : "Edit";
 
-    void AddHost()
+    protected override async Task OnParametersSetAsync()
     {
-        EditHost(configuration.CreateLiveServerHost());
+        await configuration.RefreshHosts(true);
     }
 
-    void EditHost(LiveSqlServerHost host)
+    void AddHost()
     {
-        editedHostConfiguration = host.Configuration;
+        EditHost(new SqlServerHostConfiguration());
+    }
+
+    void EditHost(SqlServerHostConfiguration host)
+    {
+        editedHostConfiguration = host;
         editModalSubscription = () => { editModalSubscription = null; editedHostConfiguration = null; StateHasChanged(); };
         StateHasChanged();
     }
 
-    void SaveHost(SqlServerHostConfiguration hostConfiguration)
+    async Task SaveHost(SqlServerHostConfiguration hostConfiguration)
     {
-        configuration.AddOrUpdateSqlServerHost(hostConfiguration);
+        //await configuration.UpdateLiveHosts(dbf => dbf.DoAsync(db => db.Add()));
+        await configuration.UpdateLiveHosts(dbf => dbf.ReconcileAsync(hostConfiguration, e => { }));
+
         editModalSubscription = null; editedHostConfiguration = null;
+
         StateHasChanged();
     }
 }

@@ -13,27 +13,6 @@ public class ProminentSourceConfiguration
     public String DescriptionSnippetType { get; set; }
 }
 
-public class SqlServerHostConfiguration
-{
-    public Guid Id { get; set; }
-
-    [Required]
-    [RegularExpression(@"^[a-z-]+$", ErrorMessage = "The name can only contain lower case ascii characters and the dash")]
-    public String Name { get; set; } = "new";
-
-    [Required]
-    public String Host { get; set; } = ".\\";
-
-    public Boolean UseWindowsAuthentication { get; set; } = true;
-
-    public String User { get; set; }
-    public String Password { get; set; }
-
-    public String Catalog { get; set; }
-
-    public SqlServerHostConfiguration Clone() => (SqlServerHostConfiguration)MemberwiseClone();
-}
-
 public class LiveSqlServerHost : ObservableObject
 {
     private readonly SqlServerHostConfiguration configuration;
@@ -184,11 +163,11 @@ public class LiveConfiguration
 
     AssocList<String, (ProminentSourceConfiguration config, LiveSource context)> prominentSources;
 
-    AssocList<Guid, (SqlServerHostConfiguration config, LiveSqlServerHost live)> hosts;
-
-    Dictionary<String, LiveSqlServerHost> hostsByHostname;
+    Dictionary<Guid, LiveSqlServerHost> liveHosts;
+    Dictionary<String, LiveSqlServerHost> liveHostsByName;
 
     IOptions<AppSettings> options;
+    IDbFactory dbf;
     SqlServerConnectionProvider sqlServerConnectionProvider;
     SquilConfiguration lastLoadedConfiguration;
 
@@ -200,32 +179,16 @@ public class LiveConfiguration
 
     public AppSettings AppSettings => options.Value;
 
-    public LiveConfiguration(ISquilConfigStore configStore, IOptions<AppSettings> options, SqlServerConnectionProvider sqlServerConnectionProvider)
+    public LiveConfiguration(ISquilConfigStore configStore, IOptions<AppSettings> options, IDbFactory dbf, SqlServerConnectionProvider sqlServerConnectionProvider)
     {
         this.configStore = configStore;
         this.options = options;
+        this.dbf = dbf;
         this.sqlServerConnectionProvider = sqlServerConnectionProvider;
 
         prominentSources = new AssocList<String, (ProminentSourceConfiguration, LiveSource)>("prominent source");
-        hosts = new AssocList<Guid, (SqlServerHostConfiguration, LiveSqlServerHost)>("sql server host");
-
-        hostsByHostname = new Dictionary<String, LiveSqlServerHost>();
-
-        hosts.Changed += Hosts_Changed;
 
         Load();
-    }
-
-    private void Hosts_Changed(Boolean insertion, Guid id, (SqlServerHostConfiguration config, LiveSqlServerHost live) value)
-    {
-        if (insertion)
-        {
-            hostsByHostname.Add(value.config.Name, value.live);
-        }
-        else
-        {
-            hostsByHostname.Remove(value.config.Name);
-        }
     }
 
     public ProminentSourceConfiguration[] GetProminentSourceConfigurations()
@@ -237,36 +200,37 @@ public class LiveConfiguration
     public void RemoveProminentSource(String name)
         => Modify(() => prominentSources.Remove(name));
 
-    public SqlServerHostConfiguration[] GetSqlServerHostConfigurations()
-        => Get(() => hosts.Select(c => c.Value.config).ToArray());
+    public LiveSqlServerHost[] LiveSqlServerHosts
+        => Get(() => liveHosts?.Values.ToArray());
 
-    public LiveSqlServerHost[] GetLiveSqlServerHosts()
-        => Get(() => hosts.Select(c => c.Value.live).ToArray());
-
-    public void AddSqlServerHost(SqlServerHostConfiguration configuration)
-        => Modify(() => hosts.Append(configuration.Id, (configuration, new LiveSqlServerHost(configuration, sqlServerConnectionProvider))));
-
-    public void AddOrUpdateSqlServerHost(SqlServerHostConfiguration configuration)
+    public async Task UpdateLiveHosts(Func<IDbFactory, Task> action)
     {
-        if (configuration.Id == default)
-        {
-            configuration.Id = Guid.NewGuid();
+        await action(dbf);
 
-            Modify(() => hosts.Append(configuration.Id, (configuration, new LiveSqlServerHost(configuration, sqlServerConnectionProvider))));
-        }
-        else
-        {
-            Modify(() => hosts.Update(configuration.Id, (configuration, new LiveSqlServerHost(configuration, sqlServerConnectionProvider))));
-        }
+        await RefreshHosts();
     }
 
-    public void RemoveSqlServerHost(Guid id)
-        => Modify(() => hosts.Remove(id));
+    public async Task RefreshHosts(Boolean onlyIfUnloaded = false)
+    {
+        if (onlyIfUnloaded && liveHosts != null) return;
 
-    public Object ObservableSqlServerHosts => hosts;
+        var hosts = await dbf.DoAsync(db => db.SqlServerHostConfigurations.ToArrayAsync());
 
-    public LiveSqlServerHost CreateLiveServerHost()
-        => new LiveSqlServerHost(new SqlServerHostConfiguration(), sqlServerConnectionProvider);
+        var newLiveHosts = (
+            from h in hosts
+            join l in liveHosts?.Values ?? Empties<LiveSqlServerHost>.Enumerable on h.Id equals l.Id into existing
+            from l in existing.DefaultIfEmpty()
+            select (h, l: l ?? new LiveSqlServerHost(h, sqlServerConnectionProvider))
+        ).ToDictionary(p => p.h.Id, p => p.l);
+
+        var newLiveHostsByName = newLiveHosts.Values.ToDictionary(h => h.Name, h => h);
+
+        lock (this)
+        {
+            liveHosts = newLiveHosts;
+            liveHostsByName = newLiveHostsByName;
+        }
+    }
 
     T Get<T>(Func<T> select)
     {
@@ -309,13 +273,6 @@ public class LiveConfiguration
                 {
                     AddProminentSource(connection);
                 }
-
-                foreach (var host in lastLoadedConfiguration.SqlServerHosts)
-                {
-                    if (host.Id == Guid.Empty) continue;
-
-                    AddSqlServerHost(host);
-                }
             }
             catch (Exception ex)
             {
@@ -337,8 +294,7 @@ public class LiveConfiguration
     {
         configStore.Save(new SquilConfiguration
         {
-            ProminentSources = GetProminentSourceConfigurations(),
-            SqlServerHosts = GetSqlServerHostConfigurations()
+            ProminentSources = GetProminentSourceConfigurations()
         });
     }
 
@@ -370,7 +326,7 @@ public class LiveConfiguration
     {
         if (TryParseHostSourceName(name, out var host, out var catalog))
         {
-            return Get(() => hostsByHostname[host]).GetSourceContext(catalog);
+            return Get(() => liveHostsByName[host]).GetSourceContext(catalog);
         }
         else
         {
