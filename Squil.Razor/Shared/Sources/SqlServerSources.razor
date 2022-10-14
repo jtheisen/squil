@@ -24,7 +24,7 @@
 <ServerModal OnClose="@editModalSubscription">
     <Title>@EditModalTitleVerb host connection</Title>
     <Body>
-        <EditSqlServerHost Model="@editedHostConfiguration" OnSubmit="@SaveHost" />
+        <EditSqlServerHost Model="@editedHostConfiguration" OnSave="@SaveHost" OnDelete="@DeleteHost" />
     </Body>
 </ServerModal>
 
@@ -58,6 +58,15 @@
     {
         //await configuration.UpdateLiveHosts(dbf => dbf.DoAsync(db => db.Add()));
         await configuration.UpdateLiveHosts(dbf => dbf.ReconcileAsync(hostConfiguration, e => { }));
+
+        editModalSubscription = null; editedHostConfiguration = null;
+
+        StateHasChanged();
+    }
+
+    async Task DeleteHost(SqlServerHostConfiguration hostConfiguration)
+    {
+        await configuration.UpdateLiveHosts(dbf => dbf.RemoveAsync(hostConfiguration));
 
         editModalSubscription = null; editedHostConfiguration = null;
 

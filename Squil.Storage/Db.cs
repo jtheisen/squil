@@ -56,4 +56,14 @@ public static class DbExtensions
 
         return await db.ReconcileAndSaveChangesAsync(templateEntity, extent);
     }
+
+    public static async Task RemoveAsync<E>(this IDbContextFactory<Db> factory, E templateEntity)
+        where E : class
+    {
+        var db = await factory.CreateDbContextAsync();
+
+        db.Remove(templateEntity);
+
+        await db.SaveChangesAsync();
+    }
 }

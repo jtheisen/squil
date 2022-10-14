@@ -69,6 +69,8 @@
         }
     }
 
+    <button class="btn btn-danger float-end" type="button" @onclick="HandleDelete">Delete</button>
+
     <button class="btn btn-primary float-end" type="submit">Submit</button>
 
 </EditForm>
@@ -78,14 +80,17 @@
     public SqlServerHostConfiguration Model { get; set; }
 
     [Parameter]
-    public EventCallback<SqlServerHostConfiguration> OnSubmit { get; set; }
+    public EventCallback<SqlServerHostConfiguration> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback<SqlServerHostConfiguration> OnDelete { get; set; }
+
 
     LiveSqlServerHost liveHost;
 
-    async Task HandleEditSubmit()
-    {
-        await OnSubmit.InvokeAsync(Model);
-    }
+    async Task HandleEditSubmit() => await OnSave.InvokeAsync(Model);
+
+    async Task HandleDelete() => await OnDelete.InvokeAsync(Model);
 
     async Task RefreshCatalogs()
     {
