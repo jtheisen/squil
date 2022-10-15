@@ -11,7 +11,7 @@ public class SqlServerConnectionProvider
         builder.DataSource = config.Host;
         builder.IntegratedSecurity = config.UseWindowsAuthentication;
         builder.ApplicationName = "SQuiL database browser";
-        builder.ConnectTimeout = 1;
+        builder.ConnectTimeout = 4;
 
         if (!config.UseWindowsAuthentication)
         {
