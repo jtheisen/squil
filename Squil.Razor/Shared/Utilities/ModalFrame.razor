@@ -22,6 +22,10 @@
 
     void HandleClose(HiddenBsModalEventArgs a)
     {
+        // This helps in case the following callback doesn't trigger a parameter set,
+        // which ideally it always should - and does when using the ModalModel
+        isOpen = false;
+
         OnClose?.Invoke();
     }
 
