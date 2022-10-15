@@ -97,82 +97,8 @@ public class LiveSqlServerHost : ObservableObject
     }
 }
 
-public class SquilConfiguration
-{
-    public ProminentSourceConfiguration[] ProminentSources { get; set; } = Empties<ProminentSourceConfiguration>.Array;
-
-    public SqlServerHostConfiguration[] SqlServerHosts { get; set; } = Empties<SqlServerHostConfiguration>.Array;
-}
-
-public interface ISquilConfigStore
-{
-    Boolean CanSave { get; }
-
-    SquilConfiguration Load();
-
-    void Save(SquilConfiguration config);
-}
-
-public class AppSettingsSquilConfigStore : ISquilConfigStore
-{
-    private readonly IOptions<List<ProminentSourceConfiguration>> configurationsOption;
-
-    public AppSettingsSquilConfigStore(IOptions<List<ProminentSourceConfiguration>> configurationsOption)
-    {
-        this.configurationsOption = configurationsOption;
-    }
-
-    public Boolean CanSave => false;
-
-    public SquilConfiguration Load() => new SquilConfiguration { ProminentSources = configurationsOption.Value.ToArray() };
-
-    public void Save(SquilConfiguration config) => throw new NotImplementedException();
-}
-
-public class LocalFileSquilConfigStore : ISquilConfigStore
-{
-    String squilFolder;
-    String configFilePath;
-
-    public LocalFileSquilConfigStore()
-    {
-        squilFolder = GetSquilFolder();
-        configFilePath = System.IO.Path.Combine(squilFolder, "config.json");
-    }
-
-    public Boolean CanSave => true;
-
-    public SquilConfiguration Load()
-    {
-        if (File.Exists(configFilePath))
-        {
-            var text = File.ReadAllText(configFilePath);
-
-            return JsonConvert.DeserializeObject<SquilConfiguration>(text);
-        }
-        else
-        {
-            return new SquilConfiguration();
-        }
-    }
-
-    public void Save(SquilConfiguration config)
-    {
-        Directory.CreateDirectory(squilFolder);
-
-        File.WriteAllText(configFilePath, JsonConvert.SerializeObject(config));
-    }
-
-    String GetSquilFolder()
-        => Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "squil");
-}
-
-
-
 public class LiveConfiguration
 {
-    ISquilConfigStore configStore;
-
     AssocList<String, (ProminentSourceConfiguration config, LiveSource context)> prominentSources;
 
     Dictionary<Guid, LiveSqlServerHost> liveHosts;
@@ -181,7 +107,6 @@ public class LiveConfiguration
     IOptions<AppSettings> options;
     IDbFactory dbf;
     SqlServerConnectionProvider sqlServerConnectionProvider;
-    SquilConfiguration lastLoadedConfiguration;
 
     Exception lastLoadException;
 
@@ -191,26 +116,25 @@ public class LiveConfiguration
 
     public AppSettings AppSettings => options.Value;
 
-    public LiveConfiguration(ISquilConfigStore configStore, IOptions<AppSettings> options, IDbFactory dbf, SqlServerConnectionProvider sqlServerConnectionProvider)
+    public LiveConfiguration(IOptions<AppSettings> options, IOptions<List<ProminentSourceConfiguration>> prominentSourceConfigurationsOptions, IDbFactory dbf, SqlServerConnectionProvider sqlServerConnectionProvider)
     {
-        this.configStore = configStore;
         this.options = options;
         this.dbf = dbf;
         this.sqlServerConnectionProvider = sqlServerConnectionProvider;
 
         prominentSources = new AssocList<String, (ProminentSourceConfiguration, LiveSource)>("prominent source");
 
-        Load();
+        if (prominentSourceConfigurationsOptions.Value is List<ProminentSourceConfiguration> prominentSourceConfigurations)
+        {
+            foreach (var configuration in prominentSourceConfigurations)
+            {
+                prominentSources.Append(configuration.Name, (configuration, new LiveSource(configuration.ConnectionString)));
+            }
+        }
     }
 
     public ProminentSourceConfiguration[] GetProminentSourceConfigurations()
         => Get(() => prominentSources.Select(c => c.Value.config).ToArray());
-
-    public void AddProminentSource(ProminentSourceConfiguration connection)
-        => Modify(() => prominentSources.Append(connection.Name, (connection, new LiveSource(connection.ConnectionString))));
-
-    public void RemoveProminentSource(String name)
-        => Modify(() => prominentSources.Remove(name));
 
     public LiveSqlServerHost[] LiveSqlServerHosts
         => Get(() => liveHosts?.Values.ToArray());
@@ -250,64 +174,6 @@ public class LiveConfiguration
         {
             return select();
         }
-    }
-
-    void Modify(Action action)
-    {
-        if (inBatch)
-        {
-            action();
-        }
-        else
-        {
-            lock (this)
-            {
-                EnsureCanSave();
-
-                action();
-
-                Save();
-            }
-        }
-    }
-
-    void Load()
-    {
-        lock (this)
-        {
-            inBatch = true;
-
-            try
-            {
-                lastLoadedConfiguration = configStore.Load();
-
-                foreach (var connection in lastLoadedConfiguration.ProminentSources)
-                {
-                    AddProminentSource(connection);
-                }
-            }
-            catch (Exception ex)
-            {
-                lastLoadException = ex;
-            }
-            finally
-            {
-                inBatch = false;
-            }
-        }
-    }
-
-    void EnsureCanSave()
-    {
-        if (!configStore.CanSave) throw new Exception($"Trying to modify configuration without writable store");
-    }
-
-    void Save()
-    {
-        configStore.Save(new SquilConfiguration
-        {
-            ProminentSources = GetProminentSourceConfigurations()
-        });
     }
 
     Boolean TryParseHostSourceName(String name, out String host, out String catalog)

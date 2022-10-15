@@ -15,11 +15,6 @@ services.Configure<AppSettings>(configuration);
 if (settings.UseProminentSources)
 {
     services.Configure<List<ProminentSourceConfiguration>>(configuration.GetSection("Connections"));
-    services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
-}
-else
-{
-    services.AddSingleton<ISquilConfigStore, LocalFileSquilConfigStore>();
 }
 
 services.AddRazorPages();

@@ -22,7 +22,6 @@ public static class MauiProgram
 #endif
 
         //services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
-        services.AddSingleton<ISquilConfigStore, LocalFileSquilConfigStore>();
         services.AddSingleton<LiveConfiguration>();
         services.AddSingleton<LocationQueryRunner>();
 
