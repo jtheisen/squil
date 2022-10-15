@@ -49,22 +49,47 @@
                     <div class="form-group row align-items-baseline">
                         <label class="@labelClass" for="name">Password</label>
                         <div class="@fieldClass">
-                            <InputText class="form-control form-control-sm" id="connection-string" type="password" @bind-Value="Model.Password" disabled="@Model.UseWindowsAuthentication" />
+                            <InputText class="form-control form-control-sm" type="password" @bind-Value="Model.Password" disabled="@Model.UseWindowsAuthentication" />
                         </div>
                     </div>
 
                     <div class="mb-4" />
 
-                    <button class="btn btn-secondary float-end w-dialog-button" type="button" @onclick="RefreshCatalogs">Fetch catalogs</button>
+                    <div class="input-group">
+                        <InputText class="form-control" type="text" placeholder="Database" @onfocus="() => SetDatabaseHelpText()" @bind-Value="Model.Catalog" list="selectable-catalogs" />
+                        <button class="btn btn-outline-secondary" type="button" @onclick="() => Model.Catalog = null">Clear</button>
+                        <button class="btn btn-outline-secondary" type="button" @onclick="RefreshCatalogs">Fetch databases</button>
+                    </div>
+
+                    @if (liveHost?.IsRefreshing == true)
+                    {
+                        <div class="d-flex flex-row-reverse mt-2">
+                            <div class="spinner-border spinner-border-sm" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-text">@databaseHelpText</div>
+                    }
 
                     @if (liveHost?.Error is Exception exception)
                     {
-                        <div class="alert alert-danger">
-                            @exception.Message
+                        <div class="alert alert-danger mt-2 d-flex gap-4">
+                            <i class="fas fa-exclamation-triangle fa-3x" /> @exception.Message
                         </div>
                     }
 
-                    @if (liveHost?.AllCatalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
+                    @if (liveHost?.FilteredCatalogs is SqlConnectionExtensions.SqlCatalog[] selectableCatalogs)
+                    {
+                        <datalist id="selectable-catalogs">
+                            @foreach (var catalog in selectableCatalogs)
+                            {
+                                <option value="@catalog.Name" />
+                            }
+                        </datalist>
+                    }
+
+@*                    @if (liveHost?.AllCatalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
                     {
                         @foreach (var catalog in catalogs)
                         {
@@ -75,7 +100,7 @@
                             </div>
                         }
                     }
-                </Body>
+*@                </Body>
                 <Footer>
                     <button class="btn btn-danger me-auto w-dialog-button" type="button" @onclick="OnDeleteClick">Delete</button>
 
@@ -97,6 +122,8 @@
     [Parameter]
     public EventCallback OnDeleteClick { get; set; }
 
+    String databaseHelpText = "";
+
     SqlServerHostConfiguration Model => ModalModel.Model;
 
     Boolean IsAdding => Model?.Id == Guid.Empty;
@@ -107,13 +134,33 @@
 
     protected override void OnParametersSet()
     {
-        liveHost = Model?.Apply(m => new LiveSqlServerHost(m.Clone(), configuration.SqlServerConnectionProvider));
+        SetDatabaseHelpText();
 
-        base.OnParametersSet();
+        liveHost = null;
     }
 
     async Task RefreshCatalogs()
     {
+        liveHost = Model?.Apply(m => new LiveSqlServerHost(m.Clone(), configuration.SqlServerConnectionProvider));
+
         await liveHost.Refresh();
+
+        SetDatabaseHelpText(true);
+    }
+
+    void SetDatabaseHelpText(Boolean fetched = false)
+    {
+        if (!fetched)
+        {
+            databaseHelpText = "Enter a database/catalog name or leave empty to connect to all accessible, non-system databases";
+        }
+        else if (liveHost.FilteredCatalogs?.Length is Int32 n)
+        {
+            databaseHelpText = $"✔ Found {n} accessible, non-system databases";
+        }
+        else
+        {
+            databaseHelpText = null;
+        }
     }
 }

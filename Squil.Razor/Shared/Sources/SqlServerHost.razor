@@ -15,18 +15,29 @@
     </div>
 </div>
 
-@if (Host.FilteredCatalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
+@if (Host.SelectedCatalogs is SqlConnectionExtensions.SqlCatalog[] catalogs)
 {
-    foreach (var catalog in catalogs)
+    if (catalogs.Length > 0)
     {
-        <a @key="catalog" href="/query/@catalog.Name@@@Host.Name" class="list-group-item list-group-item-action">
-            <i class="text-muted fas fa-database ms-2 me-2" />@catalog.Name
-        </a>
+        foreach (var catalog in catalogs)
+        {
+            <a @key="catalog" href="/query/@catalog.Name@@@Host.Name" class="list-group-item list-group-item-action">
+                <i class="text-muted fas fa-database ms-2 me-2" />@catalog.Name
+            </a>
+        }
+    }
+    else
+    {
+        <span class="list-group-item">
+            <em>Source can be accessed but selected database is inaccessible or missing</em>
+        </span>
     }
 }
 else if (Host.Error != null)
 {
-    @Host.Error
+    <span class="list-group-item list-group-item-danger">
+        <small>@Host.Error.Message</small>
+    </span>
 }
 
 <RerenderHelper Observable="Host" OnChange="StateHasChanged" />

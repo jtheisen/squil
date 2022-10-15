@@ -36,9 +36,16 @@ public class LiveSqlServerHost : ObservableObject
 
     public SqlServerHostConfiguration Configuration => configuration;
 
+    public Boolean IsRefreshing => currentGreet != null;
+
     public async Task Refresh()
     {
-        currentGreet = provider.GreetConnection(configuration);
+        lock (this)
+        {
+            if (currentGreet != null) return;
+
+            currentGreet = provider.GreetConnection(configuration);
+        }
 
         NotifyChange();
 
@@ -53,6 +60,8 @@ public class LiveSqlServerHost : ObservableObject
             lastError = ex;
         }
 
+        currentGreet = null;
+
         NotifyChange();
     }
 
@@ -64,6 +73,9 @@ public class LiveSqlServerHost : ObservableObject
 
     public SqlConnectionExtensions.SqlCatalog[] FilteredCatalogs
         => lastGreetResult?.Catalogs.Where(IsCatalogEligible).ToArray();
+
+    public SqlConnectionExtensions.SqlCatalog[] SelectedCatalogs
+        => configuration.Catalog is String catalog ? FilteredCatalogs?.Where(c => c.Name == catalog).ToArray() : FilteredCatalogs;
 
     Boolean IsCatalogEligible(SqlConnectionExtensions.SqlCatalog catalog)
         => !catalog.IsSystemObject && catalog.HasAccess;
