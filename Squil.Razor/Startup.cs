@@ -8,8 +8,8 @@ public static class Startup
 {
     public static void AddSquilDb(this IServiceCollection services, AppSettings settings, IConfiguration configuration)
     {
-        var provider = configuration["provider"];
-        var ignoreAssembly = configuration["ignore-assembly"] != null;
+        var provider = configuration?["provider"];
+        var ignoreAssembly = configuration?["ignore-assembly"] != null;
 
         provider ??= settings.SquilDbProviderName;
 
@@ -27,20 +27,6 @@ public static class Startup
 
                     _ => throw new Exception($"Unsupported provider: {provider}")
                 });
-
-            //services.AddDbContext<Db>(
-            //    options => _ = provider switch
-            //    {
-            //        "Sqlite" => options.UseSqlite(
-            //            cs,
-            //            x => x.MigrationsAssembly("Squil.Storage.Migrations.Sqlite")),
-
-            //        "SqlServer" => options.UseSqlServer(
-            //            cs,
-            //            x => x.MigrationsAssembly("Squil.Storage.Migrations.SqlServer")),
-
-            //        _ => throw new Exception($"Unsupported provider: {provider}")
-            //    });
         }
     }
 

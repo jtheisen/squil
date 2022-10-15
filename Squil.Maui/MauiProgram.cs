@@ -1,4 +1,6 @@
-﻿namespace Squil.Maui;
+﻿using Microsoft.Maui.Controls;
+
+namespace Squil.Maui;
 
 public static class MauiProgram
 {
@@ -24,12 +26,33 @@ public static class MauiProgram
         services.AddSingleton<LiveConfiguration>();
         services.AddSingleton<LocationQueryRunner>();
 
-        services.AddCommonSquilServices(new AppSettings());
+        var squilFolder = GetAndEnsureSquilFolder();
+
+        var settings = new AppSettings
+        {
+            SquilDbProviderName = "Sqlite",
+            SquilDbSqliteConnectionString = $"Filename={Path.Combine(squilFolder, "squil-config.db")}"
+        };
+
+        services.AddSquilDb(settings, null);
+        services.AddCommonSquilServices(settings);
 
         var app = builder.Build();
 
         app.Services.InitializeDb();
 
         return app;
+    }
+
+    static String GetSquilFolder()
+        => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "squil");
+
+    static String GetAndEnsureSquilFolder()
+    {
+        var folder = GetSquilFolder();
+
+        Directory.CreateDirectory(folder);
+
+        return folder;
     }
 }
