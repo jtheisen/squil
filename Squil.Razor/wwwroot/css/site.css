@@ -18,6 +18,14 @@ body {
     overflow-y: scroll;
 }
 
+/* Bootstrap
+-------------------------------------------------- */
+
+body {
+    --bs-link-color: currentcolor;
+    --bs-link-hover-color: currentcolor;
+}
+
 /* Misc
 -------------------------------------------------- */
 

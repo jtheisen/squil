@@ -88,7 +88,7 @@ public class LiveSqlServerHost : ObservableObject
 
             config.Catalog = catalog;
 
-            var connectionString = provider.GetConnectionString(configuration);
+            var connectionString = provider.GetConnectionString(configuration, catalogOverride: catalog);
 
             liveSources[catalog] = liveSource = new LiveSource(connectionString);
         }

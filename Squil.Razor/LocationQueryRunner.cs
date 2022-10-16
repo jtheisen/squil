@@ -15,6 +15,7 @@ public enum QueryControllerQueryType
 
 public class LocationQueryRequest
 {
+    public String Source { get; }
     public String Schema { get; }
     public String Table { get; }
     public String Index { get; }
@@ -43,21 +44,23 @@ public class LocationQueryRequest
             return segment != UrlRenderer.BlazorDefeatingDummySegment ? segment : null;
         }
 
-        var section = Get(1);
+        Source = Get(1);
+
+        var section = Get(2);
 
         switch (section)
         {
             case "views":
             case "tables":
-                Schema = Get(2);
-                Table = Get(3);
-                Index = Get(4);
-                Column = Get(5);
+                Schema = Get(3);
+                Table = Get(4);
+                Index = Get(5);
+                Column = Get(6);
                 break;
             case "indexes":
-                Schema = Get(2);
-                Index = Get(3);
-                Column = Get(4);
+                Schema = Get(3);
+                Index = Get(4);
+                Column = Get(5);
                 break;
         }
 

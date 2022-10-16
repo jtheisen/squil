@@ -147,6 +147,8 @@ $border-color: #eee;
     .index {
         /* font-size: .75rem;
         line-height: 1rem; */
+        --bs-link-color: #ccc;
+        --bs-link-hover-color: #ccc;
         display: block;
         margin-top: -1px;
     }
@@ -164,7 +166,6 @@ $border-color: #eee;
         background: white;
         flex: 1 1 auto;
         border: 1px solid $border-color;
-
         position: relative;
     }
 
@@ -203,7 +204,6 @@ $border-color: #eee;
         padding: .25rem .5rem;
         border: none;
         outline: none;
-
         display: block;
         background: transparent;
         position: absolute;

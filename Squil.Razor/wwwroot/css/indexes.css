@@ -116,6 +116,8 @@
 .indexes-form .index {
   /* font-size: .75rem;
   line-height: 1rem; */
+  --bs-link-color: #ccc;
+  --bs-link-hover-color: #ccc;
   display: block;
   margin-top: -1px;
 }

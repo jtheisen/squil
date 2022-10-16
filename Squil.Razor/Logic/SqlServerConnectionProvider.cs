@@ -4,7 +4,7 @@ namespace Squil;
 
 public class SqlServerConnectionProvider
 {
-    public String GetConnectionString(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)
+    public String GetConnectionString(SqlServerHostConfiguration config, String catalogOverride = null, Boolean ignoreCatalog = false)
     {
         var builder = new SqlConnectionStringBuilder();
 
@@ -19,7 +19,11 @@ public class SqlServerConnectionProvider
             builder.Password = config.Password;
         }
 
-        if (!ignoreCatalog && !String.IsNullOrEmpty(config.Catalog))
+        if (catalogOverride != null)
+        {
+            builder.InitialCatalog = catalogOverride;
+        }
+        else if (!ignoreCatalog && !String.IsNullOrEmpty(config.Catalog))
         {
             builder.InitialCatalog = config.Catalog;
         }
@@ -31,7 +35,7 @@ public class SqlServerConnectionProvider
 
     public SqlConnection GetConnection(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)
     {
-        return new SqlConnection(GetConnectionString(config, ignoreCatalog));
+        return new SqlConnection(GetConnectionString(config, ignoreCatalog: ignoreCatalog));
     }
 
     public async Task<SqlConnection> GetOpenedConnection(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)

@@ -1,4 +1,4 @@
-﻿@page "/query/{SourceName}/{*Path}"
+﻿@page "/query/{*Path}"
 @using System.Data.SqlClient
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
@@ -250,12 +250,10 @@
 <RerenderHelper Observable="@SearchValues.Backing" OnChange="@HandleSeekValuesChanged" />
 
 @code {
-
-    [Parameter]
-    public String SourceName { get; set; }
-
     [Parameter]
     public String Path { get; set; }
+
+    String SourceName { get; set; }
 
     AppSettings Settings => Options.Value;
 
@@ -285,6 +283,8 @@
         {
             ListLimit = listLimit ?? Settings.InitialLimit
         };
+
+        SourceName = request.Source;
 
         var result = Runner.Query(SourceName, request);
 
