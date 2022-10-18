@@ -3,6 +3,7 @@
     "Squil": {
       "commandName": "Project",
       "launchBrowser": true,
+      "launchUrl": "debug",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

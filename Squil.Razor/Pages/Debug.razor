@@ -1,0 +1,9 @@
+﻿@page "/debug"
+
+<SimpleLayout>
+    <button class="btn btn-danger" @onclick="@(() => throw new Exception("Catastrophic failure"))">crash</button>
+</SimpleLayout>
+
+@code {
+
+}

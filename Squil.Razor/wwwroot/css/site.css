@@ -118,22 +118,49 @@ body {
 /* Blazor
 -------------------------------------------------- */
 #blazor-error-ui {
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
     display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
+    #blazor-error-ui > div:first-child {
+        background: white;
+        opacity: .8;
+    }
+
+    #blazor-error-ui > div {
+        position: fixed;
+        display: flex;
+        padding: 0 5em;
+        text-align: center;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4em;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+    }
+
+    #blazor-error-ui > div p {
+        max-width: 65ch;
+    }
+
+    #blazor-error-ui > div > svg {
+        width: 10em;
+        fill: gray;
+    }
+
+    #blazor-error-ui > div a {
+        display: block;
         cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
+        border: 2px solid black;
+        font-weight: bold;
+        text-decoration: none;
+        padding: 1em 1em;
+        width: 12em;
+        margin: 0 1em;
+        border-radius: 5px;
     }
 
 .blazor-error-boundary {

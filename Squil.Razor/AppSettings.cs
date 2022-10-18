@@ -6,6 +6,8 @@ public class AppSettings
 
     public Boolean EnableDevMode { get; set; }
 
+    public Boolean ShowHelpTexts { get; set; } = true;
+
     public Int32 InitialLimit { get; set; } = 10;
 
     public Int32 LoadMoreLimit { get; set; } = 100;

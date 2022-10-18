@@ -77,3 +77,5 @@ function copyInnerTextToClipboard(element) {
     const innerText = element.innerText;
     navigator.clipboard.writeText(innerText);
 }
+
+Mousetrap.bind('d e b u g', () => location.href = '/debug')
