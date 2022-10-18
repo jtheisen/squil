@@ -16,9 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Storage", "Squil.Stor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reconciler", "Reconciler\Reconciler.csproj", "{67EB4498-6857-45AB-8549-599A81D3FA9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Squil.Storage.Migrations.Sqlite", "Squil.Storage.Migrations.Sqlite\Squil.Storage.Migrations.Sqlite.csproj", "{44C0EF97-ECAD-4A88-A6A7-F3AD24A8F93A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Storage.Migrations.Sqlite", "Squil.Storage.Migrations.Sqlite\Squil.Storage.Migrations.Sqlite.csproj", "{44C0EF97-ECAD-4A88-A6A7-F3AD24A8F93A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Squil.Storage.Migrations.SqlServer", "Squil.Storage.Migrations.SqlServer\Squil.Storage.Migrations.SqlServer.csproj", "{F535F749-AACD-408E-AB1A-7A2C60203313}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Storage.Migrations.SqlServer", "Squil.Storage.Migrations.SqlServer\Squil.Storage.Migrations.SqlServer.csproj", "{F535F749-AACD-408E-AB1A-7A2C60203313}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
