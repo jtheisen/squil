@@ -10,9 +10,9 @@
     renderCount++; 
 }
 
-<PageTitle>@vm.Result.RootName</PageTitle>
+<PageTitle>@vm?.Result.RootName</PageTitle>
 
-<DefaultLayout>
+<DefaultLayout IsLoading="@(vm == null)">
     <NavItems>
         <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
         <BreadcrumbItem><a class="text-muted" href="@vm.Result.RootUrl.If(vm.Result.QueryType != QueryControllerQueryType.Root)">@vm.Result.RootName</a></BreadcrumbItem>
@@ -258,11 +258,21 @@
 
     String SourceName { get; set; }
 
+    Int32 listLimit;
+
+    Boolean haveLocationChange = false;
+
     AppSettings Settings => Options.Value;
 
     Int32 renderCount, queryCount;
 
-    IMap<String, String> SearchValues { get; set; } = new ExpandoObject().AsMap(withDefaults: true).Convert(o => o as String, o => o);
+    IMap<String, String> SearchValues { get; set; } = new ExpandoObject()
+        .AsMap(withDefaults: true)
+        .Convert(o => o as String, o => o);
+
+    Task lastQueryTask;
+
+    Boolean haveQueryPending;
 
     LocationQueryVm vm = null;
 
@@ -276,7 +286,28 @@
 
     Action ReportModalSubscription { get; set; }
 
-    void RunQuery(Boolean isLocationChange = true, Int32? listLimit = null)
+    async void RunQuery(Boolean synchronously = false)
+    {
+        if (lastQueryTask?.IsCompleted == false)
+        {
+            haveQueryPending = true;
+        }
+        else
+        {
+            lastQueryTask = InnerRunQuery(synchronously);
+
+            await lastQueryTask;
+
+            if (haveQueryPending)
+            {
+                haveQueryPending = false;
+
+                RunQuery();
+            }
+        }
+    }
+
+    async Task InnerRunQuery(Boolean synchronously = false)
     {
         var query = new Uri(NavigationManager.Uri).Query;
 
@@ -284,27 +315,29 @@
 
         var request = new LocationQueryRequest(Path, queryParams, SearchValues.ToNameValueCollection())
         {
-            ListLimit = listLimit ?? Settings.InitialLimit
+            ListLimit = listLimit
         };
 
         SourceName = request.Source;
 
-        var result = Runner.Query(SourceName, request);
+        var result = synchronously ? Runner.Query(SourceName, request) : await Task.Run(() => Runner.Query(SourceName, request));
 
         if (result.Exception != null && result.Exception is not SqlException)
         {
-            Js.InvokeVoidAsync("console.log", result.Exception.ToString());
+            Js.InvokeVoidAsync("console.log", result.Exception.ToString()).Ignore();
         }
 
         ++queryCount;
 
-        if (isLocationChange)
+        if (haveLocationChange)
         {
             vm = new LocationQueryVm(request, result);
 
             QueryContext = new QueryContext(SourceName);
 
             QueryContext.InDebug = queryParams["debug"] != null;
+
+            haveLocationChange = false;
         }
         else
         {
@@ -318,17 +351,22 @@
     {
         StateHasChanged();
 
-        RunQuery(false);
+        RunQuery();
     }
 
     void HandleLoadMoreClick()
     {
-        RunQuery(false, Settings.LoadMoreLimit + 1);
+        listLimit = Settings.LoadMoreLimit + 1;
+
+        RunQuery();
     }
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
+
+        listLimit = Settings.InitialLimit;
+        haveLocationChange = true;
 
         RunQuery(true);
     }
@@ -345,7 +383,11 @@
 
     void LocationChanged(object sender, LocationChangedEventArgs e)
     {
-        RunQuery(true);
+        // FIXME: don't we already have the paramter change?
+
+        haveLocationChange = true;
+
+        RunQuery();
     }
 
     void IDisposable.Dispose()

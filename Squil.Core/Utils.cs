@@ -266,6 +266,8 @@ public static partial class Extensions
 
     public static void Ignore(this Task _) { }
 
+    public static void Ignore(this ValueTask _) { }
+
     [DebuggerHidden]
     public static T Assert<T>(this T value, Predicate<T> predicate, String message = null)
     {

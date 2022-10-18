@@ -1,4 +1,7 @@
-﻿using Squil.SchemaBuilding;
+﻿using Microsoft.AspNetCore.Components;
+using Squil.SchemaBuilding;
+using System.Text;
+using System.Web;
 
 namespace Squil;
 
