@@ -26,6 +26,13 @@ body {
     --bs-link-hover-color: black;
 }
 
+a {
+    text-decoration: none;
+}
+    a:hover {
+        text-decoration: underline;
+    }
+
 /* Misc
 -------------------------------------------------- */
 
