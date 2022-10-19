@@ -25,6 +25,9 @@ public static class Map
     public static IMap<K, T> AsMap<K, T>(this IDictionary<K, T> source, Boolean withDefaults = false)
         => new FromDictionaryMap<K, T>(source, withDefaults);
 
+    public static IMap<K, T> AsMap<K, T>(this IDictionary<K, T> source, Func<T> createDefault)
+        => new FromDictionaryMap<K, T>(source, true, createDefault);
+
     public static IMap<String, String> AsMap(this NameValueCollection source)
         => new FromNvcMap(source);
 
@@ -63,11 +66,15 @@ class FromDictionaryMap<K, T> : IMap<K, T>
 {
     private readonly IDictionary<K, T> backing;
     private readonly bool withDefaults;
+    private readonly Func<T> createDefault;
 
-    public FromDictionaryMap(IDictionary<K, T> backing, Boolean withDefaults = false)
+    public FromDictionaryMap(IDictionary<K, T> backing, Boolean withDefaults = false, Func<T> createDefault = null)
     {
         this.backing = backing;
         this.withDefaults = withDefaults;
+        this.createDefault = createDefault;
+
+        if (createDefault != null && !withDefaults) throw new Exception();
     }
 
     public T this[K key]
@@ -87,6 +94,10 @@ class FromDictionaryMap<K, T> : IMap<K, T>
         if (backing.TryGetValue(key, out var value))
         {
             return value;
+        }
+        else if (createDefault != null)
+        {
+            return backing[key] = createDefault();
         }
         else
         {

@@ -4,6 +4,7 @@
 @inject NavigationManager NavigationManager
 @inject IOptions<AppSettings> Options
 @inject IJSRuntime Js
+@inject CircuitState Cs
 @implements IDisposable
 
 @{
@@ -256,6 +257,9 @@
     [Parameter]
     public String Path { get; set; }
 
+    [CascadingParameter]
+    public CurrentLocation Location { get; set; }
+
     String SourceName { get; set; }
 
     Int32 listLimit;
@@ -266,9 +270,7 @@
 
     Int32 renderCount, queryCount;
 
-    IMap<String, String> SearchValues { get; set; } = new ExpandoObject()
-        .AsMap(withDefaults: true)
-        .Convert(o => o as String, o => o);
+    IMap<String, String> SearchValues => Cs.SearchValuesByLocation[Location.Location];
 
     Task lastQueryTask;
 

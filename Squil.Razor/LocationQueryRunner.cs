@@ -212,10 +212,16 @@ public class LocationQueryRunner
         {
             var cmIndex = result.Index = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
+            var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
+
+            var keyValueCount = cmIndex?.Columns?.TakeWhile(cv => !String.IsNullOrWhiteSpace(request.KeyParams[cv.c.Name])).Count();
+
+            var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && keyValueCount == extentOrder?.Length);
+
             ValidationResult GetColumnValue(CMDirectedColumn column, Int32 no)
             {
                 var keyValue = request.KeyParams[column.Name];
-                var searchValue = request.SearchValues[column.Name];
+                var searchValue = isSingletonQuery ? null : request.SearchValues[column.Name];
 
                 var validationResult = column.c.Type.Validate(no, keyValue, searchValue ?? "", column.d, default);
 
@@ -224,15 +230,9 @@ public class LocationQueryRunner
 
             var columnValues = cmIndex?.Columns.Select(GetColumnValue).ToArray();
 
-            var keyValueCount = columnValues?.TakeWhile(cv => cv.IsKeyValue).Count();
-
-            var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
-
             var noOfValuesToUse = columnValues?.Where(r => !String.IsNullOrWhiteSpace(r.Value)).Select(r => r.No + 1).LastOrDefault();
 
             var extentValues = columnValues?.Take(noOfValuesToUse.Value).Select(cv => cv.GetSqlValue()).ToArray();
-
-            var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && extentValues?.Length == extentOrder?.Length && columnValues.All(v => v.IsKeyValue));
 
             principalLocation = GetPrincipalLocation(cmTable, request);
 

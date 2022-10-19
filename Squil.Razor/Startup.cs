@@ -33,7 +33,7 @@ public static class Startup
     public static void AddCommonSquilServices(this IServiceCollection services, AppSettings settings)
     {
         services.AddSingleton<SqlServerConnectionProvider>();
-
+        services.AddScoped<CircuitState>();
     }
 
     public static void InitializeDb(this IServiceProvider services)
