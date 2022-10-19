@@ -236,7 +236,8 @@ public class LocationQueryRunner
 
             principalLocation = GetPrincipalLocation(cmTable, request);
 
-            var defaultSearchMode = cmIndex?.GetDefaultSearchMode(settings) ?? cmTable.GetDefaultSearchMode(settings);
+            // Currently, we alsways scan the entire table and need to ignore the index selection
+            var defaultSearchMode = /*cmIndex?.GetDefaultSearchMode(settings) ?? */cmTable.GetDefaultSearchMode(settings);
 
             QuerySearchMode? GetSearchMode()
             {
