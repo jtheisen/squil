@@ -12,6 +12,8 @@ public class AppSettings
 
     public Int32 LoadMoreLimit { get; set; } = 100;
 
+    public Boolean ShowNavigationChrome { get; set; }
+
     // Something is off about how SQL Server reports the sizes, they seem to large.
     public Int32 PreferScanningUnderKb { get; set; } = 100000;
 

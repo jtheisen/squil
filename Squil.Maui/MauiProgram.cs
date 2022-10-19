@@ -27,14 +27,19 @@ public static class MauiProgram
 
         var squilFolder = GetAndEnsureSquilFolder();
 
-        var settings = new AppSettings
+        void SetAppSettings(AppSettings s)
         {
-            SquilDbProviderName = "Sqlite",
-            SquilDbSqliteConnectionString = $"Filename={Path.Combine(squilFolder, "squil-config.db")}"
+            s.SquilDbProviderName = "Sqlite";
+            s.SquilDbSqliteConnectionString = $"Filename={Path.Combine(squilFolder, "squil-config.db")}";
+            s.ShowNavigationChrome = true;
         };
+
+        var settings = new AppSettings();
+        SetAppSettings(settings);
 
         services.AddSquilDb(settings, null);
         services.AddCommonSquilServices(settings);
+        services.Configure<AppSettings>(SetAppSettings);
 
         var app = builder.Build();
 

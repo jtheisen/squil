@@ -1,9 +1,19 @@
-﻿<header class="header bg-white border-bottom box-shadow mb-3">
+﻿@inject IOptions<AppSettings> Options
+
+<header class="header bg-white border-bottom box-shadow mb-3">
     <SidebarLayout>
         <LeftContent>
             <nav class="header-height navbar navbar-expand d-none d-md-block text-muted">
                 <div class="d-flex align-self-start h-100">
-                    <Logo />
+                    @if (Options.Value.ShowNavigationChrome)
+                    {
+                        <button class="btn btn-link" onclick="history.back()"><i class="fas fa-arrow-left" /></button>
+                        <button class="btn btn-link" onclick="location.reload()"><i class="fas fa-redo-alt" /></button>
+                    }
+                    else
+                    {
+                        <Logo />
+                    }
                 </div>
             </nav>
         </LeftContent>

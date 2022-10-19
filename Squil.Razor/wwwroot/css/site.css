@@ -23,7 +23,7 @@ body {
 
 body {
     --bs-link-color: currentcolor;
-    --bs-link-hover-color: currentcolor;
+    --bs-link-hover-color: black;
 }
 
 /* Misc

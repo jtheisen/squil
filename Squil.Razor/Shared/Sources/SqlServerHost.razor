@@ -6,11 +6,11 @@
         <div class="spinner-border spinner-border-sm" />
     }
 
-    <div class="d-flex gap-3">
-        <a class="cursor-pointer" @onclick="Refresh"><i class="text-muted fas fa-redo-alt" /></a>
+    <div class="d-flex gap-3 text-muted">
+        <a class="cursor-pointer" @onclick="Refresh"><i class="fas fa-redo-alt" /></a>
         @if (OnEdit != null)
         {
-            <a class="cursor-pointer" @onclick="() => OnEdit(Host)"><i class="text-muted fas fa-pen" /></a>
+            <a class="cursor-pointer" @onclick="() => OnEdit(Host)"><i class="fas fa-pen" /></a>
         }
     </div>
 </div>
