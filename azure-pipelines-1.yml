@@ -14,8 +14,10 @@ steps:
   inputs:
     command: 'publish'
     publishWebProjects: false
-    projects: 'Squil.Maui/Squil.Maui.csproj'
+    projects: '**/Squil.Maui.csproj'
     modifyOutputPath: false
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
+
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(Pipeline.Workspace)'
