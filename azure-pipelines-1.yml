@@ -10,14 +10,23 @@ pool:
   vmImage: windows-latest
 
 steps:
+- task: DownloadSecureFile@1
+  inputs:
+    secureFile: 'dev-cert.pfx'
 - task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
     publishWebProjects: false
     projects: '**/Squil.Maui.csproj'
+    arguments: '-f net6.0-windows10.0.19041.0'
+    zipAfterPublish: false
     modifyOutputPath: false
-    arguments: '-o $(Build.ArtifactStagingDirectory) -f net6.0-windows10.0.19041.0'
-
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Agent.BuildDirectory)'
+    Contents: '**/Squil.Maui.msix'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    flattenFolders: true
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(Pipeline.Workspace)'
