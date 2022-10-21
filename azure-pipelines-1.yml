@@ -24,7 +24,7 @@ steps:
 - task: CopyFiles@2
   inputs:
     SourceFolder: '$(Agent.BuildDirectory)'
-    Contents: '**/Squil.Maui.msix'
+    Contents: '**/Squil.Maui*.msix'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
     flattenFolders: true
 - task: PublishBuildArtifacts@1
