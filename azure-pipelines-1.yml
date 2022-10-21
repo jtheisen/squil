@@ -7,7 +7,7 @@ trigger:
 - maui
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
 - task: DownloadSecureFile@1
