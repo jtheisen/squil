@@ -7,12 +7,9 @@ trigger:
 - maui
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: windows-latest
 
 steps:
-- task: CmdLine@2
-  inputs:
-    script: 'dotnet workload install maui'
 - task: DownloadSecureFile@1
   inputs:
     secureFile: 'dev-cert.pfx'
