@@ -16,7 +16,7 @@ steps:
     publishWebProjects: false
     projects: '**/Squil.Maui.csproj'
     modifyOutputPath: false
-    arguments: '-o $(Build.ArtifactStagingDirectory)'
+    arguments: '-o $(Build.ArtifactStagingDirectory) -f net6.0-windows10.0.19041.0'
 
 - task: PublishPipelineArtifact@1
   inputs:
