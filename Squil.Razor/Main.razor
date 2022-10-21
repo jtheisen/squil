@@ -9,7 +9,11 @@
         <NotFound>
             <PageTitle>Not found</PageTitle>
             <LayoutView Layout="@typeof(StaticLayout)">
-                <p role="alert">Sorry, there's nothing at this address.</p>
+                <DefaultLayout>
+                    <div class="d-flex justify-content-center align-items-center" style="min-height: 75vh">
+                        <p role="alert">Sorry, there's nothing at this location.</p>
+                    </div>
+                </DefaultLayout>
             </LayoutView>
         </NotFound>
     </Router>
