@@ -27,8 +27,8 @@ steps:
     Contents: '**/Squil.Maui.msix'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
     flattenFolders: true
-- task: PublishPipelineArtifact@1
+- task: PublishBuildArtifacts@1
   inputs:
-    targetPath: '$(Pipeline.Workspace)'
-    artifact: 'msix'
-    publishLocation: 'pipeline'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'maui'
+    publishLocation: 'Container'
