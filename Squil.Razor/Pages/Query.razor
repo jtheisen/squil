@@ -8,7 +8,9 @@
 @implements IDisposable
 
 @{
-    renderCount++; 
+    renderCount++;
+
+    log.Debug($"Render {instanceId} #{renderCount}, query state: {lastQueryTask?.Status}");
 }
 
 <PageTitle>@vm?.Result.RootName</PageTitle>
@@ -28,7 +30,7 @@
                     </span>
                 </BreadcrumbItem>
                 <BreadcrumbItem>
-                    <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" /></span>
+                    <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" NoColumnInformation="@true" /></span>
                 </BreadcrumbItem>
             }
             else
@@ -38,12 +40,12 @@
                 switch (vm.Result.QueryType)
                 {
                     case QueryControllerQueryType.Table:
-                        <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></span>
+                        <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></span>
                         break;
                     case QueryControllerQueryType.Row:
 
                         <BreadcrumbItem>
-                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></a>
+                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
                         </BreadcrumbItem>
 
                         <BreadcrumbItem>
@@ -54,7 +56,7 @@
                         break;
                     case QueryControllerQueryType.Column:
                         <BreadcrumbItem>
-                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" /></a>
+                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
                         </BreadcrumbItem>
 
                         <BreadcrumbItem>
@@ -80,6 +82,10 @@
     </NavItems>
 
     <ActionItems>
+        @if (lastQueryTask?.IsCompleted == false)
+        {
+            <span>in flight</span>
+        }
         @if (Settings.EnableDevMode)
         {
             <a class="btn btn-outline-dark text-muted" href="/info/@SourceName">schema</a>
@@ -254,6 +260,12 @@
 <RerenderHelper Observable="@SearchValues.Backing" OnChange="@HandleSeekValuesChanged" />
 
 @code {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
+    static Int32 staticInstanceId = 0;
+
+    Int32 instanceId = (staticInstanceId++ % 10);
+
     [Parameter]
     public String Path { get; set; }
 
@@ -275,6 +287,7 @@
     Task lastQueryTask;
 
     Boolean haveQueryPending;
+    Boolean jsInitPending;
 
     LocationQueryVm vm = null;
 
@@ -292,16 +305,35 @@
     {
         if (lastQueryTask?.IsCompleted == false)
         {
+            log.Debug("Scheduling query");
+
             haveQueryPending = true;
         }
         else
         {
+            log.Debug($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
+
             lastQueryTask = InnerRunQuery(synchronously);
+
+            if (lastQueryTask.IsCompleted)
+            {
+                log.Debug($"Query completed synchronously");
+            }
+            else
+            {
+                log.Debug($"Query is running asynchronously");
+            }
+
+            StateHasChanged();
 
             await lastQueryTask;
 
+            StateHasChanged();
+
             if (haveQueryPending)
             {
+                log.Debug($"Recursing on scheduled query");
+
                 haveQueryPending = false;
 
                 RunQuery();
@@ -346,12 +378,12 @@
             vm.Update(request, result);
         }
 
-        StateHasChanged();
+        jsInitPending = true;
     }
 
     void HandleSeekValuesChanged()
     {
-        StateHasChanged();
+        log.Debug("Seek values changed");
 
         RunQuery();
     }
@@ -365,12 +397,14 @@
 
     protected override void OnParametersSet()
     {
+        log.Debug($"OnParametersSet at {Path}");
+
         base.OnParametersSet();
 
-        listLimit = Settings.InitialLimit;
-        haveLocationChange = true;
-
-        RunQuery(true);
+        if (vm == null)
+        {
+            RunQueryAfterLocationChange(true);
+        }
     }
 
     protected override void OnInitialized()
@@ -380,16 +414,31 @@
 
     protected override async Task OnAfterRenderAsync(Boolean firstRender)
     {
-        await Js.InvokeVoidAsync("initBootstrapContent");
+        log.Debug($"rendered content");
+
+        if (jsInitPending)
+        {
+            jsInitPending = false;
+
+            log.Debug($"init boostrap content after render");
+
+            await Js.InvokeVoidAsync("initBootstrapContent");
+        }
     }
 
     void LocationChanged(object sender, LocationChangedEventArgs e)
     {
-        // FIXME: don't we already have the paramter change?
+        log.Debug($"LocationChanged at {Path}");
 
+        RunQueryAfterLocationChange(false);
+    }
+
+    void RunQueryAfterLocationChange(Boolean synchronously)
+    {
+        listLimit = Settings.InitialLimit;
         haveLocationChange = true;
 
-        RunQuery();
+        RunQuery(synchronously);
     }
 
     void IDisposable.Dispose()

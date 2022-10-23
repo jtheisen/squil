@@ -3,6 +3,8 @@
     var fieldsets = ProduceFieldsets(Entity, ParentCollection);
 
     var table = ParentCollection?.RelationEnd.Table;
+
+    if (Entity == null) throw new Exception($"No entity during rendering EntityContentView");
 }
 
 @if (table != null)

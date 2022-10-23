@@ -53,6 +53,7 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.10" />
+      <PackageReference Include="NLog" Version="5.0.4" />
     </ItemGroup>
 
     <ItemGroup>
