@@ -198,13 +198,22 @@
   font-size: 0.75em;
   white-space: pre;
 }
-.entity-context .entity-relation-name-view span:not(:first-child):before {
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column-shared {
+  display: none;
+}
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-part:before {
   content: " in ";
 }
-.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column:before {
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column-distinctive:before {
   content: " via ";
 }
-.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column + .entity-relation-name-fk-column:before {
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column-distinctive + .entity-relation-name-fk-column-distinctive:before {
+  content: ", ";
+}
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column-order:before {
+  content: " ordered by ";
+}
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column-order + .entity-relation-name-fk-column-order:before {
   content: ", ";
 }
 .entity-context .entity-column > label {

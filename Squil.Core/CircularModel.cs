@@ -471,18 +471,43 @@ public class CMRelationEnd
 
     #region Columns for UI
 
-    public CMColumn[] ColumnsForUi => cachedColumnsForUi ??= GetColumnsForUi().ToArray();
+    public enum ColumnForUiType
+    {
+        Shared,
+        Distinctive,
+        Order
+    }
 
-    CMColumn[] cachedColumnsForUi;
+    public (CMColumn c, ColumnForUiType t)[] ColumnsForUi => cachedColumnsForUi ??= GetColumnsForUi();
+
+    (CMColumn, ColumnForUiType)[] cachedColumnsForUi;
 
     IEnumerable<CMRelationEnd> SameTableRelations
         => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => IsMany == r.IsMany && r != this);
 
-    IEnumerable<CMColumn> GetColumnsForUi() =>
+    IEnumerable<(CMColumn, ColumnForUiType)> GetFkColumnsForUi() =>
         from c in ForeignKey.Columns
-        where !SameTableRelations.All(r => r.ForeignKey.ColumnNames.Contains(c.Name))
-        select c.c
+        let isShared = SameTableRelations.All(r => r.ForeignKey.ColumnNames.Contains(c.Name))
+        select (c.c, isShared ? ColumnForUiType.Shared : ColumnForUiType.Distinctive)
         ;
+
+    (CMColumn, ColumnForUiType)[] GetColumnsForUi()
+    {
+        var columnsForUi = GetFkColumnsForUi().ToArray();
+
+        if (IsMany && GetIndex() is CMIndexlike i)
+        {
+            return columnsForUi
+                .Concat(i.Columns
+                    .Skip(columnsForUi.Length)
+                    .Select(ic => (ic.c, ColumnForUiType.Order)))
+                .ToArray();
+        }
+        else
+        {
+            return columnsForUi;
+        }
+    }
 
     #endregion
 }

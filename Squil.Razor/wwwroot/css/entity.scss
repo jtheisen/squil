@@ -284,18 +284,29 @@ $bg-light-2: #e7e5e4;
     .entity-relation-name-view {
         span:not(:first-child) {
             font-size: .75em;
-
             white-space: pre;
 
-            &:before {
+            &.entity-relation-name-fk-column-shared {
+                display: none;
+            }
+
+            &.entity-relation-name-part:before {
                 content: " in ";
             }
 
-            &.entity-relation-name-fk-column:before {
+            &.entity-relation-name-fk-column-distinctive:before {
                 content: " via ";
             }
 
-            &.entity-relation-name-fk-column + .entity-relation-name-fk-column:before {
+            &.entity-relation-name-fk-column-distinctive + .entity-relation-name-fk-column-distinctive:before {
+                content: ", ";
+            }
+
+            &.entity-relation-name-fk-column-order:before {
+                content: " ordered by ";
+            }
+
+            &.entity-relation-name-fk-column-order + .entity-relation-name-fk-column-order:before {
                 content: ", ";
             }
         }

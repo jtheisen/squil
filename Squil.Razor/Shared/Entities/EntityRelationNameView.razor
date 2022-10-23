@@ -11,19 +11,21 @@
     if (parts.Length == 0) throw new Exception("Unexpectedly no parts for relation name");
 }
 
-<span class="entity-relation-name-view">
+<span class="entity-relation-name-view" data-index="@IndexName">
     @foreach (var (p, i) in parts.Reverse().Select((p, i) => (p, i)))
     {
-        <span>@(i == 0 && !end.IsMany ? p.Singularize() : p)</span>
+        <span class="entity-relation-name-part">@(i == 0 && !end.IsMany ? p.Singularize() : p)</span>
     }
 
     @foreach (var column in end.ColumnsForUi)
     {
-        <span class="entity-relation-name-fk-column">@column.Name</span>
+        <span class="entity-relation-name-fk-column-@column.t.ToString().ToLower()">@column.c.Name</span>
     }
 </span>
 
 @code {
     [Parameter]
     public CMRelationEnd RelationEnd { get; set; }
+
+    public String IndexName => (RelationEnd.IsMany ? RelationEnd.GetIndex() : null)?.Name;
 }
