@@ -196,12 +196,16 @@
 }
 .entity-context .entity-relation-name-view span:not(:first-child) {
   font-size: 0.75em;
+  white-space: pre;
 }
 .entity-context .entity-relation-name-view span:not(:first-child):before {
   content: " in ";
 }
-.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk:before {
-  content: " through ";
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column:before {
+  content: " via ";
+}
+.entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column + .entity-relation-name-fk-column:before {
+  content: ", ";
 }
 .entity-context .entity-column > label {
   font-size: 0.8em;

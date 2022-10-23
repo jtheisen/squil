@@ -318,8 +318,12 @@ public class CMRoot
     void CalculateUniquelyTypedRelations()
     {
         foreach (var t in tables.Values)
+        {
             t.RelationsForTable =
                 t.Relations.Values.ToLookup(r => r.Table.Name);
+        }
+
+
     }
 
     void CalculatePrimaryNames()
@@ -460,6 +464,27 @@ public class CMRelationEnd
     public CMColumn[] Columns { get; set; }
 
     public CMRelationEnd OtherEnd { get; set; }
+
+    public CMForeignKey ForeignKey
+        => Key is CMForeignKey fk ? fk : OtherEnd.Key as CMForeignKey;
+
+
+    #region Columns for UI
+
+    public CMColumn[] ColumnsForUi => cachedColumnsForUi ??= GetColumnsForUi().ToArray();
+
+    CMColumn[] cachedColumnsForUi;
+
+    IEnumerable<CMRelationEnd> SameTableRelations
+        => OtherEnd.Table.RelationsForTable[Table.Name].Where(r => IsMany == r.IsMany && r != this);
+
+    IEnumerable<CMColumn> GetColumnsForUi() =>
+        from c in ForeignKey.Columns
+        where !SameTableRelations.All(r => r.ForeignKey.ColumnNames.Contains(c.Name))
+        select c.c
+        ;
+
+    #endregion
 }
 
 [DebuggerDisplay("{Name}")]
@@ -499,22 +524,6 @@ public interface IWithUsedKb
 
 public static class CMExtensions
 {
-    public static CMForeignKey GetForeignKey(this CMRelationEnd end)
-    {
-        if (end.Key is CMForeignKey fk)
-        {
-            return fk;
-        }
-        else if (end.OtherEnd.Key is CMForeignKey ofk)
-        {
-            return ofk;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
     public static IEnumerable<CMIndexlike> StartsWith(this IEnumerable<CMIndexlike> indexes, IEnumerable<String> columns, Boolean isPrefix = false, Boolean not = false)
     {
         var prefixColumns = columns.OrderBy(c => c).ToArray();

@@ -285,12 +285,18 @@ $bg-light-2: #e7e5e4;
         span:not(:first-child) {
             font-size: .75em;
 
+            white-space: pre;
+
             &:before {
                 content: " in ";
             }
 
-            &.entity-relation-name-fk:before {
-                content: " through ";
+            &.entity-relation-name-fk-column:before {
+                content: " via ";
+            }
+
+            &.entity-relation-name-fk-column + .entity-relation-name-fk-column:before {
+                content: ", ";
             }
         }
     }

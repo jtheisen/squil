@@ -9,8 +9,6 @@
     var parts = tableName.GetDistinguishedParts(end.OtherEnd.Table.Name);
 
     if (parts.Length == 0) throw new Exception("Unexpectedly no parts for relation name");
-
-    var fk = end.GetForeignKey()?.Name;
 }
 
 <span class="entity-relation-name-view">
@@ -19,9 +17,9 @@
         <span>@(i == 0 && !end.IsMany ? p.Singularize() : p)</span>
     }
 
-    @if (!end.IsUniquelyTyped && !String.IsNullOrWhiteSpace(fk))
+    @foreach (var column in end.ColumnsForUi)
     {
-        <span class="entity-relation-name-fk">@fk</span>
+        <span class="entity-relation-name-fk-column">@column.Name</span>
     }
 </span>
 
