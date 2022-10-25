@@ -300,6 +300,8 @@ public class CMRoot
 
                 if (fk.UnsupportedReason != null) continue;
 
+                if (fk.Principal.UnsupportedReason != null) continue;
+
                 yield return new Relation
                 {
                     Dependent = new RelationEnd { TableName = table.Name, Name = "D_" + fk.Name, KeyName = fk.Name, ColumnNames = fk.Columns.Select(c => c.c.Name).ToArray() },
@@ -322,8 +324,6 @@ public class CMRoot
             t.RelationsForTable =
                 t.Relations.Values.ToLookup(r => r.Table.Name);
         }
-
-
     }
 
     void CalculatePrimaryNames()

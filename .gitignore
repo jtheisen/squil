@@ -363,7 +363,7 @@ FodyWeavers.xsd
 
 .vscode
 
-# squil-specific
+#-- squil-specific
 
 # All *folders* in all Properties folders
 **/Properties/**/
@@ -371,3 +371,5 @@ FodyWeavers.xsd
 docker-tests
 *.db
 *.db-*
+
+.dbeaver
