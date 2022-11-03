@@ -75,6 +75,13 @@ a {
     width: 10rem;
 }
 
+.inset-0 {
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+}
+
 /* Breadcrumbs
 -------------------------------------------------- */
 .squil-breadcrumbs {
@@ -228,3 +235,39 @@ main.main {
     width: 100%;
     white-space: nowrap;
 }
+
+main.main {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+}
+
+/* Querying
+-------------------------------------------------- */
+.query-delay-overlay,
+.query-delay-overlay-backdrop {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+}
+
+.query-delay-overlay-backdrop {
+    background: black;
+    opacity: .9;
+}
+
+.query-delay-overlay {
+    margin: 0 -15px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 4;
+}
+
+    .query-delay-overlay.querying {
+        transition: opacity;
+        transition-delay: 1s;
+        transition-duration: 200ms;
+        opacity: 1;
+        pointer-events: initial;
+    }

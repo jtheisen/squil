@@ -24,7 +24,7 @@ public class CsdBase
 
 public class CsdRoot : CsdBase
 {
-    public CsdTable[] Tables { get; set; }
+    public CsdTable[] Tables { get; set; } = Empties<CsdTable>.Array;
 
     public DateTime TimeStamp { get; set; }
 }
@@ -37,9 +37,9 @@ public class CsdTable : CsdBase
 
     public CsdTableType Type { get; set; }
 
-    public CsdColumn[] Columns { get; set; }
+    public CsdColumn[] Columns { get; set; } = Empties<CsdColumn>.Array;
 
-    public CsdKeyish[] Keyishs { get; set; }
+    public CsdKeyish[] Keyishs { get; set; } = Empties<CsdKeyish>.Array;
 
     public Int32? UsedKb { get; set; }
 }
@@ -57,6 +57,8 @@ public class CsdColumn : CsdBase
     public Int32 Precision { get; set; }
 
     public Int32 Scale { get; set; }
+
+    public Boolean IsIgnoredByDefault { get; set; }
 
     public Boolean IsSystemType { get; set; }
 
@@ -91,7 +93,7 @@ public class CsdKeyish : CsdBase
 
     public Boolean IsClustered { get; set; }
 
-    public DirectedColumnName[] Columns { get; set; }
+    public DirectedColumnName[] Columns { get; set; } = Empties<DirectedColumnName>.Array;
 }
 
 public class CsdIndexlike : CsdKeyish

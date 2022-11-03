@@ -1,5 +1,5 @@
 ﻿using System.Collections.Specialized;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using TaskLedgering;
 
 namespace Squil;
@@ -142,6 +142,11 @@ public class LocationQueryRunner
 
     public LocationQueryResult Query(String connectionName, LocationQueryRequest request)
     {
+        if (connections.AppSettings.DebugQueryDelayMillis is Int32 d)
+        {
+            Thread.Sleep(d);
+        }
+
         using var ledger = InstallTaskLedger();
 
         LocationQueryResult result = null;

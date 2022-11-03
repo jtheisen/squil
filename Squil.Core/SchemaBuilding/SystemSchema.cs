@@ -28,7 +28,7 @@ public class SysSchema : SysWithComment
     public String Name { get; set; }
 
     [XmlAttribute("schema_id")]
-    public Int32 SchemaId { get; set; }
+    Int32 SchemaId { get; set; }
 
     [XmlArray("tables")]
     public SysTable[] Tables { get; set; } = Empties<SysTable>.Array;
@@ -43,7 +43,7 @@ public class SysObject : SysWithComment
     public Int32 ObjectId { get; set; }
 
     [XmlAttribute("schema_id")]
-    public Int32 SchemaId { get; set; }
+    Int32 SchemaId { get; set; }
 
     [XmlAttribute("name")]
     public String Name { get; set; }
@@ -64,10 +64,10 @@ public class SysObject : SysWithComment
 public class SysObjectReference
 {
     [XmlAttribute("object_id")]
-    public Int32 ObjectId { get; set; }
+    Int32 ObjectId { get; set; }
 
     [XmlAttribute("schema_id")]
-    public Int32 SchemaId { get; set; }
+    Int32 SchemaId { get; set; }
 
     [XmlAttribute("name")]
     public String Name { get; set; }
@@ -97,7 +97,7 @@ public class SysTable : SysObject
 public class SysColumn : SysWithComment
 {
     [XmlAttribute("object_id")]
-    public Int32 ObjectId { get; set; }
+    Int32 ObjectId { get; set; }
 
     [XmlAttribute("column_id")]
     public Int32 ColumnId { get; set; }
@@ -142,7 +142,7 @@ public class SysColumn : SysWithComment
 public class SysType
 {
     [XmlAttribute("user_type_id")]
-    public Int32 UserTypeId { get; set; }
+    Int32 UserTypeId { get; set; }
 
     [XmlAttribute("name")]
     public String Name { get; set; }
@@ -160,7 +160,7 @@ public class SysIndexReference
     public String Name { get; set; }
 
     [XmlAttribute("object_id")]
-    public Int32 TableObjectId { get; set; }
+    Int32 TableObjectId { get; set; }
 }
 
 [XmlType("ix")]
@@ -172,10 +172,10 @@ public class SysIndex : SysWithComment
     public String Name { get; set; }
 
     [XmlAttribute("object_id")]
-    public Int32 TableObjectId { get; set; }
+    Int32 TableObjectId { get; set; }
 
     [XmlAttribute("index_id")]
-    public Int32 IndexId { get; set; }
+    Int32 IndexId { get; set; }
 
     [XmlAttribute("type")]
     public Int32 Type { get; set; }
@@ -224,16 +224,16 @@ public class SysIndex : SysWithComment
 public class SysIndexColumn
 {
     [XmlAttribute("object_id")]
-    public Int32 TableObjectId { get; set; }
+    Int32 TableObjectId { get; set; }
 
     [XmlAttribute("index_id")]
-    public Int32 IndexId { get; set; }
+    Int32 IndexId { get; set; }
 
     [XmlAttribute("key_ordinal")]
     public Int32 KeyOrdinal { get; set; }
 
     [XmlAttribute("index_column_id")]
-    public Int32 IndexColumnId { get; set; }
+    Int32 IndexColumnId { get; set; }
 
     [XmlAttribute("column_id")]
     public Int32 ColumnId { get; set; }
@@ -251,7 +251,7 @@ public class SysIndexColumn
 public class SysKeyConstraint : SysObject
 {
     [XmlAttribute("index_id")]
-    public Int32 UniqueIndexId { get; set; }
+    Int32 UniqueIndexId { get; set; }
 
     [XmlAttribute("is_system_named")]
     public Boolean IsSystemNamed { get; set; }
@@ -263,13 +263,13 @@ public class SysKeyConstraint : SysObject
 public class SysForeignKey : SysObject
 {
     [XmlAttribute("parent_object_id")]
-    public Int32 ParentObjectId { get; set; }
+    Int32 ParentObjectId { get; set; }
 
     [XmlAttribute("referenced_object_id")]
-    public Int32 ReferencedObjectId { get; set; }
+    Int32 ReferencedObjectId { get; set; }
 
     [XmlAttribute("key_index_id")]
-    public Int32 ReferencedIndexlikeId { get; set; }
+    Int32 ReferencedIndexlikeId { get; set; }
 
     [XmlAttribute("is_disabled")]
     public Boolean IsDisabled { get; set; }
@@ -305,70 +305,69 @@ public class SysForeignKey : SysObject
 public class SysForeignKeyColumn
 {
     [XmlAttribute("constraint_object_id")]
-    public Int32 ConstraintObjectId { get; set; }
+    Int32 ConstraintObjectId { get; set; }
 
     [XmlAttribute("constraint_column_id")]
-    public Int32 ConstraintColumnId { get; set; }
+    Int32 ConstraintColumnId { get; set; }
 
     [XmlAttribute("parent_object_id")]
-    public Int32 ParentObjectId { get; set; }
+    Int32 ParentObjectId { get; set; }
 
     [XmlAttribute("parent_column_id")]
     public Int32 ParentColumnId { get; set; }
 
     [XmlAttribute("referenced_object_id")]
-    public Int32 ReferencedObjectId { get; set; }
+    Int32 ReferencedObjectId { get; set; }
 
     [XmlAttribute("referenced_column_id")]
-    public Int32 ReferencedColumnId { get; set; }
+    Int32 ReferencedColumnId { get; set; }
 }
 
 public static class SystemSchema
 {
-    public static ISRoot GetSchema()
+    public static CsdRoot GetSchema()
     {
-        return new ISRoot
+        return new CsdRoot
         {
             Tables = new[]
             {
-                MakeISTable<SysObjectReference>(),
-                MakeISTable<SysSchema>(),
-                MakeISTable<SysType>(),
+                MakeCsdTable<SysObjectReference>(),
+                MakeCsdTable<SysSchema>(),
+                MakeCsdTable<SysType>(),
 
-                MakeISTable<SysTable>(),
-                MakeISTable<SysColumn>(),
-                MakeISTable<SysIndex>(),
-                MakeISTable<SysIndexColumn>(),
-                MakeISTable<SysForeignKey>(),
-                MakeISTable<SysForeignKeyColumn>()
+                MakeCsdTable<SysTable>(),
+                MakeCsdTable<SysColumn>(),
+                MakeCsdTable<SysIndex>(),
+                MakeCsdTable<SysIndexColumn>(),
+                MakeCsdTable<SysForeignKey>(),
+                MakeCsdTable<SysForeignKeyColumn>()
             }
         };
     }
 
-    public static ISTable MakeISTable<T>()
+    public static CsdTable MakeCsdTable<T>()
         where T : class
     {
         var md = XmlEntitiyMetata<T>.Instance;
 
-        return MakeISTable(md.TableName, md.ColumnNames);
+        return MakeCsdTable(md.TableName, md.Columns);
     }
 
-    public static ISTable MakeISTable(String name, params IEnumerable<String>[] columns)
-    {
-        return MakeISTable(name, columns.SelectMany(cls => cls).ToArray());
-    }
 
-    public static ISTable MakeISTable(String name, IEnumerable<String> columns)
+    public static CsdTable MakeCsdTable(String name, CsdColumn[] columns)
     {
-        var table = new ISTable
+        var table = new CsdTable
         {
-            Columns = columns.Select(n => new ISColumn { COLUMN_NAME = n, DATA_TYPE = "varchar" }).ToArray()
+            Columns = columns
         };
 
-        table.SetTableName(GetTableName(name));
+        table.Name = GetTableName(name);
 
         return table;
     }
+
+    static ObjectName GetTableName(String name)
+        => new ObjectName("sys", name);
 
     public static IEnumerable<Relation> GetRelations()
     {
@@ -442,7 +441,4 @@ public static class SystemSchema
             Dependent = new RelationEnd { TableName = GetTableName("schemas"), Name = "objects", ColumnNames = sysSchemaIdNames }
         };
     }
-
-    static ObjectName GetTableName(String name)
-        => new ObjectName("sys", name);
 }

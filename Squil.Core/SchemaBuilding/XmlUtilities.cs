@@ -43,7 +43,7 @@ public class XmlEntitiyMetata<E> : LazyStaticSingleton<XmlEntitiyMetata<E>>
 
     public XmlProperty[] XmlProperties { get; }
 
-    public String[] ColumnNames { get; }
+    public CsdColumn[] Columns { get; }
 
     public String TableName => tableAttribute.Table;
 
@@ -76,13 +76,19 @@ public class XmlEntitiyMetata<E> : LazyStaticSingleton<XmlEntitiyMetata<E>>
 
         XmlProperties = (
             from c in hierarchy
-            from p in c.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+            from p in c.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
             from a in p.GetCustomAttributes<XmlAttributeAttribute>()
             where p.GetCustomAttribute<XmlNoColumnAttribute>() == null
             select new XmlProperty { p = p, a = a }
         ).ToArray();
 
-        ColumnNames = XmlProperties.Select(p => p.Name).ToArray();
+        Columns = XmlProperties.Select(p => new CsdColumn
+        {
+            Name = p.Name,
+            IsIgnoredByDefault = !p.p.GetMethod.IsPublic,
+            DataType = "varchar"
+        }
+        ).ToArray();
     }
 
     public static IEnumerable<Type> GetAncestors(Type type)

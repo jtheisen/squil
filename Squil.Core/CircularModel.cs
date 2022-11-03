@@ -74,6 +74,7 @@ public class CMRoot
                     Comment = c.Comment,
                     SqlType = c.DataType,
                     IsNullable = c.IsNullable,
+                    IsIgnoredByDefault = c.IsIgnoredByDefault,
                     IsAssemblyType = c.IsAssemblyType,
                     Type = TypeRegistry.Instance.GetTypeOrNull(c.DataType),
                     MaxLength = c.MaxLength,
@@ -528,6 +529,8 @@ public class CMColumn
     public Int32 OrderInClusteredIndex { get; set; }
 
     public String Escaped => Name.EscapeNamePart();
+
+    public Boolean IsIgnoredByDefault { get; set; }
 
     public Boolean IsNullable { get; set; }
 

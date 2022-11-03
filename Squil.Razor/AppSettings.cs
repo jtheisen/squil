@@ -12,6 +12,8 @@ public class AppSettings
 
     public Int32 LoadMoreLimit { get; set; } = 100;
 
+    public Int32? DebugQueryDelayMillis { get; set; }
+
     public Boolean ShowNavigationChrome { get; set; }
 
     // Something is off about how SQL Server reports the sizes, they seem to large.

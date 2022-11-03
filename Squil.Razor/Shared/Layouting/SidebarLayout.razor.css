@@ -2,6 +2,7 @@
 .layout {
     display: flex;
     gap: 15px;
+    flex: 1 1 0;
 }
 
 .left,
@@ -26,6 +27,7 @@
 .middle {
     padding: 0 15px;
     width: 100%;
+    position: relative;
 }
 
 @media (min-width: 576px) {

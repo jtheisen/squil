@@ -1,13 +1,16 @@
-﻿using System.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 
 namespace Squil;
 
 public class SqlServerConnectionProvider
 {
+    public const String CompatibilityPrefix = "Trust Server Certificate=true;";
+
     public String GetConnectionString(SqlServerHostConfiguration config, String catalogOverride = null, Boolean ignoreCatalog = false)
     {
         var builder = new SqlConnectionStringBuilder();
 
+        builder.TrustServerCertificate = true;
         builder.DataSource = config.Host;
         builder.IntegratedSecurity = config.UseWindowsAuthentication;
         builder.ApplicationName = "SQuiL database browser";
@@ -36,6 +39,11 @@ public class SqlServerConnectionProvider
     public SqlConnection GetConnection(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)
     {
         return new SqlConnection(GetConnectionString(config, ignoreCatalog: ignoreCatalog));
+    }
+
+    public LiveSource GetLiveSource(String connectionString)
+    {
+        return new LiveSource(CompatibilityPrefix + connectionString);
     }
 
     public async Task<SqlConnection> GetOpenedConnection(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)

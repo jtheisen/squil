@@ -1,5 +1,5 @@
 ﻿@page "/query/{*Path}"
-@using System.Data.SqlClient
+@using Microsoft.Data.SqlClient
 @inject LocationQueryRunner Runner
 @inject NavigationManager NavigationManager
 @inject IOptions<AppSettings> Options
@@ -164,7 +164,7 @@
                             </div>
 
                             <pre class="mb-0">
-                                @foreach (System.Data.SqlClient.SqlError msg in se.Errors)
+                                @foreach (Microsoft.Data.SqlClient.SqlError msg in se.Errors)
                                 {
                                     <div>@msg.Message</div>
                                 }
@@ -210,6 +210,11 @@
 
                         <div class="common-lead-spacer">&nbsp;</div>
                     }
+
+                    <div class="@ClassNames("query-delay-overlay text-light", "querying".If(IsQuerying))">
+                        <div class="query-delay-overlay-backdrop" />
+                        <h2>Querying!</h2>
+                    </div>
 
                     <Modal OnClose="SqlModalSubscription">
                         <Title>SQL Query</Title>
@@ -271,6 +276,8 @@
 
     [CascadingParameter]
     public CurrentLocation Location { get; set; }
+
+    Boolean IsQuerying => lastQueryTask?.IsCompleted != true;
 
     String SourceName { get; set; }
 

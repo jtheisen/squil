@@ -1,5 +1,5 @@
 using Squil.SchemaBuilding;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace Squil;
 
@@ -89,7 +89,7 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
         using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
 
         var cmRootForSys = new CMRoot("sys");
-        cmRootForSys.Populate(SystemSchema.GetSchema().CreateCsd());
+        cmRootForSys.Populate(SystemSchema.GetSchema());
         cmRootForSys.PopulateRoot();
         cmRootForSys.Populate(SystemSchema.GetRelations().ToArray());
 
@@ -217,14 +217,17 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
         var sysSchema = connection.GetSysSchema();
 
         // populate from sysschema
+        {
+            using var __ = GetCurrentLedger().TimedScope("circular-model-building");
 
-        var cmRootForCs = new CMRoot("business model");
-        cmRootForCs.Populate(sysSchema.CreateCsd());
-        cmRootForCs.PopulateRoot();
-        cmRootForCs.PopulateRelationsFromForeignKeys();
-        cmRootForCs.Closeup();
+            var cmRootForCs = new CMRoot("business model");
+            cmRootForCs.Populate(sysSchema.CreateCsd());
+            cmRootForCs.PopulateRoot();
+            cmRootForCs.PopulateRelationsFromForeignKeys();
+            cmRootForCs.Closeup();
 
-        return cmRootForCs;
+            return cmRootForCs;
+        }
     }
 
     public static DateTime GetSchemaModifiedAt(this SqlConnection connection)

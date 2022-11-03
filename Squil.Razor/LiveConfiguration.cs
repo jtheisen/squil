@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 
 namespace Squil;
 
@@ -128,7 +126,7 @@ public class LiveConfiguration
         {
             foreach (var configuration in prominentSourceConfigurations)
             {
-                prominentSources.Append(configuration.Name, (configuration, new LiveSource(configuration.ConnectionString)));
+                prominentSources.Append(configuration.Name, (configuration, sqlServerConnectionProvider.GetLiveSource(configuration.ConnectionString)));
             }
         }
     }

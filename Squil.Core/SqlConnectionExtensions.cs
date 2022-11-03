@@ -1,8 +1,8 @@
 ﻿using System.Data;
-using System.Data.SqlClient;
 using System.IO;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using Microsoft.Data.SqlClient;
 
 namespace Squil;
 

@@ -1,6 +1,5 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Data.SqlClient;
 using System.Xml.Linq;
 
 namespace Squil;
@@ -132,7 +131,7 @@ public class QueryGenerator
 
         var selectables = new List<String>();
 
-        var columns = forwardEnd.Table.ColumnsInOrder;
+        var columns = forwardEnd.Table.ColumnsInOrder.Where(c => !c.IsIgnoredByDefault).ToArray();
 
         if (selectAllColumns)
         {

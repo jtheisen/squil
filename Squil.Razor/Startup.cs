@@ -22,7 +22,7 @@ public static class Startup
                         settings.SquilDbSqliteConnectionString,
                         x => x.Apply(!ignoreAssembly, x2 => x2.MigrationsAssembly("Squil.Storage.Migrations.Sqlite"))),
                     "SqlServer" => options.UseSqlServer(
-                        settings.SquilDbSqlServerConnectionString,
+                        SqlServerConnectionProvider.CompatibilityPrefix + settings.SquilDbSqlServerConnectionString,
                         x => x.Apply(!ignoreAssembly, x2 => x2.MigrationsAssembly("Squil.Storage.Migrations.SqlServer"))),
 
                     _ => throw new Exception($"Unsupported provider: {provider}")

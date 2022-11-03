@@ -142,7 +142,7 @@ public static class InformationSchemaSchema
     {
         var md = XmlEntitiyMetata<T>.Instance;
 
-        return MakeISTable(md.TableName, md.ColumnNames);
+        return MakeISTable(md.TableName, from c in md.Columns select c.Name);
     }
 
     public static ISTable MakeISTable(String name, params IEnumerable<String>[] columns)
