@@ -244,21 +244,27 @@ main.main {
 
 /* Querying
 -------------------------------------------------- */
-.query-delay-overlay,
-.query-delay-overlay-backdrop {
+.query-results {
+
+}
+
+    .query-results.querying {
+        transition: filter, opacity;
+        transition-delay: 1s;
+        transition-duration: 200ms;
+        filter: blur(8px);
+        opacity: .5;
+    }
+
+.query-delay-overlay {
     position: absolute;
     width: 100%;
     top: 0;
     bottom: 0;
 }
 
-.query-delay-overlay-backdrop {
-    background: black;
-    opacity: .9;
-}
-
 .query-delay-overlay {
-    margin: 0 -15px;
+    margin-top: .75em;
     opacity: 0;
     pointer-events: none;
     z-index: 4;

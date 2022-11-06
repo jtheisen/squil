@@ -32,13 +32,16 @@ public static class Startup
 
     public static void AddCommonSquilServices(this IServiceCollection services, AppSettings settings)
     {
+        services.AddSingleton<LiveConfiguration>();
         services.AddSingleton<SqlServerConnectionProvider>();
+        services.AddScoped<LocationQueryRunner>();
+        services.AddScoped<ConnectionHolder>();
         services.AddScoped<CircuitState>();
     }
 
-    public static void InitializeDb(this IServiceProvider services)
+    public static void InitializeDbAndInstallStaticServices(this IServiceProvider services)
     {
-        var dbFactory = services.GetService<IDbContextFactory<Db>>();
+        var dbFactory = services.GetService<IDbFactory>();
 
         if (dbFactory != null)
         {
@@ -46,5 +49,7 @@ public static class Startup
 
             db.Database.Migrate();
         }
+
+        StaticServiceStack.Install<CancellationToken>(default);
     }
 }

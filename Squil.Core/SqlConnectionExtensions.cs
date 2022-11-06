@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.IO;
+using System.Threading;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using Microsoft.Data.SqlClient;
@@ -82,6 +83,21 @@ public static class SqlConnectionExtensions
         var command = connection.CreateSqlCommandFromSql(sql);
 
         using var reader = command.ExecuteXmlReader();
+
+        var rootRow = XElement.Load(reader);
+
+        return scope.SetResult(rootRow);
+    }
+
+    public static async Task<XElement> QueryAndParseXmlAsync(this SqlConnection connection, String sql)
+    {
+        using var scope = GetCurrentLedger().TimedScope("query-and-parsing");
+
+        var command = connection.CreateSqlCommandFromSql(sql);
+
+        var ct = StaticServiceStack.Get<CancellationToken>();
+
+        using var reader = await command.ExecuteXmlReaderAsync(StaticServiceStack.Get<CancellationToken>());
 
         var rootRow = XElement.Load(reader);
 

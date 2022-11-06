@@ -1,4 +1,6 @@
 using Microsoft.Data.SqlClient;
+using System.Threading;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Squil;
 
@@ -52,6 +54,14 @@ public class LiveSource
         return connection;
     }
 
+    public void SetConnectionInHolder(ConnectionHolder holder)
+    {
+        if (holder.Connection?.ConnectionString != connectionString)
+        {
+            holder.Connection = new SqlConnection(connectionString);
+        }
+    }
+
     public async Task<SqlConnection> GetConnectionAsync()
     {
         var connection = new SqlConnection(connectionString);
@@ -61,7 +71,7 @@ public class LiveSource
         return connection;
     }
 
-    public Entity Query(SqlConnection connection, Extent extent)
+    public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
     {
         if (currentModel == null)
         {
@@ -72,7 +82,7 @@ public class LiveSource
 
         try
         {
-            entity = QueryGenerator.Query(connection, extent);
+            entity = await QueryGenerator.QueryAsync(connection, extent);
         }
         catch (SqlException ex)
         {
@@ -90,7 +100,7 @@ public class LiveSource
         {
             UpdateModel();
 
-            return QueryGenerator.Query(connection, extent);
+            return await QueryGenerator.QueryAsync(connection, extent);
         }
         else
         {
@@ -136,5 +146,120 @@ public class LiveSource
         {
             return false;
         }
+    }
+}
+
+public class ConnectionHolder : ObservableObject, IDisposable
+{
+    static Logger log = LogManager.GetCurrentClassLogger();
+
+    SqlConnection connection;
+
+    CancellationTokenSource tcs = new CancellationTokenSource();
+
+    SemaphoreSlim semaphore = new SemaphoreSlim(1);
+
+    Int32 runId = 0;
+
+    public SqlConnection Connection
+    {
+        get => connection;
+        set
+        {
+            if (connection != null)
+            {
+                connection.Dispose();
+            }
+
+            connection = value;
+        }
+    }
+
+    public StallDetective StallDetective { get; private set; }
+
+    public async Task<T> RunAsync<T>(Func<SqlConnection, Task<T>> action)
+    {
+        var runId = ++this.runId % 10;
+
+        StallDetective = null;
+
+        if (runId == 3)
+        {
+            StallDetective = null;
+        }
+
+        try
+        {
+            NotifyChange();
+
+            if (semaphore.CurrentCount == 0)
+            {
+                log.Info($"{runId}: Requesting cancellation of running query");
+
+                Cancel();
+            }
+
+            log.Info($"{runId}: Acquiring lock");
+
+            await semaphore.WaitAsync();
+
+            if (connection.State == System.Data.ConnectionState.Closed)
+            {
+                log.Info($"{runId}: Opening connection");
+
+                await connection.OpenAsync();
+
+                NotifyChange();
+            }
+
+            using var _ = StaticServiceStack.Install(tcs.Token);
+
+            log.Info($"{runId}: Starting query");
+
+            var task = action(connection);
+
+            await Task.WhenAny(task, Task.Delay(1000));
+
+            if (!task.IsCompleted)
+            {
+                log.Info($"{runId}: Query is delayed, spawning stall detective");
+
+                StallDetective = new StallDetective(connection);
+
+                NotifyChange();
+
+                StallDetective.Investigate().Ignore();
+            }
+
+            await task;
+
+            NotifyChange();
+
+            return task.Result;
+        }
+        catch (Exception ex)
+        {
+            log.Info($"{runId}: Query terminated with exception: " + ex.Message);
+
+            throw;
+        }
+        finally
+        {
+            log.Info($"{runId}: Query terminated");
+
+            semaphore.Release();
+        }
+    }
+
+    public void Cancel()
+    {
+        tcs.Cancel();
+
+        tcs = new CancellationTokenSource();
+    }
+
+    public void Dispose()
+    {
+        Connection = null;
     }
 }
