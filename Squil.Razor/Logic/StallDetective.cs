@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
+using Squil.SchemaBuilding;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Xml.Serialization;
 
 namespace Squil;
 
@@ -88,6 +90,35 @@ public class StallDetective : ObservableObject
         }
     }
 
+    [XmlRoot("investigation_root")]
+    public class InvestigationRoot
+    {
+        [XmlArray("requests")]
+        public DmExecRequest[] Requests { get; set; }
+    }
+
+    [XmlType("r")]
+    public class DmExecRequest
+    {
+        [XmlAttribute("session_id")]
+        public Int16 SessionId { get; set; }
+
+        [XmlAttribute("request_id")]
+        public Int32 RequestId { get; set; }
+
+        [XmlAttribute("blocking_session_id")]
+        public Int16 BlockingSessionId { get; set; }
+
+        [XmlAttribute("cpu_time")]
+        public Int32 CpuTime { get; set; }
+
+        [XmlAttribute("reads")]
+        public Int64 Reads { get; set; }
+
+        [XmlAttribute("logical_reads")]
+        public Int64 LogicalReads { get; set; }
+    }
+
     async Task<StallProbeResult> CheckIsUnblocked()
     {
         using var db = new SqlConnection(connectionString);
@@ -95,13 +126,19 @@ public class StallDetective : ObservableObject
         await db.OpenAsync();
 
         var sql = $@"
-select blocking_session_id
-from sys.dm_exec_requests
-where session_id = {connection.ServerProcessId}";
+select (
+	select session_id, request_id, blocking_session_id, cpu_time, reads, logical_reads
+	from sys.dm_exec_requests r
+    where session_id = {connection.ServerProcessId}
+	for xml auto, type
+) requests for xml path('investigation_root')
+";
 
-        var cmd = db.CreateSqlCommandFromSql(sql);
+        var investigationRoot = await db.QueryAndParseXmlAsync<InvestigationRoot>(sql);
 
-        var blockingSessionId = (Int16?)await cmd.ExecuteScalarAsync();
+        var request = investigationRoot.Requests.SingleOrDefault("Unexpectedly got multiple requests");
+
+        var blockingSessionId = request?.BlockingSessionId;
 
         log.Info($"CheckIsUnblocked: spid={connection.ServerProcessId} has blockingSessionId={blockingSessionId}");
 

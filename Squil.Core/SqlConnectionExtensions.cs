@@ -30,6 +30,19 @@ public static class SqlConnectionExtensions
         return scope.SetResult(reader.GetString(0));
     }
 
+    public static async Task<String> QueryXmlStringAsync(this SqlConnection connection, String sql)
+    {
+        using var scope = GetCurrentLedger().TimedScope("query");
+
+        var command = connection.CreateSqlCommandFromSql($"select ({sql})");
+
+        using var reader = await command.ExecuteReaderAsync();
+
+        await reader.ReadAsync();
+
+        return scope.SetResult(reader.GetString(0));
+    }
+
     public static X Parse<X>(String xml)
         where X : class
     {
@@ -76,6 +89,14 @@ public static class SqlConnectionExtensions
         return result as X;
     }
 
+    public static async Task<X> QueryAndParseXmlAsync<X>(this SqlConnection connection, String sql)
+        where X : class
+    {
+        var xml = await connection.QueryXmlStringAsync(sql);
+
+        return Parse<X>(xml);
+    }
+
     public static XElement QueryAndParseXml(this SqlConnection connection, String sql)
     {
         using var scope = GetCurrentLedger().TimedScope("query-and-parsing");
@@ -99,6 +120,7 @@ public static class SqlConnectionExtensions
 
         using var reader = await command.ExecuteXmlReaderAsync(StaticServiceStack.Get<CancellationToken>());
 
+        // FIXME: This isn't really async as the reader doesn't support that.
         var rootRow = XElement.Load(reader);
 
         return scope.SetResult(rootRow);
