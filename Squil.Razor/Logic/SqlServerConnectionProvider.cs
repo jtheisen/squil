@@ -5,6 +5,7 @@ namespace Squil;
 public class SqlServerConnectionProvider
 {
     public const String CompatibilityPrefix = "Trust Server Certificate=true;";
+    public const String PersistSecurityInfoSuffix = ";Persist Security Info=true";
 
     public String GetConnectionString(SqlServerHostConfiguration config, String catalogOverride = null, Boolean ignoreCatalog = false)
     {
@@ -14,6 +15,7 @@ public class SqlServerConnectionProvider
         builder.PoolBlockingPeriod = PoolBlockingPeriod.NeverBlock;
         builder.DataSource = config.Host;
         builder.IntegratedSecurity = config.UseWindowsAuthentication;
+        builder.PersistSecurityInfo = true;
 
         SetConnectionOverrides(builder);
 
@@ -53,7 +55,7 @@ public class SqlServerConnectionProvider
 
     public LiveSource GetLiveSource(String connectionString)
     {
-        var builder = new SqlConnectionStringBuilder(CompatibilityPrefix + connectionString);
+        var builder = new SqlConnectionStringBuilder(CompatibilityPrefix + connectionString + PersistSecurityInfoSuffix);
 
         SetConnectionOverrides(builder);
 

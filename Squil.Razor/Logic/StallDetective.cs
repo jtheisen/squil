@@ -1,32 +1,24 @@
 ﻿using Microsoft.Data.SqlClient;
-using Squil.SchemaBuilding;
-using System.Data.Common;
-using System.Diagnostics;
 using System.Xml.Serialization;
 
 namespace Squil;
 
-public class StallProbe
+public enum StallInvestigationResultType
 {
-    public String Name { get; set; }
-
-    public Task<StallProbeResult> Task { get; set; }
-
-    public Func<Task<StallProbeResult>> CreateProbe { get; set; }
-
-    public async Task Run()
-    {
-        Task = CreateProbe();
-
-        await Task;
-    }
+    Initial,
+    CantConnect,
+    NoPermission,
+    NoInformation,
+    Blocked,
+    Unblocked
 }
 
-public class StallProbeResult
-{
-    public Boolean IsStallReason { get; set; }
+public record StallInvestigationPublicResult(StallInvestigationResultType Type, Int32 progress);
 
-    public String Message { get; set; }
+public record StallInvestigationResult(StallInvestigationResultType Type, Int32 CpuTime)
+{
+    public static implicit operator StallInvestigationResult(StallInvestigationResultType type)
+        => new StallInvestigationResult(type, 0);
 }
 
 public class StallDetective : ObservableObject
@@ -36,63 +28,73 @@ public class StallDetective : ObservableObject
     private readonly String connectionString;
     private readonly SqlConnection connection;
 
-    public List<StallProbe> Probes { get; }
+    StallInvestigationResult lastResult;
+    public StallInvestigationPublicResult Result { get; private set; }
 
     public StallDetective(SqlConnection connection)
     {
         this.connection = connection
             ?? throw new Exception($"Unexpectedly having no connection on stall investigation");
-        connectionString = connection.ConnectionString;
 
-        Probes = new List<StallProbe>();
+        var cb = new SqlConnectionStringBuilder(connection.ConnectionString);
+        cb.ConnectTimeout = 6;
+        connectionString = cb.ConnectionString;
 
-        AddProbe("Data source reachable?", CheckIsServerReachable);
-
-        AddProbe("Query blocked?", CheckIsUnblocked);
+        Result = new StallInvestigationPublicResult(StallInvestigationResultType.Initial, 0);
     }
 
     public async Task Investigate()
     {
-        foreach (var probe in Probes)
+        var ct = StaticServiceStack.Get<CancellationToken>();
+
+        while (!ct.IsCancellationRequested)
         {
-            var task = probe.Run();
+            var result = await CheckSession();
 
-            NotifyChange();
+            var haveChange = false;
 
-            await task;
+            var type = Result.Type;
+            var progress = Result.progress;
+
+            if (lastResult?.CpuTime < result.CpuTime)
+            {
+                ++progress;
+                haveChange = true;
+            }
+
+            if (type != result.Type)
+            {
+                type = result.Type;
+                haveChange = true;
+            }
+
+            lastResult = result;
+            Result = new StallInvestigationPublicResult(type, progress);
+
+            if (haveChange)
+            {
+                NotifyChange();
+            }
+
+            if (type == StallInvestigationResultType.NoPermission)
+            {
+                log.Info($"Terminating stall investigation after realizing we have no permission to get further information");
+
+                return;
+            }
+
+            await Task.Delay(1000);
         }
 
-        NotifyChange();
-    }
-
-    void AddProbe(String name, Func<Task<StallProbeResult>> createProbe)
-    {
-        Probes.Add(new StallProbe { Name = name, CreateProbe = createProbe });
-    }
-
-    async Task<StallProbeResult> CheckIsServerReachable()
-    {
-        using var db = new SqlConnection(connectionString);
-
-        await db.OpenAsync();
-
-        var c = db.CreateSqlCommandFromSql("select @@spid");
-
-        try
-        {
-            await c.ExecuteScalarAsync();
-
-            return NoReason("Data source is available");
-        }
-        catch (DbException)
-        {
-            return IsReason("Can't reach data source");
-        }
+        log.Info($"Terminating stall investigation after cancellation");
     }
 
     [XmlRoot("investigation_root")]
     public class InvestigationRoot
     {
+        [XmlAttribute("can_view_server_state")]
+        public Boolean CanViewServerState { get; set; }
+
         [XmlArray("requests")]
         public DmExecRequest[] Requests { get; set; }
     }
@@ -119,11 +121,20 @@ public class StallDetective : ObservableObject
         public Int64 LogicalReads { get; set; }
     }
 
-    async Task<StallProbeResult> CheckIsUnblocked()
+    async Task<StallInvestigationResult> CheckSession()
     {
         using var db = new SqlConnection(connectionString);
 
-        await db.OpenAsync();
+        try
+        {
+            await db.OpenAsync();
+        }
+        catch (Exception ex)
+        {
+            log.Info(ex, "Can't connect");
+
+            return StallInvestigationResultType.CantConnect;
+        }
 
         var sql = $@"
 select (
@@ -131,23 +142,37 @@ select (
 	from sys.dm_exec_requests r
     where session_id = {connection.ServerProcessId}
 	for xml auto, type
-) requests for xml path('investigation_root')
+) requests, (
+    select
+    count(*)
+    from fn_my_permissions(NULL, 'SERVER')
+    where permission_name = 'VIEW SERVER STATE'
+) can_view_server_state
+for xml path('investigation_root')
 ";
 
         var investigationRoot = await db.QueryAndParseXmlAsync<InvestigationRoot>(sql);
 
         var request = investigationRoot.Requests.SingleOrDefault("Unexpectedly got multiple requests");
 
-        var blockingSessionId = request?.BlockingSessionId;
+        if (request == null)
+        {
+            if (investigationRoot.CanViewServerState)
+            {
+                return StallInvestigationResultType.NoInformation;
+            }
+            else
+            {
+                return StallInvestigationResultType.NoPermission;
+            }
+        }
+
+        var blockingSessionId = request?.BlockingSessionId ?? 0;
 
         log.Info($"CheckIsUnblocked: spid={connection.ServerProcessId} has blockingSessionId={blockingSessionId}");
 
-        return (blockingSessionId ?? 0) != 0 ? IsReason("Query is blocked") : NoReason("Query is not blocked");
+        return new StallInvestigationResult(
+            blockingSessionId != 0 ? StallInvestigationResultType.Blocked : StallInvestigationResultType.Unblocked,
+            request.CpuTime);
     }
-
-    public static StallProbeResult NoReason(String message)
-        => new StallProbeResult { IsStallReason = false, Message = message };
-
-    public static StallProbeResult IsReason(String message)
-        => new StallProbeResult { IsStallReason = true, Message = message };
 }
