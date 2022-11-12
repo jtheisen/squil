@@ -24,23 +24,31 @@ namespace Squil.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Catalog")
+                        .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Host")
                         .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("ModifiedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Password")
+                        .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("UseWindowsAuthentication")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("User")
+                        .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

@@ -27,6 +27,8 @@ public class SqlServerHostConfiguration
     [MaxLength(60)]
     public String Catalog { get; set; }
 
+    public DateTimeOffset ModifiedAt { get; set; }
+
     public SqlServerHostConfiguration Clone() => (SqlServerHostConfiguration)MemberwiseClone();
 }
 

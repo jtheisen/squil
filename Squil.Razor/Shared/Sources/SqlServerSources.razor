@@ -16,7 +16,7 @@
         {
             var h = host;
 
-            <SqlServerHost @key="host.Id" Host="host" OnEdit="@(h => editHostModel.SetModel(h.Configuration))" />
+            <SqlServerHost @key="host.Id" Host="host" OnEdit="@(h => editHostModel.SetModel(h.Configuration.Clone()))" />
         }
     </div>
 }
@@ -49,6 +49,13 @@
 
     async Task SaveHost()
     {
+        if (String.IsNullOrWhiteSpace(editHostModel.Model.Catalog))
+        {
+            editHostModel.Model.Catalog = null;
+        }
+
+        editHostModel.Model.ModifiedAt = DateTimeOffset.Now;
+
         await configuration.UpdateLiveHosts(async dbf =>
         {
             var db = await dbf.CreateDbContextAsync();
