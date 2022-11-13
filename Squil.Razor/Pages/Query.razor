@@ -31,9 +31,9 @@
                     <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" /></span>
                 </BreadcrumbItem>
             }
-            else
+            else if (vm.LastResult.PrimaryEntities?.List.FirstOrDefault() is Entity primaryEntity)
             {
-                var entity = vm.Result.PrimaryEntities?.List.FirstOrDefault();
+                var entity = primaryEntity;
 
                 switch (vm.Result.QueryType)
                 {
