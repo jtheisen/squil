@@ -9,7 +9,7 @@ public class SqlServerHostConfiguration
 
     [Required]
     [MaxLength(30)]
-    [RegularExpression(@"^[a-z0-9-]+$", ErrorMessage = "The name can only contain lower case ascii characters, numbers and a dash")]
+    [RegularExpression(@"^[a-z0-9-]+$", ErrorMessage = "The name can only contain lower case ASCII characters, numbers and dashes")]
     public String Name { get; set; } = "new";
 
     [Required]
