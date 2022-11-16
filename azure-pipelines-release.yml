@@ -38,7 +38,7 @@ stages:
         inputs:
           buildType: 'current'
           artifactName: 'sources'
-          targetPath: '$(Pipeline.SourcesDirectory)'
+          targetPath: 'sources'
       - task: DotNetCoreCLI@2
         inputs:
           command: 'publish'
