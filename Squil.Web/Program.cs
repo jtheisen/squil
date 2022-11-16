@@ -10,6 +10,7 @@ var configuration = builder.Configuration;
 
 var settings = configuration.Get<AppSettings>();
 
+services.Configure<AppSettings>(a => a.Version = SquilVersion.ReadSquilVersion());
 services.Configure<AppSettings>(configuration);
 
 if (settings.UseProminentSources)

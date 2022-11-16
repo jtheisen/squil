@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@inject IOptions<AppSettings> Options
+@inherits LayoutComponentBase
 
 <PageTitle>SQuiL</PageTitle>
 
@@ -13,7 +14,7 @@
         <div class="container-fluid mx-4">
             <ul class="flex-fill nav navbar-nav me-auto">
                 <li class="nav-item me-auto">
-                    <span class="navbar-text d-inline-block">SQuiL &copy; @DateTime.Now.Year - Jens Theisen</span>
+                    <span class="navbar-text d-inline-block">SQuiL &copy; @DateTime.Now.Year - Jens Theisen; @Options.Value.Version</span>
                 </li>
                 <li class="nav-item"><a class="nav-link text-muted" href="https://squil.net">Introduction</a></li>
                 <li class="nav-item"><a class="nav-link text-muted d-none d-md-block" href="https://github.com/jtheisen/squil">Github</a></li>

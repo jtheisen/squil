@@ -2,6 +2,8 @@ namespace Squil;
 
 public class AppSettings
 {
+    public String Version { get; set; }
+
     public String GoogleAnalyticsToken { get; set; }
 
     public Boolean EnableDevMode { get; set; }

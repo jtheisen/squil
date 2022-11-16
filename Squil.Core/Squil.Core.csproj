@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\version.txt" Link="version.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ColorHelper" Version="1.6.2" />
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
