@@ -7,20 +7,37 @@ trigger:
 - release
 
 pool:
+  name: Ubuntu
   vmImage: ubuntu-latest
 
-steps:
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
-- task: PowerShell@2
-  inputs:
-    filePath: 'version.ps1'
-    showWarnings: true
-    workingDirectory: '$(Build.SourcesDirectory)'
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: '$(Build.SourcesDirectory)'
-    artifact: 'sources'
-    publishLocation: 'pipeline'
+stages:
+- stage: Checkout and Tag
+  pool:
+    vmImage: ubuntu-latest
+  jobs:
+  - job: prepare
+    steps:
+    - task: PowerShell@2
+      inputs:
+        filePath: 'version.ps1'
+        showWarnings: true
+        workingDirectory: '$(Build.SourcesDirectory)'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)'
+        artifact: 'sources'
+        publishLocation: 'pipeline'
+- stage: BuildMAUI
+  pool:
+    vmImage: windows-latest
+  jobs:
+  - job: build
+    steps:
+      - task: DotNetCoreCLI@2
+        inputs:
+          command: 'publish'
+          publishWebProjects: false
+          projects: '**/Squil.Maui.csproj'
+          arguments: '-f net6.0-windows10.0.19041.0'
+          zipAfterPublish: false
+          modifyOutputPath: false
