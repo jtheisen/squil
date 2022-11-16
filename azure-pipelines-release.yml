@@ -26,6 +26,7 @@ stages:
         artifact: 'sources'
         publishLocation: 'pipeline'
 - stage: BuildWeb
+  dependsOn: Prepare
   jobs:
   - job: build
     steps:
@@ -46,6 +47,7 @@ stages:
         artifact: 'web'
         publishLocation: 'pipeline'
 - stage: BuildMauiWindows
+  dependsOn: Prepare
   pool:
     vmImage: windows-latest
   jobs:
