@@ -18,6 +18,9 @@ stages:
   jobs:
   - job: prepare
     steps:
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'restore'
     - task: PowerShell@2
       inputs:
         filePath: 'version.ps1'
