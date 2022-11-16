@@ -33,6 +33,7 @@ stages:
   jobs:
   - job: build
     steps:
+      - checkout: none
       - task: DotNetCoreCLI@2
         inputs:
           command: 'publish'
