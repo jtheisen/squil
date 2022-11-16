@@ -9,10 +9,10 @@ steps:
   inputs:
     command: 'publish'
     projects: '**/Squil.Web.csproj'
-    arguments: '-o $(Build.SourcesDirectory)'
+    arguments: '-o $(Build.ArtifactStagingDirectory)'
     publishWebProjects: false
 
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: web'
   inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)'
+    PathtoPublish: '$(build.artifactstagingdirectory)'
