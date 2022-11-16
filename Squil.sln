@@ -20,6 +20,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Storage.Migrations.Sq
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Squil.Storage.Migrations.SqlServer", "Squil.Storage.Migrations.SqlServer\Squil.Storage.Migrations.SqlServer.csproj", "{F535F749-AACD-408E-AB1A-7A2C60203313}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8BAF72D5-B8C8-4221-9E6C-B874C837AC79}"
+	ProjectSection(SolutionItems) = preProject
+		version.xml = version.xml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
