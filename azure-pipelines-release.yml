@@ -21,6 +21,6 @@ steps:
 - task: GitTag@6
   inputs:
     workingdir: '$(SYSTEM.DEFAULTWORKINGDIRECTORY)'
-    tagUser: 'DevOps'
+    tagUser: 'jtheisen'
     tag: '$(build.buildNumber)'
     useLightweightTags: true
