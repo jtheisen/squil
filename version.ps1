@@ -1,5 +1,5 @@
 $fullversion=$env:VERSION
-$mauiversion=$env:MAUIVERSION
+$mauiversion=$env:VERSIONFORMAUI
 
 if ($fullversion)
 {
