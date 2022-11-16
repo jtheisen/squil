@@ -80,12 +80,14 @@
     </NavItems>
 
     <ActionItems>
-        @if (Settings.EnableDevMode)
-        {
-            <a class="btn btn-outline-dark text-muted" href="/info/@SourceName">schema</a>
-            <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">Report</button>
-        }
-        <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+        <div class="btn-group">
+            @if (Settings.EnableDevMode)
+            {
+                <a class="btn btn-outline-dark text-muted"  href="/info/@SourceName">schema</a>
+                <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">report</button>
+            }
+            <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+        </div>
     </ActionItems>
 
     <ChildContent>
