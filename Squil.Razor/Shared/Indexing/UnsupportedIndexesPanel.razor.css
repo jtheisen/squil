@@ -1,0 +1,10 @@
+﻿.indexes-unsupported {
+    list-style: none;
+    padding-left: 1em;
+}
+
+li.unsupported-index::before {
+    content: "-";
+    position: absolute;
+    transform: translateX(-0.75em);
+}

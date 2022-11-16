@@ -1,3 +1,13 @@
 ﻿.header {
     cursor: pointer;
+    display: grid;
+}
+
+.header > * {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.header > .caption {
+    margin-left: 1em;
 }
