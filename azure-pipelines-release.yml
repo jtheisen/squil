@@ -1,7 +1,7 @@
 variables:
   base-version: 1.1.9
   build-suffix: $[counter(variables['base-version'], 1)]
-  version: $[ join(variables['base-version'], variables['build-suffix']) ]
+  version: $[variables['base-version']].$[variables['build-suffix']]
 
 trigger:
 - release
