@@ -88,8 +88,8 @@ public class CMRoot
                 foreach (var column in columns)
                 {
                     if (!column.Type.IsSupported) return (
-                        "Unsupported column data type",
-                        "One ore more columns are not supported for data entry yet",
+                        "Unsupported column type",
+                        "One ore more columns are not supported in indexes",
                         $"The unsupported column data type is '{column.Type.Name}' of column '{column.Name}'"
                     );
                 }

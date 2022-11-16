@@ -134,6 +134,9 @@
   border: 1px solid #eee;
   position: relative;
 }
+.indexes-form .index-column:not(:last-child) {
+  border-right: 3px dashed #eee;
+}
 .indexes-form .no-index-column {
   justify-content: center;
   text-transform: uppercase;

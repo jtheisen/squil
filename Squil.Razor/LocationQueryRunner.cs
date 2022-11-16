@@ -15,8 +15,6 @@ public enum QueryControllerQueryType
 
 public class LocationQueryRequest
 {
-    public String Path { get; }
-
     public String Source { get; }
     public String Schema { get; }
     public String Table { get; }
@@ -35,8 +33,6 @@ public class LocationQueryRequest
 
     public LocationQueryRequest(String path, NameValueCollection queryParams, NameValueCollection searchValues)
     {
-        Path = path;
-
         var segments = new Uri("https://host/" + path, UriKind.Absolute).Segments;
         
         Debug.Assert(segments.GetOrDefault(0) == "/");
@@ -136,25 +132,15 @@ public enum CanLoadMoreStatus
 
 public class LocationQueryRunner
 {
-    LiveConfiguration connections;
+    private readonly ObjectNameParser parser = new ObjectNameParser();
+    private readonly LiveConfiguration connections;
 
-    ConnectionHolder currentConnectionHolder;
-
-    public ConnectionHolder CurrentConnectionHolder => currentConnectionHolder;
-
-    public LocationQueryRunner(LiveConfiguration connections, ConnectionHolder currentConnectionHolder)
+    public LocationQueryRunner(LiveConfiguration connections)
     {
         this.connections = connections;
-
-        this.currentConnectionHolder = currentConnectionHolder;
     }
 
-    public void Cancel()
-    {
-        currentConnectionHolder.Cancel();
-    }
-
-    public async Task<LocationQueryResult> QueryAsync(String connectionName, LocationQueryRequest request)
+    public LocationQueryResult Query(String connectionName, LocationQueryRequest request)
     {
         if (connections.AppSettings.DebugQueryDelayMillis is Int32 d)
         {
@@ -167,7 +153,7 @@ public class LocationQueryRunner
 
         try
         {
-            result = await QueryInternal0(connectionName, request);
+            result = QueryInternal0(connectionName, request);
         }
         catch (Exception ex)
         {
@@ -182,19 +168,19 @@ public class LocationQueryRunner
         return result;
     }
 
-    public async Task<LocationQueryResult> QueryInternal0(String connectionName, LocationQueryRequest request)
+    public LocationQueryResult QueryInternal0(String connectionName, LocationQueryRequest request)
     {
         try
         {
-            return await QueryInternal1(connectionName, request);
+            return QueryInternal1(connectionName, request);
         }
         catch (SchemaChangedException)
         {
-            return await QueryInternal1(connectionName, request);
+            return QueryInternal1(connectionName, request);
         }
     }
 
-    async Task<LocationQueryResult> QueryInternal1(String connectionName, LocationQueryRequest request)
+    LocationQueryResult QueryInternal1(String connectionName, LocationQueryRequest request)
     {
         var context = connections.GetLiveSource(connectionName);
 
@@ -327,11 +313,11 @@ public class LocationQueryRunner
 
         if (!result.IsValidationOk) return result;
 
-        context.SetConnectionInHolder(currentConnectionHolder);
+        using var connection = context.GetConnection();
 
         try
         {
-            result.Entity = await currentConnectionHolder.RunAsync(c => context.QueryAsync(c, extent));
+            result.Entity = context.Query(connection, extent);
         }
         catch (SqlException ex)
         {

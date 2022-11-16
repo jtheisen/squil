@@ -17,16 +17,17 @@ public static class MauiProgram
         var services = builder.Services;
 
         services.AddMauiBlazorWebView();
-#if DEBUG
         services.AddBlazorWebViewDeveloperTools();
-#endif
 
         //services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
+        services.AddSingleton<LiveConfiguration>();
+        services.AddSingleton<LocationQueryRunner>();
 
         var squilFolder = GetAndEnsureSquilFolder();
 
         void SetAppSettings(AppSettings s)
         {
+            s.Version = SquilVersion.ReadSquilVersion();
             s.SquilDbProviderName = "Sqlite";
             s.SquilDbSqliteConnectionString = $"Filename={Path.Combine(squilFolder, "squil-config.db")}";
             s.ShowNavigationChrome = true;
@@ -41,7 +42,7 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        app.Services.InitializeDbAndInstallStaticServices();
+        app.Services.InitializeDb();
 
         return app;
     }

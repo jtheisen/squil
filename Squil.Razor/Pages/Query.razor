@@ -8,8 +8,6 @@
 @implements IDisposable
 
 @{
-    var isFirstRender = renderCount == 0;
-
     renderCount++;
 
     log.Debug($"Render {instanceId} #{renderCount}, query state: {lastQueryTask?.Status}");
@@ -17,86 +15,81 @@
 
 <PageTitle>@vm?.Result.RootName</PageTitle>
 
-<DefaultLayout>
+<DefaultLayout IsLoading="@(vm == null)">
     <NavItems>
-        @if (vm != null)
-        {
-            <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
-            <BreadcrumbItem><a class="text-muted" href="@vm.Result.RootUrl.If(vm.Result.QueryType != QueryControllerQueryType.Root)">@vm.Result.RootName</a></BreadcrumbItem>
-            <CascadingValue Value="QueryContext">
-                @if (vm.Result.PrincipalEntities != null)
+        <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
+        <BreadcrumbItem><a class="text-muted" href="@vm.Result.RootUrl.If(vm.Result.QueryType != QueryControllerQueryType.Root)">@vm.Result.RootName</a></BreadcrumbItem>
+        <CascadingValue Value="QueryContext">
+            @if (vm.Result.PrincipalEntities != null)
+            {
+                var entity = vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
+
+                <BreadcrumbItem>
+                    <span class="entity-context text-muted">
+                        <EntityHeaderView Table="@vm.Result.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
+                    </span>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                    <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" NoColumnInformation="@true" /></span>
+                </BreadcrumbItem>
+            }
+            else if (vm.LastResult.PrimaryEntities?.List.FirstOrDefault() is Entity primaryEntity)
+            {
+                var entity = primaryEntity;
+
+                switch (vm.Result.QueryType)
                 {
-                    var entity = vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
+                    case QueryControllerQueryType.Table:
+                        <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></span>
+                        break;
+                    case QueryControllerQueryType.Row:
 
-                    <BreadcrumbItem>
-                        <span class="entity-context text-muted">
-                            <EntityHeaderView Table="@vm.Result.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
-                        </span>
-                    </BreadcrumbItem>
-                    <BreadcrumbItem>
-                        <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" NoColumnInformation="@true" /></span>
-                    </BreadcrumbItem>
+                        <BreadcrumbItem>
+                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
+                        </BreadcrumbItem>
+
+                        <BreadcrumbItem>
+                            <span class="text-muted entity-context">
+                                <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
+                            </span>
+                        </BreadcrumbItem>
+                        break;
+                    case QueryControllerQueryType.Column:
+                        <BreadcrumbItem>
+                            <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
+                        </BreadcrumbItem>
+
+                        <BreadcrumbItem>
+                            <a class="text-muted entity-context" href="@QueryContext.RenderEntityUrl(vm.Result.Table, entity)">
+                                <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
+                            </a>
+                        </BreadcrumbItem>
+
+                        <BreadcrumbItem>
+                            <span>@vm.LastRequest.Column</span>
+                        </BreadcrumbItem>
+                        break;
+                    case QueryControllerQueryType.TableSlice:
+                        @* Should have been handled above by having a principal entity *@
+                        <i>some slice</i>
+                        break;
+                    case QueryControllerQueryType.Root:
+                    default:
+                        break;
                 }
-                else
-                {
-                    var entity = vm.Result.PrimaryEntities?.List.FirstOrDefault();
-
-                    switch (vm.Result.QueryType)
-                    {
-                        case QueryControllerQueryType.Table:
-                            <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></span>
-                            break;
-                        case QueryControllerQueryType.Row:
-
-                            <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
-                            </BreadcrumbItem>
-
-                            <BreadcrumbItem>
-                                <span class="text-muted entity-context">
-                                    <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
-                                </span>
-                            </BreadcrumbItem>
-                            break;
-                        case QueryControllerQueryType.Column:
-                            <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
-                            </BreadcrumbItem>
-
-                            <BreadcrumbItem>
-                                <a class="text-muted entity-context" href="@QueryContext.RenderEntityUrl(vm.Result.Table, entity)">
-                                    <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
-                                </a>
-                            </BreadcrumbItem>
-
-                            <BreadcrumbItem>
-                                <span>@vm.LastRequest.Column</span>
-                            </BreadcrumbItem>
-                            break;
-                        case QueryControllerQueryType.TableSlice:
-                            @* Should have been handled above by having a principal entity *@
-                            <i>some slice</i>
-                            break;
-                        case QueryControllerQueryType.Root:
-                        default:
-                            break;
-                    }
-                }
-            </CascadingValue>
-        }
+            }
+        </CascadingValue>
     </NavItems>
 
     <ActionItems>
-        @if (lastQueryTask?.IsCompleted == false)
-        {
-            <span>in flight</span>
-        }
-        @if (Settings.EnableDevMode)
-        {
-            <a class="btn btn-outline-dark text-muted" href="/info/@LastRequest.Source">schema</a>
-            <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">Report</button>
-        }
-        <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+        <div class="btn-group">
+            @if (Settings.EnableDevMode)
+            {
+                <a class="btn btn-outline-dark text-muted"  href="/info/@SourceName">schema</a>
+                <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">report</button>
+            }
+            <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+        </div>
     </ActionItems>
 
     <ChildContent>
@@ -109,7 +102,7 @@
 
                     @if(Settings.EnableDevMode)
                     {
-                        if (vm?.LastResult?.Ledger != null)
+                        if (vm.LastResult?.Ledger != null)
                         {
                             <div>
                                 <span>@queryCount / @renderCount</span>
@@ -126,7 +119,7 @@
                             </div>
                         }
                     }
-                    else if (vm != null)
+                    else
                     {
                         <h5 class="text-muted font-weight-bold border-bottom mb-4">Guidance</h5>
                         <div class="sidebar-helptext small text-muted">
@@ -137,7 +130,7 @@
                 </RightContent>
 
                 <LeftContent>
-                    @if (vm?.SearchOptions != null)
+                    @if (vm.SearchOptions != null)
                     {
                         <div class="common-lead-spacer">&nbsp;</div>
                         <SearchPanel Vm="vm" SearchValues="SearchValues" />
@@ -146,172 +139,120 @@
 
                 <ChildContent>
 
-                    @if (vm != null)
+                    @switch(vm.LastResult.QueryType)
                     {
-                        switch (vm.LastResult.QueryType)
+                        case QueryControllerQueryType.Table:
+                        case QueryControllerQueryType.TableSlice:
+                            <div class="search-panel-spacer">&nbsp;</div>
+                            break;
+                    }
+
+                    <div class="common-lead-spacer">&nbsp;</div>
+
+                    @if (Settings.ShowHelpTexts)
+                    {
+                        <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
+                    }
+
+                    @if (vm.LastResult.Exception is SqlException se)
+                    {
+                        <div class="alert alert-danger">
+                            <div class="mb-2">
+                                The database sent an unexpected error, this is likely a bug.
+                            </div>
+
+                            <pre class="mb-0">
+                                @foreach (Microsoft.Data.SqlClient.SqlError msg in se.Errors)
+                                {
+                                    <div>@msg.Message</div>
+                                }
+                            </pre>
+                        </div>
+                    }
+                    else if(vm.LastResult.Exception is Exception e)
+                    {
+                        <div class="alert alert-danger">
+                            <div>
+                                An internal exception occurred during this query, this is likely a bug.
+                            </div>
+                        </div>
+                    }
+
+                    @if (vm.DisplayedEntity != null)
+                    {
+                        <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsOk))">
+                            <EntityContentView Entity="@vm.DisplayedEntity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
+                        </div>
+
+                        @switch (vm.CanLoadMore())
                         {
-                            case QueryControllerQueryType.Table:
-                            case QueryControllerQueryType.TableSlice:
-                                <div class="search-panel-spacer">&nbsp;</div>
+                            case CanLoadMoreStatus.Can:
+                                if (vm.LastRequest.ListLimit < Settings.LoadMoreLimit)
+                                {
+                                    <div class="my-4">
+                                        <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@Settings.LoadMoreLimit</span> at once</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="my-4">
+                                        <em class="btn">...and more (maximum load size reached)</em>
+                                    </div>
+                                }
+                                break;
+                            case CanLoadMoreStatus.Complete:
+                            case CanLoadMoreStatus.Unavailable:
+                            default:
                                 break;
                         }
 
                         <div class="common-lead-spacer">&nbsp;</div>
-
-                        <div class="@ClassNames("query-results", "querying".If(IsQuerying))">
-                            @if (Settings.ShowHelpTexts)
-                            {
-                                <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
-                            }
-
-                            @if (vm.LastResult.Exception is SqlException se)
-                            {
-                                <div class="alert alert-danger">
-                                    <div class="mb-2">
-                                        The database sent an unexpected error, this is likely a bug.
-                                    </div>
-
-                                    <pre class="mb-0 text-wrap">
-                                        @foreach (Microsoft.Data.SqlClient.SqlError msg in se.Errors)
-                                        {
-                                        <div>@msg.Message</div>
-                                        }
-                                        </pre>
-                                </div>
-                            }
-                            else if (vm.LastResult.Exception is Exception e)
-                            {
-                                <div class="alert alert-danger">
-                                    <div>
-                                        An internal exception occurred on during this query, this is likely a bug.
-                                    </div>
-                                </div>
-                            }
-
-                            @if (vm.DisplayedEntity != null)
-                            {
-                                <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsOk))">
-                                    <EntityContentView Entity="@vm.DisplayedEntity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
-                                </div>
-
-                                @switch (vm.CanLoadMore())
-                                {
-                                    case CanLoadMoreStatus.Can:
-                                        if (vm.LastRequest.ListLimit < Settings.LoadMoreLimit)
-                                        {
-                                            <div class="my-4">
-                                                <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@Settings.LoadMoreLimit</span> at once</button>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="my-4">
-                                                <em class="btn">...and more (maximum load size reached)</em>
-                                            </div>
-                                        }
-                                        break;
-                                    case CanLoadMoreStatus.Complete:
-                                    case CanLoadMoreStatus.Unavailable:
-                                    default:
-                                        break;
-                                }
-
-                                <div class="common-lead-spacer">&nbsp;</div>
-                            }
-                        </div>
-
-                        <Modal OnClose="SqlModalSubscription">
-                            <Title>SQL Query</Title>
-                            <HeaderExtra>
-                                <small>
-                                    <p class="mt-2 me-4">
-                                        Each page's data is requested in only one query. The query is textually long, but
-                                        executes efficiently as it relies only on a series of nested table seeks.
-                                        This is guaranteed unless you use the scanning search or you hit a bug.
-                                    </p>
-                                    <p>
-                                        Although this query uses the nonstandard XML query syntax of SQL Server, a similar
-                                        query can be created for most other database engines. However, these may look even more
-                                        convoluted then.
-                                    </p>
-
-                                </small>
-                            </HeaderExtra>
-                            <Body>
-                                <pre><CopyableContent>@(vm.LastResult?.Ledger.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
-                                </Body>
-                            </Modal>
-
-                        <Modal OnClose="ReportModalSubscription">
-                            <Title>Query report</Title>
-                            <Body>
-                                @foreach (var entry in vm.LastResult.Ledger.GetEntries())
-                                {
-                                    var result = entry.result.GetReportString();
-
-                                    <h5>@entry.name<br /><small>@entry.time</small></h5>
-                                    @if (result is String s)
-                                    {
-                                        <pre>
-                                        <CopyableContent>@s</CopyableContent>
-                                                </pre>
-                                    }
-                                }
-                            </Body>
-                        </Modal>
                     }
 
-                    <div class="@ClassNames("query-delay-overlay", "querying".If(!isFirstRender && IsQuerying))">
-                        <div class="common-lead-spacer">&nbsp;</div>
-                        <h2>Investigating slow query</h2>
-
-                        <RerenderHelper Observable="@Runner.CurrentConnectionHolder" OnChange="@StateHasChanged" />
-
-                        @if (Runner.CurrentConnectionHolder.StallDetective is StallDetective sd)
-                        {
-                            <RerenderHelper Observable="@sd" OnChange="@StateHasChanged" />
-
-                            <div>
-                                @switch (sd.Result.Type)
-                                {
-                                    case StallInvestigationResultType.Initial:
-                                        break;
-                                    case StallInvestigationResultType.CantConnect:
-                                        <p>
-                                            The server has become unreachable.
-                                        </p>
-                                        break;
-                                    case StallInvestigationResultType.NoInformation:
-                                        <p>
-                                            The server is reachable, but even though this connection has the required permission,
-                                            no further information about the stalled query could be retrieved.
-                                        </p>
-                                        break;
-                                    case StallInvestigationResultType.NoPermission:
-                                        <p>
-                                            The server is reachable, but this connection doesn't have the necessary
-                                            VIEW SERVER STATE permission required for further stall investigation.
-                                        </p>
-                                        break;
-                                    case StallInvestigationResultType.Blocked:
-                                        <p>
-                                            The query is blocked waiting on a locked resource. It will continue as soon as
-                                            the lock is released.
-                                        </p>
-                                        break;
-                                    case StallInvestigationResultType.Unblocked:
-                                        <p>
-                                            Query status could be retrieved and it is not reported to be blocked.
-                                            The following spinner will move every second the database makes some
-                                            progress on this query. If it doesn't move, then the query is blocked in
-                                            some unreported way.
-                                        </p>
-                                        <i class="fa-solid fa-spinner fa-rotate-@((sd.Result.progress % 8) * 45)"></i>
-                                        break;
-                                }
-                            </div>
-                        }
+                    <div class="@ClassNames("query-delay-overlay text-light", "querying".If(IsQuerying))">
+                        <div class="query-delay-overlay-backdrop" />
+                        <h2>Querying!</h2>
                     </div>
+
+                    <Modal OnClose="SqlModalSubscription">
+                        <Title>SQL Query</Title>
+                        <HeaderExtra>
+                            <small>
+                                <p class="mt-2 me-4">
+                                    Each page's data is requested in only one query. The query is textually long, but
+                                    executes efficiently as it relies only on a series of nested table seeks.
+                                    This is guaranteed unless you use the scanning search or you hit a bug.
+                                </p>
+                                <p>
+                                    Although this query uses the nonstandard XML query syntax of SQL Server, a similar
+                                    query can be created for most other database engines. However, these may look even more
+                                    convoluted then.
+                                </p>
+
+                            </small>
+                        </HeaderExtra>
+                        <Body>
+                            <pre><CopyableContent>@(vm.LastResult?.Ledger.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
+                        </Body>
+                    </Modal>
+
+                    <Modal OnClose="ReportModalSubscription">
+                        <Title>Query report</Title>
+                        <Body>
+                            @foreach (var entry in vm.LastResult.Ledger.GetEntries())
+                            {
+                                var result = entry.result.GetReportString();
+
+                                <h5>@entry.name<br /><small>@entry.time</small></h5>
+                                @if (result is String s)
+                                {
+                                    <pre>
+                                        <CopyableContent>@s</CopyableContent>
+                                    </pre>
+                                }
+                            }
+                        </Body>
+                    </Modal>
 
                 </ChildContent>
             </SidebarLayout>
@@ -336,7 +277,7 @@
 
     Boolean IsQuerying => lastQueryTask?.IsCompleted != true;
 
-    LocationQueryRequest LastRequest { get; set; }
+    String SourceName { get; set; }
 
     Int32 listLimit;
 
@@ -416,20 +357,9 @@
             ListLimit = listLimit
         };
 
-        LastRequest = request;
+        SourceName = request.Source;
 
-        var task = Runner.QueryAsync(request.Source, request);
-
-        if (false)
-        {
-            task.Wait();
-        }
-        else
-        {
-            await task;
-        }
-
-        var result = task.Result;
+        var result = synchronously ? Runner.Query(SourceName, request) : await Task.Run(() => Runner.Query(SourceName, request));
 
         if (result.Exception != null && result.Exception is not SqlException)
         {
@@ -442,7 +372,7 @@
         {
             vm = new LocationQueryVm(request, result);
 
-            QueryContext = new QueryContext(request.Source);
+            QueryContext = new QueryContext(SourceName);
 
             QueryContext.InDebug = queryParams["debug"] != null;
 
@@ -472,16 +402,19 @@
 
     protected override void OnParametersSet()
     {
-        if (LastRequest?.Path != Path)
-        {
-            log.Debug($"OnParametersSet path changed from {LastRequest?.Path ?? "null"} to {Path}");
-
-            haveQueryPending = false;
-
-            RunQueryAfterLocationChange(false);
-        }
+        log.Debug($"OnParametersSet at {Path}");
 
         base.OnParametersSet();
+
+        if (vm == null)
+        {
+            RunQueryAfterLocationChange(true);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += LocationChanged;
     }
 
     protected override async Task OnAfterRenderAsync(Boolean firstRender)
@@ -498,6 +431,13 @@
         }
     }
 
+    void LocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        log.Debug($"LocationChanged at {Path}");
+
+        RunQueryAfterLocationChange(false);
+    }
+
     void RunQueryAfterLocationChange(Boolean synchronously)
     {
         listLimit = Settings.InitialLimit;
@@ -508,6 +448,6 @@
 
     void IDisposable.Dispose()
     {
-        Runner.Cancel();
+        NavigationManager.LocationChanged -= LocationChanged;
     }
 }

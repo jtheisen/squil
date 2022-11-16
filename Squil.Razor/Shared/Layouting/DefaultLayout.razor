@@ -25,7 +25,7 @@
             </div>
         </ChildContent>
         <RightContent>
-            <nav class="header-height navbar navbar-expand position-absolute right">
+            <nav class="header-height navbar navbar-expand position-absolute right me-2">
                 <div class="d-flex align-self-start">
                     @ActionItems
                 </div>
@@ -36,8 +36,10 @@
 
 <main class="main">
     <div class="d-flex" />
-    
-    @ChildContent
+    @if (!IsLoading)
+    {
+        @ChildContent
+    }
 </main>
 
 @code {
@@ -49,4 +51,7 @@
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public Boolean IsLoading { get; set; }
 }

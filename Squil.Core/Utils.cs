@@ -1,4 +1,3 @@
-using NLog;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
@@ -90,8 +89,6 @@ public static class RazorHelpers
 
 public static partial class Extensions
 {
-    static Logger log = LogManager.GetCurrentClassLogger();
-
     static readonly XmlWriterSettings xmlWriterSettings = new XmlWriterSettings { Indent = true };
 
     public static String Format(this XmlDocument document)
@@ -267,19 +264,7 @@ public static partial class Extensions
 
     public static T If<T>(this T source, Boolean predicate) => predicate ? source : default;
 
-    public static async void Ignore(this Task task)
-    {
-        try
-        {
-            await task;
-        }
-        catch (Exception e)
-        {
-            log.Error(e, "Ignored task terminated with exception: " + e.Message);
-
-            throw;
-        }
-    }
+    public static void Ignore(this Task _) { }
 
     public static void Ignore(this ValueTask _) { }
 

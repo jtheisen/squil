@@ -5,19 +5,16 @@ namespace Squil;
 public class SqlServerConnectionProvider
 {
     public const String CompatibilityPrefix = "Trust Server Certificate=true;";
-    public const String PersistSecurityInfoSuffix = ";Persist Security Info=true";
 
     public String GetConnectionString(SqlServerHostConfiguration config, String catalogOverride = null, Boolean ignoreCatalog = false)
     {
         var builder = new SqlConnectionStringBuilder();
 
         builder.TrustServerCertificate = true;
-        builder.PoolBlockingPeriod = PoolBlockingPeriod.NeverBlock;
         builder.DataSource = config.Host;
         builder.IntegratedSecurity = config.UseWindowsAuthentication;
-        builder.PersistSecurityInfo = true;
-
-        SetConnectionOverrides(builder);
+        builder.ApplicationName = "SQuiL database browser";
+        builder.ConnectTimeout = 4;
 
         if (!config.UseWindowsAuthentication)
         {
@@ -39,15 +36,6 @@ public class SqlServerConnectionProvider
         return builder.ConnectionString;
     }
 
-    void SetConnectionOverrides(SqlConnectionStringBuilder builder)
-    {
-        builder.ApplicationName = "SQuiL database browser";
-        builder.CommandTimeout = 0;
-        builder.ConnectRetryCount = 0;
-        builder.ConnectRetryInterval = 1;
-        builder.ConnectTimeout = 1;
-    }
-
     public SqlConnection GetConnection(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)
     {
         return new SqlConnection(GetConnectionString(config, ignoreCatalog: ignoreCatalog));
@@ -55,11 +43,7 @@ public class SqlServerConnectionProvider
 
     public LiveSource GetLiveSource(String connectionString)
     {
-        var builder = new SqlConnectionStringBuilder(CompatibilityPrefix + connectionString + PersistSecurityInfoSuffix);
-
-        SetConnectionOverrides(builder);
-
-        return new LiveSource(builder.ConnectionString);
+        return new LiveSource(CompatibilityPrefix + connectionString);
     }
 
     public async Task<SqlConnection> GetOpenedConnection(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)

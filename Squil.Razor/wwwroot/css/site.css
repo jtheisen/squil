@@ -129,6 +129,14 @@ a {
     fill: currentColor;
 }
 
+.max-w-c-md {
+    max-width: calc(720px - var(--bs-gutter-x));
+}
+
+.max-w-xxl-50 {
+    max-width: calc(1320px / 2);
+}
+
 /* Blazor
 -------------------------------------------------- */
 #blazor-error-ui {
@@ -153,7 +161,7 @@ a {
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 1000;
+        z-index: 1056;
     }
 
     #blazor-error-ui > div p {
@@ -244,27 +252,21 @@ main.main {
 
 /* Querying
 -------------------------------------------------- */
-.query-results {
-
-}
-
-    .query-results.querying {
-        transition: filter, opacity;
-        transition-delay: 1s;
-        transition-duration: 200ms;
-        filter: blur(8px);
-        opacity: .5;
-    }
-
-.query-delay-overlay {
+.query-delay-overlay,
+.query-delay-overlay-backdrop {
     position: absolute;
     width: 100%;
     top: 0;
     bottom: 0;
 }
 
+.query-delay-overlay-backdrop {
+    background: black;
+    opacity: .9;
+}
+
 .query-delay-overlay {
-    margin-top: .75em;
+    margin: 0 -15px;
     opacity: 0;
     pointer-events: none;
     z-index: 4;

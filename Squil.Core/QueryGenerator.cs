@@ -254,11 +254,11 @@ public class QueryGenerator
         };
     }
 
-    public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
+    public Entity Query(SqlConnection connection, Extent extent)
     {
         var sql = GetCompleteSql(extent);
 
-        var resultXml = await connection.QueryAndParseXmlAsync(sql.Sql);
+        var resultXml = connection.QueryAndParseXml(sql.Sql);
 
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
