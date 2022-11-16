@@ -17,12 +17,12 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(Pipeline.Workspace)'
+    targetPath: '$(Build.SourcesDirectory)'
     artifact: 'sources-pipeline'
     publishLocation: 'pipeline'
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Pipeline.Workspace)'
+    PathtoPublish: '$(Build.SourcesDirectory)'
     ArtifactName: 'sources-build'
 
