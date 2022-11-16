@@ -34,6 +34,11 @@ stages:
   - job: build
     steps:
       - checkout: none
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'current'
+          artifactName: 'sources'
+          targetPath: '$(Pipeline.SourcesDirectory)'
       - task: DotNetCoreCLI@2
         inputs:
           command: 'publish'
