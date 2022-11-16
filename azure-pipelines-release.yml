@@ -18,15 +18,8 @@ steps:
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
 
-- task: GitHubRelease@1
+- task: GitTag@6
   inputs:
-    gitHubConnection: 'Squil release'
-    repositoryName: 'jtheisen/squil'
-    action: 'create'
-    target: '$(Build.SourceVersion)'
-    tagSource: 'gitTag'
-    releaseNotesSource: 'inline'
-    releaseNotesInline: 'test'
-    isPreRelease: true
-    changeLogCompareToRelease: 'lastFullRelease'
-    changeLogType: 'issueBased'
+    workingdir: '$(SYSTEM.DEFAULTWORKINGDIRECTORY)'
+    tagUser: 'jtheisen'
+    tag: '$(build.buildNumber)'
