@@ -1,7 +1,7 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+variables:
+  base-version: 1.1.9
+  build-suffix: $[counter(variables['base-version'], 1)]
+  version: $[ join(variables['base-version'], variables['build-suffix']) ]
 
 trigger:
 - release
