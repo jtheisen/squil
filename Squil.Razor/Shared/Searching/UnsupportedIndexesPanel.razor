@@ -15,7 +15,20 @@
                         <div class="unsupported-reason">@group.Reason.Reason; concerns</div>
                         @foreach (var i in group.Indexes)
                         {
-                            <div class="index-name">@i.Index.Name</div>
+                            <div class="index-name d-flex gap-1">
+                                <span class="text-truncate flex-1">@i.Index.Name</span>
+                                @if (i.Index.UnsupportedReason?.Specific is String specific)
+                                {
+                                    <ContentWithTooltip>
+                                        <InlineContent>
+                                            <i class="opacity-50 fa fa-xs fa-info-circle"></i>
+                                        </InlineContent>
+                                        <ChildContent>
+                                            @specific
+                                        </ChildContent>
+                                    </ContentWithTooltip>
+                                }
+                            </div>
                         }
                     </li>
                 }

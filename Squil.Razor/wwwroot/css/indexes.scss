@@ -169,6 +169,10 @@ $border-color: #eee;
         position: relative;
     }
 
+    .index-column:not(:last-child) {
+        border-right: 3px dashed #eee;
+    }
+
     .no-index-column {
         justify-content: center;
         text-transform: uppercase;

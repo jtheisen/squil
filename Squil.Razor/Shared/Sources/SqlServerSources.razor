@@ -16,15 +16,21 @@
         {
             var h = host;
 
-            <SqlServerHost @key="host.Id" Host="host" OnEdit="@(h => editHostModel.SetModel(h.Configuration))" />
+            <SqlServerHost @key="host.Id" Host="host" OnEdit="@(h => editHostModel.SetModel(h.Configuration.Clone()))" />
         }
     </div>
 }
 
-<EditSqlServerHostDialog ModalModel="@editHostModel" OnSaveClick="@SaveHost" OnDeleteClick="@DeleteHost" />
+<EditSqlServerHostDialog ModalModel="@editHostModel" OnSaveClick="@SaveHost" OnDeleteClick="@DeleteHost">
+    <ExtraValidation>
+        <CustomValidation @ref="customValidation" />
+    </ExtraValidation>
+</EditSqlServerHostDialog>
 
 @code {
     ModalModel<SqlServerHostConfiguration> editHostModel;
+
+    CustomValidation customValidation;
 
     protected override void OnInitialized()
     {
@@ -43,9 +49,36 @@
 
     async Task SaveHost()
     {
-        await configuration.UpdateLiveHosts(dbf => dbf.ReconcileAsync(editHostModel.Model, e => { }));
+        if (String.IsNullOrWhiteSpace(editHostModel.Model.Catalog))
+        {
+            editHostModel.Model.Catalog = null;
+        }
 
-        editHostModel.Model = null;
+        editHostModel.Model.ModifiedAt = DateTimeOffset.Now;
+
+        await configuration.UpdateLiveHosts(async dbf =>
+        {
+            var db = await dbf.CreateDbContextAsync();
+
+            await using var transaction = await db.Database.BeginTransactionAsync();
+
+            await db.ReconcileAndSaveChangesAsync(editHostModel.Model, e => { });
+
+            var count = await db.SqlServerHostConfigurations.CountAsync(h => h.Name == editHostModel.Model.Name);
+
+            if (count > 1)
+            {
+                await transaction.RollbackAsync();
+
+                customValidation.DisplayError("Name", "Name already exists");
+            }
+            else
+            {
+                await transaction.CommitAsync();
+
+                editHostModel.Model = null;
+            }
+        });
     }
 
     async Task DeleteHost()

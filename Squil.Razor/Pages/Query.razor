@@ -33,9 +33,9 @@
                     <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" NoColumnInformation="@true" /></span>
                 </BreadcrumbItem>
             }
-            else
+            else if (vm.LastResult.PrimaryEntities?.List.FirstOrDefault() is Entity primaryEntity)
             {
-                var entity = vm.Result.PrimaryEntities?.List.FirstOrDefault();
+                var entity = primaryEntity;
 
                 switch (vm.Result.QueryType)
                 {
@@ -82,16 +82,14 @@
     </NavItems>
 
     <ActionItems>
-        @if (lastQueryTask?.IsCompleted == false)
-        {
-            <span>in flight</span>
-        }
-        @if (Settings.EnableDevMode)
-        {
-            <a class="btn btn-outline-dark text-muted" href="/info/@SourceName">schema</a>
-            <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">Report</button>
-        }
-        <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+        <div class="btn-group">
+            @if (Settings.EnableDevMode)
+            {
+                <a class="btn btn-outline-dark text-muted"  href="/info/@SourceName">schema</a>
+                <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">report</button>
+            }
+            <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
+        </div>
     </ActionItems>
 
     <ChildContent>
@@ -175,7 +173,7 @@
                     {
                         <div class="alert alert-danger">
                             <div>
-                                An internal exception occurred on during this query, this is likely a bug.
+                                An internal exception occurred during this query, this is likely a bug.
                             </div>
                         </div>
                     }

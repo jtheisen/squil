@@ -6,7 +6,7 @@
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   IgnorableNamespaces="uap rescap mp">
 
-  <Identity Name="54609JensTheisen.SQuiLDatabaseBrowser" Publisher="CN=A2955C53-6032-48A0-9B4F-D1CD11034085" Version="1.1.7.0" />
+  <Identity Name="54609JensTheisen.SQuiLDatabaseBrowser" Publisher="CN=A2955C53-6032-48A0-9B4F-D1CD11034085" Version="1.1.9.0" />
 
   <Properties>
     <DisplayName>SQuiL Database Browser</DisplayName>

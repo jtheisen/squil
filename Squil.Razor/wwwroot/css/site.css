@@ -129,6 +129,14 @@ a {
     fill: currentColor;
 }
 
+.max-w-c-md {
+    max-width: calc(720px - var(--bs-gutter-x));
+}
+
+.max-w-xxl-50 {
+    max-width: calc(1320px / 2);
+}
+
 /* Blazor
 -------------------------------------------------- */
 #blazor-error-ui {
@@ -153,7 +161,7 @@ a {
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 1000;
+        z-index: 1056;
     }
 
     #blazor-error-ui > div p {

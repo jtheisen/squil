@@ -45,6 +45,8 @@ public static class Startup
             using var db = dbFactory.CreateDbContext();
 
             db.Database.Migrate();
+
+            db.Database.ExecuteSqlRaw("delete from SqlServerHostConfigurations where Name in (select Name from SqlServerHostConfigurations group by Name having count(*) > 1)");
         }
     }
 }

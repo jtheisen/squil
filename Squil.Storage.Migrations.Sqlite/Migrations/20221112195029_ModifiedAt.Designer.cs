@@ -2,7 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Squil;
 
@@ -11,50 +11,47 @@ using Squil;
 namespace Squil.Migrations
 {
     [DbContext(typeof(Db))]
-    partial class DbModelSnapshot : ModelSnapshot
+    [Migration("20221112195029_ModifiedAt")]
+    partial class ModifiedAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.10")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
-
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.10");
 
             modelBuilder.Entity("Squil.SqlServerHostConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Catalog")
                         .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Host")
                         .IsRequired()
                         .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("ModifiedAt")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Password")
                         .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("UseWindowsAuthentication")
-                        .HasColumnType("bit");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("User")
                         .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

@@ -1,5 +1,8 @@
 ﻿<div>
-    <div class="header" @onclick="HandleClick">@(isOpen ? "▾" : "▸") @Header</div>
+    <div class="header" @onclick="HandleClick">
+        <div>@(isOpen ? "▾" : "▸")</div>
+        <div class="caption">@Header</div>
+    </div>
 
     @if (isOpen)
     {

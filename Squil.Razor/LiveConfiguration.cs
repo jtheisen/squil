@@ -154,7 +154,7 @@ public class LiveConfiguration
             from h in hosts
             join l in liveHosts?.Values ?? Empties<LiveSqlServerHost>.Enumerable on h.Id equals l.Id into existing
             from l in existing.DefaultIfEmpty()
-            select (h, l: l ?? new LiveSqlServerHost(h, sqlServerConnectionProvider))
+            select (h, l: l?.Configuration.ModifiedAt == h.ModifiedAt ? l : new LiveSqlServerHost(h, sqlServerConnectionProvider))
         ).ToDictionary(p => p.h.Id, p => p.l);
 
         var newLiveHostsByName = newLiveHosts.Values.ToDictionary(h => h.Name, h => h);

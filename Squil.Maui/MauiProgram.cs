@@ -17,9 +17,7 @@ public static class MauiProgram
         var services = builder.Services;
 
         services.AddMauiBlazorWebView();
-#if DEBUG
         services.AddBlazorWebViewDeveloperTools();
-#endif
 
         //services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
         services.AddSingleton<LiveConfiguration>();

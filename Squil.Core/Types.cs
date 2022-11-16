@@ -146,6 +146,8 @@ public class DateOrTimeColumnType : ColumnType
     String lpattern, upattern;
     String error;
 
+    public Int32 MinYear { get; set; } = 1;
+
     public Boolean WithDate { get; set; }
 
     public Boolean WithTime { get; set; }
@@ -198,6 +200,13 @@ public class DateOrTimeColumnType : ColumnType
 
         var result = Validate(text);
 
+        if (result.IsOk && MinYear > 1)
+        {
+            var year = Int32.Parse(result.SqlLowerValue[..4]);
+
+            if (year < MinYear) return Issue($"The earliest year in a {Name} is {MinYear}");
+        }
+
         if (result.IsOk && WithOffset)
         {
             var offset = DateTimeOffset.Now.Offset;
@@ -232,7 +241,11 @@ public class DateOrTimeColumnType : ColumnType
 
         if (WithDate)
         {
-            if (text.StartsWith("0000"))
+            if (text.Length == 0)
+            {
+                return OkWithPattern(MinYear.ToString().PadLeft(4, '0'));
+            }
+            else if (text.StartsWith("0000"))
             {
                 return Issue("there is no zero year");
             }
@@ -558,7 +571,7 @@ public class TypeRegistry
 
             new DateOrTimeColumnType { Name = "time", WithTime = true },
             new DateOrTimeColumnType { Name = "date", WithDate = true },
-            new DateOrTimeColumnType { Name = "datetime", WithDate = true, WithTime = true },
+            new DateOrTimeColumnType { Name = "datetime", WithDate = true, WithTime = true, MinYear = 1753 },
             new DateOrTimeColumnType { Name = "datetime2", WithDate = true, WithTime = true },
             new DateOrTimeColumnType { Name = "datetimeoffset", WithDate = true, WithTime = true, WithOffset = true },
 

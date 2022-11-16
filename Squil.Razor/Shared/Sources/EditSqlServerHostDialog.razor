@@ -13,6 +13,7 @@
                 <Body>
                     <DataAnnotationsValidator />
                     <ValidationSummary />
+                    @ExtraValidation
 
                     <div class="form-group row align-items-baseline">
                         <label class="@labelClass" for="name">Name</label>
@@ -102,7 +103,10 @@
                     }
 *@                </Body>
                 <Footer>
-                    <button class="btn btn-danger me-auto w-dialog-button" type="button" @onclick="OnDeleteClick">Delete</button>
+                    @if (!IsAdding)
+                    {
+                        <button class="btn btn-danger me-auto w-dialog-button" type="button" @onclick="OnDeleteClick">Delete</button>
+                    }
 
                     <button type="button" class="btn btn-outline-dark w-dialog-button" data-bs-dismiss="modal">Cancel</button>
                     <button class="btn btn-primary w-dialog-button" type="submit">Save</button>
@@ -115,6 +119,9 @@
 @code {
     [Parameter]
     public ModalModel<SqlServerHostConfiguration> ModalModel { get; set; }
+
+    [Parameter]
+    public RenderFragment ExtraValidation { get; set; }
 
     [Parameter]
     public EventCallback OnSaveClick { get; set; }
