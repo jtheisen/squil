@@ -18,11 +18,5 @@ steps:
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(Build.SourcesDirectory)'
-    artifact: 'sources-pipeline'
+    artifact: 'sources'
     publishLocation: 'pipeline'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)'
-    ArtifactName: 'sources-build'
-
