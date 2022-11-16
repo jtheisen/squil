@@ -11,7 +11,7 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-- stage: Checkout and Tag
+- stage: Prepare
   pool:
     vmImage: ubuntu-latest
   jobs:
@@ -27,7 +27,7 @@ stages:
         targetPath: '$(Build.SourcesDirectory)'
         artifact: 'sources'
         publishLocation: 'pipeline'
-- stage: BuildMAUI
+- stage: MAUI
   pool:
     vmImage: windows-latest
   jobs:
