@@ -20,6 +20,8 @@ if (settings.UseProminentSources)
 
 services.AddRazorPages();
 services.AddServerSideBlazor();
+services.AddSingleton<LiveConfiguration>();
+services.AddSingleton<LocationQueryRunner>();
 
 services.AddSquilDb(settings, configuration);
 services.AddCommonSquilServices(settings);
@@ -32,7 +34,7 @@ if (!String.IsNullOrEmpty(googleAnalyticsToken))
 
 var app = builder.Build();
 
-app.Services.InitializeDbAndInstallStaticServices();
+app.Services.InitializeDb();
 
 if (!app.Environment.IsDevelopment())
 {

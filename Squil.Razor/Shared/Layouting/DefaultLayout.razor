@@ -36,8 +36,10 @@
 
 <main class="main">
     <div class="d-flex" />
-    
-    @ChildContent
+    @if (!IsLoading)
+    {
+        @ChildContent
+    }
 </main>
 
 @code {
@@ -49,4 +51,7 @@
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public Boolean IsLoading { get; set; }
 }

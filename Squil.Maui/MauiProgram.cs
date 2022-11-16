@@ -22,6 +22,8 @@ public static class MauiProgram
 #endif
 
         //services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
+        services.AddSingleton<LiveConfiguration>();
+        services.AddSingleton<LocationQueryRunner>();
 
         var squilFolder = GetAndEnsureSquilFolder();
 
@@ -42,7 +44,7 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        app.Services.InitializeDbAndInstallStaticServices();
+        app.Services.InitializeDb();
 
         return app;
     }
