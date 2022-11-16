@@ -1,8 +1,8 @@
 variables:
   base-version: '1.1.9'
   build-suffix: $[counter(variables['base-version'], 1)]
-  version: $[ format('{0}.{1}', variables['base-version'], variables['build-suffix']) ]
-  mauiversion: $[ format('{0}.0', variables['base-version'] ) ]
+  squilversion: $[ format('{0}.{1}', variables['base-version'], variables['build-suffix']) ]
+  squilmauiversion: $[ format('{0}.0', variables['base-version'] ) ]
 
 trigger:
 - release
@@ -26,7 +26,6 @@ stages:
         artifact: 'sources'
         publishLocation: 'pipeline'
 - stage: BuildWeb
-  dependsOn: Prepare
   jobs:
   - job: build
     steps:
@@ -47,7 +46,6 @@ stages:
         artifact: 'web'
         publishLocation: 'pipeline'
 - stage: BuildMauiWindows
-  dependsOn: Prepare
   pool:
     vmImage: windows-latest
   jobs:
