@@ -47,3 +47,14 @@ stages:
           arguments: '-f net6.0-windows10.0.19041.0'
           zipAfterPublish: false
           modifyOutputPath: false
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: '$(Agent.BuildDirectory)'
+          Contents: '**/Squil.Maui*.msix'
+          TargetFolder: 'maui-windows-package'
+          flattenFolders: true
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: 'maui-windows-package'
+          artifact: 'maui-windows-msix'
+          publishLocation: 'pipeline'
