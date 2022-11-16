@@ -373,3 +373,4 @@ docker-tests
 *.db-*
 
 .dbeaver
+version.txt

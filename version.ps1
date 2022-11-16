@@ -2,6 +2,8 @@ $fullversion=$env:VERSION
 
 if ($fullversion)
 {
+	Write-Output "Version: $fullversion"
+
 	$mauiWindowsManifestFile = 'Squil.Maui\Platforms\Windows\Package.appxmanifest'
 	[xml]$mauiWindowsManifestXml = Get-Content $mauiWindowsManifestFile
 	$mauiWindowsManifestXml.Package.Identity.Version = $fullversion
