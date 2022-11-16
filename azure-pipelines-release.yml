@@ -2,19 +2,16 @@ variables:
   base-version: '1.1.9'
   build-suffix: $[counter(variables['base-version'], 1)]
   version: $[ format('{0}.{1}', variables['base-version'], variables['build-suffix']) ]
-  versionformaui: $[ format('{0}.0', variables['base-version'] ) ]
+  mauiversion: $[ format('{0}.0', variables['base-version'] ) ]
 
 trigger:
 - release
 
 pool:
-  name: Ubuntu
   vmImage: ubuntu-latest
 
 stages:
 - stage: Prepare
-  pool:
-    vmImage: ubuntu-latest
   jobs:
   - job: prepare
     steps:
@@ -28,7 +25,27 @@ stages:
         targetPath: '$(Build.SourcesDirectory)'
         artifact: 'sources'
         publishLocation: 'pipeline'
-- stage: MAUI
+- stage: BuildWeb
+  jobs:
+  - job: build
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'sources'
+        targetPath: 'sources'
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        projects: '**/Squil.Web.csproj'
+        arguments: '-o web-package'
+        publishWebProjects: false
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: 'web-package'
+        artifact: 'web'
+        publishLocation: 'pipeline'
+- stage: BuildMauiWindows
   pool:
     vmImage: windows-latest
   jobs:
