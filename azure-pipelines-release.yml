@@ -32,7 +32,7 @@ stages:
         projects: '**/Squil.Web.csproj'
         arguments: '-o web-package'
         publishWebProjects: false
-        zipAfterPublish: false
+        zipAfterPublish: true
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: 'web-package'
