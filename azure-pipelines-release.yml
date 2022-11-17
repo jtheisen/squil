@@ -64,13 +64,14 @@ stages:
       inputs:
         buildType: 'current'
         artifactName: 'web'
-        targetPath: '$(Build.SourcesDirectory)'
+        targetPath: '$(Build.StagingDirectory)'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
         azureSubscription: '$(WebDemoSubscriptionName)'
-        appType: webAppLinux
-        WebAppName: squil-staging
+        appType: 'webAppLinux'
+        WebAppName: 'squil-staging'
+        packageForLinux: '$(Build.StagingDirectory)/web'
 
 - stage: BuildMauiWindows
   condition: eq(variables['revision'], 0)
