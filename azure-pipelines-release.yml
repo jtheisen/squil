@@ -39,38 +39,6 @@ stages:
         artifact: 'web'
         publishLocation: 'pipeline'
 
-- stage: BuildMauiWindows
-  pool:
-    vmImage: windows-latest
-  jobs:
-  - job: build
-    steps:
-      - checkout: none
-      - task: DownloadPipelineArtifact@2
-        inputs:
-          buildType: 'current'
-          artifactName: 'sources'
-          targetPath: 'sources'
-      - task: DotNetCoreCLI@2
-        inputs:
-          command: 'publish'
-          publishWebProjects: false
-          projects: '**/Squil.Maui.csproj'
-          arguments: '-f net6.0-windows10.0.19041.0'
-          zipAfterPublish: false
-          modifyOutputPath: false
-      - task: CopyFiles@2
-        inputs:
-          SourceFolder: '$(Agent.BuildDirectory)'
-          Contents: '**/Squil.Maui*.msix'
-          TargetFolder: 'maui-windows-package'
-          flattenFolders: true
-      - task: PublishPipelineArtifact@1
-        inputs:
-          targetPath: 'maui-windows-package'
-          artifact: 'maui-windows-msix'
-          publishLocation: 'pipeline'
-
 - stage: ReleaseWeb
   dependsOn: BuildWeb
   jobs:
@@ -103,6 +71,39 @@ stages:
         azureSubscription: '$(WebDemoSubscriptionName)'
         appType: webAppLinux
         WebAppName: squil-staging
+
+- stage: BuildMauiWindows
+  condition: eq(variables['revision'], 0)
+  pool:
+    vmImage: windows-latest
+  jobs:
+  - job: build
+    steps:
+      - checkout: none
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'current'
+          artifactName: 'sources'
+          targetPath: 'sources'
+      - task: DotNetCoreCLI@2
+        inputs:
+          command: 'publish'
+          publishWebProjects: false
+          projects: '**/Squil.Maui.csproj'
+          arguments: '-f net6.0-windows10.0.19041.0'
+          zipAfterPublish: false
+          modifyOutputPath: false
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: '$(Agent.BuildDirectory)'
+          Contents: '**/Squil.Maui*.msix'
+          TargetFolder: 'maui-windows-package'
+          flattenFolders: true
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: 'maui-windows-package'
+          artifact: 'maui-windows-msix'
+          publishLocation: 'pipeline'
 
 - stage: ReleaseMauiWindows
   dependsOn: BuildMauiWindows
