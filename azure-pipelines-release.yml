@@ -76,7 +76,7 @@ stages:
         rootFolderOrFile: '$(Build.BinariesDirectory)/Squil.Web'
         includeRootFolder: false
         archiveType: 'zip'
-        archiveFile: '$(Build.StagingDirectory)/package.zip'
+        archiveFile: '$(Build.StagingDirectory)/Squil.Web.zip'
         replaceExistingArchive: true
     - task: PublishPipelineArtifact@1
       inputs:
@@ -89,7 +89,7 @@ stages:
         azureSubscription: '$(WebDemoSubscriptionName)'
         appType: 'webAppLinux'
         WebAppName: 'squil-staging'
-        packageForLinux: '$(Build.StagingDirectory)/package.zip'
+        packageForLinux: '$(Build.StagingDirectory)/Squil.Web.zip'
 
 - stage: BuildMauiWindows
   condition: eq(variables['revision'], 0)
