@@ -71,10 +71,6 @@ stages:
           artifact: 'maui-windows-msix'
           publishLocation: 'pipeline'
 
-      - task: ManualIntervention@8
-        timeoutInMinutes: 10
-
-
 - stage: ReleaseWeb
   dependsOn: BuildWeb
   jobs:
