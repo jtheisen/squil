@@ -32,7 +32,7 @@ stages:
         projects: '**/Squil.Web.csproj'
         arguments: '-o web-package'
         publishWebProjects: false
-        zipAfterPublish: true
+        zipAfterPublish: false
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: 'web-package'
@@ -78,6 +78,11 @@ stages:
         archiveType: 'zip'
         archiveFile: '$(Build.StagingDirectory)/package.zip'
         replaceExistingArchive: true
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.StagingDirectory)'
+        artifact: 'web-zipped'
+        publishLocation: 'pipeline'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
