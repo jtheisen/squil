@@ -103,9 +103,10 @@ stages:
         buildType: 'current'
         artifactName: 'web'
         targetPath: '$(Pipeline.Workspace)'
-    - task: CmdLine@2
+    - task: PowerShell@2
       inputs:
-        script: 'dir'
+        targetType: 'inline'
+        script: 'ls -r -directory -depth 1'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
