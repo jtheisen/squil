@@ -64,8 +64,8 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         buildType: 'current'
-        artifactName: '$(Build.BinariesDirectory)'
-        targetPath: 'web'
+        artifactName: 'web'
+        targetPath: '$(Build.BinariesDirectory)'
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
