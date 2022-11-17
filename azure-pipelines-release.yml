@@ -39,7 +39,6 @@ stages:
         publishLocation: 'pipeline'
 
 - stage: BuildMauiWindows
-  condition: False
   pool:
     vmImage: windows-latest
   jobs:
@@ -75,7 +74,6 @@ stages:
   dependsOn: BuildWeb
   jobs:
   - job: Docker
-    condition: False
     steps:
     - checkout: none
     - task: DownloadPipelineArtifact@2
