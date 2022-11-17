@@ -106,7 +106,7 @@ stages:
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
-        script: 'ls -r -directory -depth 1'
+        script: 'ls'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
