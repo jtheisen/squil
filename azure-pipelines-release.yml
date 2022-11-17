@@ -80,7 +80,8 @@ stages:
           artifact: 'maui-windows-msix'
           publishLocation: 'pipeline'
 
-- stage: Release
+- stage: WebReleases
+  dependsOn: BuildWeb
   jobs:
   - job: Docker
     steps:
