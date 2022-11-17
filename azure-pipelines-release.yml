@@ -64,16 +64,16 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         buildType: 'current'
-        artifactName: '$(SourcesDirectory)'
+        artifactName: '$(Build.BinariesDirectory)'
         targetPath: 'web'
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
         script: 'ls -r'
-        workingDirectory: '$(SourcesDirectory)'
+        workingDirectory: '$(Build.BinariesDirectory)'
     - task: ArchiveFiles@2
       inputs:
-        rootFolderOrFile: '$(SourcesDirectory)/web'
+        rootFolderOrFile: '$(Build.BinariesDirectory)/web'
         includeRootFolder: true
         archiveType: 'zip'
         archiveFile: '$(Build.StagingDirectory)/package.zip'
