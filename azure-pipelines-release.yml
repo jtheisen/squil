@@ -68,7 +68,7 @@ stages:
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
-        script: 'dir'
+        script: 'dir -r'
         workingDirectory: 'web'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
