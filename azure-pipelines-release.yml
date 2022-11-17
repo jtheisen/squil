@@ -32,7 +32,7 @@ stages:
         projects: '**/Squil.Web.csproj'
         arguments: '-o web-package'
         publishWebProjects: false
-        zipAfterPublish: false
+        zipAfterPublish: true
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: 'web-package'
@@ -65,19 +65,12 @@ stages:
       inputs:
         buildType: 'current'
         artifactName: 'web'
-        targetPath: '$(Build.BinariesDirectory)'
+        targetPath: '$(Build.StagingDirectory)'
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
         script: 'dir -r'
-        workingDirectory: '$(Build.BinariesDirectory)'
-    - task: ArchiveFiles@2
-      inputs:
-        rootFolderOrFile: '$(Build.BinariesDirectory)/Squil.Web'
-        includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.StagingDirectory)/Squil.Web.zip'
-        replaceExistingArchive: true
+        workingDirectory: '$(Build.StagingDirectory)'
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Build.StagingDirectory)'
@@ -89,7 +82,6 @@ stages:
         azureSubscription: '$(WebDemoSubscriptionName)'
         appType: 'webAppLinux'
         WebAppName: 'squil-staging'
-        packageForLinux: '$(Build.StagingDirectory)/Squil.Web.zip'
 
 - stage: BuildMauiWindows
   condition: eq(variables['revision'], 0)
