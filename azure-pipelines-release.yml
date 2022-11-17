@@ -65,15 +65,15 @@ stages:
       inputs:
         buildType: 'current'
         artifactName: 'web'
-        targetPath: '$(Build.StagingDirectory)'
+        targetPath: '$(Build.SourcesDirectory)'
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
         script: 'dir -r'
-        workingDirectory: '$(Build.StagingDirectory)'
+        workingDirectory: '$(Build.SourcesDirectory)'
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: '$(Build.StagingDirectory)'
+        targetPath: '$(Build.SourcesDirectory)'
         artifact: 'web-zipped'
         publishLocation: 'pipeline'
     - task: AzureRmWebAppDeployment@4
