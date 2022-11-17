@@ -85,6 +85,7 @@ stages:
   dependsOn: BuildWeb
   jobs:
   - job: Docker
+    condition: False
     steps:
     - checkout: none
     - task: Docker@2
@@ -102,6 +103,9 @@ stages:
         buildType: 'current'
         artifactName: 'web'
         targetPath: '$(Pipeline.Workspace)'
+    - task: CmdLine@2
+      inputs:
+        script: 'dir'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
