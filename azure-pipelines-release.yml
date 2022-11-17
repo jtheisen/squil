@@ -114,9 +114,9 @@ stages:
         buildType: 'current'
         artifactName: 'web'
         targetPath: '$(Build.SourcesDirectory)'
-    - task: MS-RDX-MRO.windows-store-publish.publish-task.store-publish@0
-      displayName: 'Publish to store'
+    - task: store-publish@0
       inputs:
         serviceEndpoint: 'microsoft-store-deployment'
         appId: '$(MicrosoftStoreAppId)'
         packagePath: '**/*.msix'
+        skipPolling: true
