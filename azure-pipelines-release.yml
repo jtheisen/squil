@@ -1,7 +1,7 @@
 variables:
   base-version: '1.1.9'
-  build-suffix: $[counter(variables['base-version'], 1)]
-  squilversion: $[ format('{0}.{1}', variables['base-version'], variables['build-suffix']) ]
+  revision: $[counter(variables['base-version'], 0)]
+  squilversion: $[ format('{0}.{1}', variables['base-version'], variables['revision']) ]
   squilmauiversion: $[ format('{0}.0', variables['base-version'] ) ]
 
 trigger:
