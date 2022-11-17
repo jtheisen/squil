@@ -11,9 +11,10 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-- stage: Prepare
+
+- stage: BuildWeb
   jobs:
-  - job: prepare
+  - job: build
     steps:
     - task: PowerShell@2
       inputs:
@@ -25,17 +26,6 @@ stages:
         targetPath: '$(Build.SourcesDirectory)'
         artifact: 'sources'
         publishLocation: 'pipeline'
-
-- stage: BuildWeb
-  jobs:
-  - job: build
-    steps:
-    - checkout: none
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        buildType: 'current'
-        artifactName: 'sources'
-        targetPath: 'sources'
     - task: DotNetCoreCLI@2
       inputs:
         command: 'publish'
@@ -81,7 +71,7 @@ stages:
           artifact: 'maui-windows-msix'
           publishLocation: 'pipeline'
 
-- stage: WebReleases
+- stage: ReleaseWeb
   dependsOn: BuildWeb
   jobs:
   - job: Docker
@@ -106,7 +96,10 @@ stages:
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
-        script: 'ls'
+        script: |
+          pwd
+          
+          ls -r
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
