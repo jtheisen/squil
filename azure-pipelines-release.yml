@@ -30,6 +30,7 @@ stages:
   jobs:
   - job: build
     steps:
+    - checkout: none
     - task: DownloadPipelineArtifact@2
       inputs:
         buildType: 'current'
@@ -85,6 +86,7 @@ stages:
   jobs:
   - job: Docker
     steps:
+    - checkout: none
     - task: Docker@2
       displayName: buildAndPush
       inputs:
@@ -94,6 +96,12 @@ stages:
           $(squilversion)
   - job: WebDemo
     steps:
+    - checkout: none
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'web'
+        targetPath: '$(Pipeline.Workspace)'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
