@@ -95,29 +95,33 @@ public class LiveSqlServerHost : ObservableObject
     }
 }
 
-public class LiveConfiguration
+public interface ILiveSourceProvider
+{
+    AppSettings AppSettings { get; }
+
+    LiveSource GetLiveSource(String name);
+}
+
+public class LightLiveConfiguration : ILiveSourceProvider
 {
     AssocList<String, (ProminentSourceConfiguration config, LiveSource context)> prominentSources;
 
-    Dictionary<Guid, LiveSqlServerHost> liveHosts;
-    Dictionary<String, LiveSqlServerHost> liveHostsByName;
-
     IOptions<AppSettings> options;
-    IDbFactory dbf;
     SqlServerConnectionProvider sqlServerConnectionProvider;
-
-    Exception lastLoadException;
-
-    Boolean inBatch;
-
-    public SqlServerConnectionProvider SqlServerConnectionProvider => sqlServerConnectionProvider;
 
     public AppSettings AppSettings => options.Value;
 
-    public LiveConfiguration(IOptions<AppSettings> options, IOptions<List<ProminentSourceConfiguration>> prominentSourceConfigurationsOptions, IDbFactory dbf, SqlServerConnectionProvider sqlServerConnectionProvider)
+    public SqlServerConnectionProvider SqlServerConnectionProvider => sqlServerConnectionProvider;
+
+    public ProminentSourceConfiguration[] GetProminentSourceConfigurations()
+        => Get(() => prominentSources.Select(c => c.Value.config).ToArray());
+
+    public LightLiveConfiguration(
+        IOptions<AppSettings> options,
+        IOptions<List<ProminentSourceConfiguration>> prominentSourceConfigurationsOptions,
+        SqlServerConnectionProvider sqlServerConnectionProvider)
     {
         this.options = options;
-        this.dbf = dbf;
         this.sqlServerConnectionProvider = sqlServerConnectionProvider;
 
         prominentSources = new AssocList<String, (ProminentSourceConfiguration, LiveSource)>("prominent source");
@@ -131,8 +135,36 @@ public class LiveConfiguration
         }
     }
 
-    public ProminentSourceConfiguration[] GetProminentSourceConfigurations()
-        => Get(() => prominentSources.Select(c => c.Value.config).ToArray());
+    protected T Get<T>(Func<T> select)
+    {
+        lock (this)
+        {
+            return select();
+        }
+    }
+
+    public virtual LiveSource GetLiveSource(String name)
+    {
+        return Get(() => prominentSources[name].context);
+    }
+}
+
+public class LiveConfiguration : LightLiveConfiguration
+{
+    Dictionary<Guid, LiveSqlServerHost> liveHosts;
+    Dictionary<String, LiveSqlServerHost> liveHostsByName;
+
+    IDbFactory dbf;
+
+    Exception lastLoadException;
+
+    Boolean inBatch;
+
+    public LiveConfiguration(IOptions<AppSettings> options, IOptions<List<ProminentSourceConfiguration>> prominentSourceConfigurationsOptions, IDbFactory dbf, SqlServerConnectionProvider sqlServerConnectionProvider)
+        : base(options, prominentSourceConfigurationsOptions, sqlServerConnectionProvider)
+    {
+        this.dbf = dbf;
+    }
 
     public LiveSqlServerHost[] LiveSqlServerHosts
         => Get(() => liveHosts?.Values.ToArray());
@@ -154,7 +186,7 @@ public class LiveConfiguration
             from h in hosts
             join l in liveHosts?.Values ?? Empties<LiveSqlServerHost>.Enumerable on h.Id equals l.Id into existing
             from l in existing.DefaultIfEmpty()
-            select (h, l: l?.Configuration.ModifiedAt == h.ModifiedAt ? l : new LiveSqlServerHost(h, sqlServerConnectionProvider))
+            select (h, l: l?.Configuration.ModifiedAt == h.ModifiedAt ? l : new LiveSqlServerHost(h, SqlServerConnectionProvider))
         ).ToDictionary(p => p.h.Id, p => p.l);
 
         var newLiveHostsByName = newLiveHosts.Values.ToDictionary(h => h.Name, h => h);
@@ -163,14 +195,6 @@ public class LiveConfiguration
         {
             liveHosts = newLiveHosts;
             liveHostsByName = newLiveHostsByName;
-        }
-    }
-
-    T Get<T>(Func<T> select)
-    {
-        lock (this)
-        {
-            return select();
         }
     }
 
@@ -198,7 +222,7 @@ public class LiveConfiguration
         }
     }
 
-    public LiveSource GetLiveSource(String name)
+    public override LiveSource GetLiveSource(String name)
     {
         if (TryParseHostSourceName(name, out var host, out var catalog))
         {
@@ -206,7 +230,7 @@ public class LiveConfiguration
         }
         else
         {
-            return Get(() => prominentSources[name].context);
+            return base.GetLiveSource(name);
         }
     }
 }

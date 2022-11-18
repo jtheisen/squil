@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Squil;
@@ -27,7 +26,16 @@ public static class Startup
 
                     _ => throw new Exception($"Unsupported provider: {provider}")
                 });
+
+            services.AddSingleton<LiveConfiguration>();
+            services.AddSingleton<LightLiveConfiguration>(sp => sp.GetService<LiveConfiguration>());
         }
+        else
+        {
+            services.AddSingleton<LightLiveConfiguration>();
+        }
+
+        services.AddSingleton<ILiveSourceProvider>(sp => sp.GetService<LiveConfiguration>());
     }
 
     public static void AddCommonSquilServices(this IServiceCollection services, AppSettings settings)

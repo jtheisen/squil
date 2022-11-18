@@ -20,7 +20,6 @@ if (settings.UseProminentSources)
 
 services.AddRazorPages();
 services.AddServerSideBlazor();
-services.AddSingleton<LiveConfiguration>();
 services.AddSingleton<LocationQueryRunner>();
 
 services.AddSquilDb(settings, configuration);

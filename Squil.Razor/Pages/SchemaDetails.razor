@@ -1,6 +1,6 @@
 ﻿@page "/schema-details/{connectionName}"
 
-@inject LiveConfiguration Connections
+@inject ILiveSourceProvider Connections
 
 @{
     var connection = Connections.GetLiveSource(ConnectionName);

@@ -20,7 +20,6 @@ public static class MauiProgram
         services.AddBlazorWebViewDeveloperTools();
 
         //services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
-        services.AddSingleton<LiveConfiguration>();
         services.AddSingleton<LocationQueryRunner>();
 
         var squilFolder = GetAndEnsureSquilFolder();
