@@ -32,7 +32,7 @@ stages:
         projects: '**/Squil.Web.csproj'
         arguments: '-o web-package'
         publishWebProjects: false
-        zipAfterPublish: true
+        zipAfterPublish: false
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: 'web-package'
@@ -43,7 +43,6 @@ stages:
   dependsOn: BuildWeb
   jobs:
   - job: Docker
-    condition: False
     steps:
     - checkout: none
     - task: DownloadPipelineArtifact@2
@@ -65,23 +64,19 @@ stages:
       inputs:
         buildType: 'current'
         artifactName: 'web'
-        targetPath: '$(Build.SourcesDirectory)'
+        targetPath: 'web'
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
-        script: 'dir -r'
-        workingDirectory: '$(Build.SourcesDirectory)'
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)'
-        artifact: 'web-zipped'
-        publishLocation: 'pipeline'
+        script: 'dir'
+        workingDirectory: 'web'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
         azureSubscription: '$(WebDemoSubscriptionName)'
         appType: 'webAppLinux'
         WebAppName: 'squil-staging'
+        packageForLinux: 'web'
 
 - stage: BuildMauiWindows
   condition: eq(variables['revision'], 0)
