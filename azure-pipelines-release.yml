@@ -20,12 +20,12 @@ variables:
 
   squildockertags: |
     $(major-minor-version)
-    $(major-minor-version)
     $(base-version)
     $(squilversion)
     $(docker-latest-tag)
 
 trigger:
+- dev
 - release
 
 pool:
@@ -85,19 +85,14 @@ stages:
       inputs:
         buildType: 'current'
         artifactName: 'web'
-        targetPath: 'web'
-    - task: PowerShell@2
-      inputs:
-        targetType: 'inline'
-        script: 'dir'
-        workingDirectory: 'web'
+        targetPath: '$(Build.BinariesDirectory)'
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
         azureSubscription: '$(WebDemoSubscriptionName)'
         appType: 'webAppLinux'
-        WebAppName: 'squil-staging'
-        packageForLinux: 'web/Squil.Web'
+        WebAppName: 'squil'
+        packageForLinux: '$(Build.BinariesDirectory)/Squil.Web'
 
 - stage: BuildMauiWindows
   condition: eq(variables['revision-version'], 0)
