@@ -60,7 +60,7 @@ stages:
 
 - stage: ReleaseWeb
   dependsOn: BuildWeb
-  condition: and(eq(variables['Build.SourceBranchName'], 'release'), variables['release'])
+  condition: and(eq(variables['Build.SourceBranchName'], 'release'), eq(variables['release'], 'True'))
   jobs:
   - job: Docker
     steps:
