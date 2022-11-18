@@ -4,6 +4,7 @@ variables:
   patch-version: 9
 
   branch-suffix: $[ replace(replace(eq(variables['Build.SourceBranchName'], 'release'), 'True', ''), 'False', format('-{0}', variables['Build.SourceBranchName'])) ]
+  major-minor-version: $[ format('{0}.{1}', variables['major-version'], variables['minor-version']) ]
   base-version: $[ format('{0}.{1}.{2}', variables['major-version'], variables['minor-version'], variables['patch-version']) ]
   base-version-with-branch: $[ format('{0}.{1}.{2}{3}', variables['major-version'], variables['minor-version'], variables['patch-version'], variables['branch-suffix']) ]
 
@@ -11,6 +12,13 @@ variables:
   revision-suffix: $[ replace(replace(eq(variables['revision-version'], 0), 'True', ''), 'False', format('-p{0}', variables['revision-version'])) ]
   squilversion: $[ format('{0}{1}', variables['base-version'], variables['revision-suffix']) ]
   squilmauiversion: $[ format('{0}.0', variables['base-version'] ) ]
+
+  is-main-release: and(eq(variables['revision-version'], 0), eq(variables['Build.SourceBranchName'], 'release'))
+
+  squildockertags: |
+    $(major-minor-version)
+    $(squilversion)
+    $[ replace(replace(variables['is-main-release'], 'True', 'latest'), 'False', '') ]
 
 trigger:
 - release
@@ -64,8 +72,7 @@ stages:
       inputs:
         containerRegistry: 'Squil Docker Hub'
         repository: squiltech/squil
-        tags: |
-          $(squilversion)
+        tags: $(squildockertags)
   - job: Demo
     steps:
     - checkout: none
