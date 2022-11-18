@@ -20,6 +20,7 @@ variables:
 
   squildockertags: |
     $(major-minor-version)
+    $(major-minor-version)
     $(base-version)
     $(squilversion)
     $(docker-latest-tag)
