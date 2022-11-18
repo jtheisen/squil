@@ -14,11 +14,12 @@ variables:
   squilmauiversion: $[ format('{0}.0', variables['base-version'] ) ]
 
   is-main-release: and(eq(variables['revision-version'], 0), eq(variables['Build.SourceBranchName'], 'release'))
+  docker-latest-tag: $[ replace(replace(variables['is-main-release'], 'True', 'latest'), 'False', '') ]
 
   squildockertags: |
     $(major-minor-version)
     $(squilversion)
-    $[ replace(replace(variables['is-main-release'], 'True', 'latest'), 'False', '') ]
+    $(docker-latest-tag)
 
 trigger:
 - release
