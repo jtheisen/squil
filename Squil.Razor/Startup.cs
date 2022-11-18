@@ -35,7 +35,7 @@ public static class Startup
             services.AddSingleton<LightLiveConfiguration>();
         }
 
-        services.AddSingleton<ILiveSourceProvider>(sp => sp.GetService<LiveConfiguration>());
+        services.AddSingleton<ILiveSourceProvider>(sp => sp.GetService<LightLiveConfiguration>());
     }
 
     public static void AddCommonSquilServices(this IServiceCollection services, AppSettings settings)
