@@ -12,7 +12,7 @@ public static class Startup
 
         provider ??= settings.SquilDbProviderName;
 
-        if (!String.IsNullOrEmpty(provider) && provider != "none")
+        if (!String.IsNullOrEmpty(provider) && !provider.Equals("none", StringComparison.InvariantCultureIgnoreCase))
         {
             services.AddDbContextFactory<Db>(
                 options => _ = provider switch

@@ -26,7 +26,7 @@ public static class MauiProgram
 
         void SetAppSettings(AppSettings s)
         {
-            s.Version = SquilVersion.ReadSquilVersion();
+            s.SquilVersion = SquilVersion.ReadSquilVersion();
             s.SquilDbProviderName = "Sqlite";
             s.SquilDbSqliteConnectionString = $"Filename={Path.Combine(squilFolder, "squil-config.db")}";
             s.ShowNavigationChrome = true;
