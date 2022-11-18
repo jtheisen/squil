@@ -9,7 +9,7 @@ if ($fullversion)
 
 	$mauiWindowsManifestFile = 'Squil.Maui\Platforms\Windows\Package.appxmanifest'
 	[xml]$mauiWindowsManifestXml = Get-Content $mauiWindowsManifestFile
-	$mauiWindowsManifestXml.Package.Identity.Version = $fullversion
+	$mauiWindowsManifestXml.Package.Identity.Version = $mauiversion
 	$mauiWindowsManifestXml.OuterXml | Out-File $mauiWindowsManifestFile
 }
 else
