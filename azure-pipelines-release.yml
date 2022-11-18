@@ -4,7 +4,7 @@ variables:
   patch-version: 9
 
   branch-suffix: $[ replace(replace(eq(variables['Build.SourceBranchName'], 'release'), 'True', ''), 'False', format('-{0}', variables['Build.SourceBranchName'])) ]
-  base-version: $[ format('{0}.{1}.{2}}', variables['major-version'], variables['minor-version'], variables['patch-version']) ]
+  base-version: $[ format('{0}.{1}.{2}', variables['major-version'], variables['minor-version'], variables['patch-version']) ]
   base-version-with-branch: $[ format('{0}.{1}.{2}{3}', variables['major-version'], variables['minor-version'], variables['patch-version'], variables['branch-suffix']) ]
 
   revision-version: $[counter(variables['base-version-with-branch'], 0)]
