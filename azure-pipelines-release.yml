@@ -3,7 +3,7 @@ variables:
   minor-version: 1
   patch-version: 9
 
-  release: False
+  release: True
 
   branch-suffix: $[ replace(replace(eq(variables['Build.SourceBranchName'], 'release'), 'True', ''), 'False', format('-{0}', variables['Build.SourceBranchName'])) ]
   major-minor-version: $[ format('{0}.{1}', variables['major-version'], variables['minor-version']) ]
@@ -20,6 +20,7 @@ variables:
 
   squildockertags: |
     $(major-minor-version)
+    $(base-version)
     $(squilversion)
     $(docker-latest-tag)
 
