@@ -4,8 +4,7 @@ $dockertags=$env:SQUILDOCKERTAGS
 
 if ($fullversion)
 {
-	Write-Output "New version is: $fullversion, MAUI version remains $mauiversion"
-	Write-Information "Docker tags are:\n$dockertags"
+	Write-Output "New version is: $fullversion, MAUI version remains $mauiversion, docker tags are:\n$dockertags"
 
 	$mauiWindowsManifestFile = 'Squil.Maui\Platforms\Windows\Package.appxmanifest'
 	[xml]$mauiWindowsManifestXml = Get-Content $mauiWindowsManifestFile
