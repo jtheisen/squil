@@ -25,7 +25,7 @@ public class AppSettings
 
     public Boolean UseProminentSources { get; set; } = false;
 
-    public String SquilDbProviderName { get; set; }
-    public String SquilDbSqlServerConnectionString { get; set; }
+    public String SquilDbProviderName { get; set; } = "Sqlite";
+    public String SquilDbSqlServerConnectionString { get; set; } = "Filename=squil.db";
     public String SquilDbSqliteConnectionString { get; set; }
 }
