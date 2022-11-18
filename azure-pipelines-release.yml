@@ -1,7 +1,13 @@
 variables:
-  base-version: '1.1.9'
-  revision: $[counter(variables['base-version'], 0)]
-  squilversion: $[ format('{0}.{1}', variables['base-version'], variables['revision']) ]
+  major-version: 1
+  minor-version: 1
+  patch-version: 9
+
+  branch-suffix: $[ replace(replace(eq(variables['Build.SourceBranch'], 'release'), 'True', ''), 'False', format('-{0}', variables['Build.SourceBranch'])) ]
+  base-version: $[ format('{0}.{1}.{2}{3}', variables['major-version'], variables['minor-version'], variables['patch-version'], variables['branch-suffix']) ]
+  revision-version: $[counter(variables['base-version'], 0)]
+  revision-suffix: $[ replace(replace(eq(variables['revision-version'], 0), 'True', ''), 'False', format('-p{0}', variables['revision-version'])) ]
+  squilversion: $[ format('{0}{1}', variables['base-version'], variables['revision-suffix']) ]
   squilmauiversion: $[ format('{0}.0', variables['base-version'] ) ]
 
 trigger:
@@ -41,6 +47,7 @@ stages:
 
 - stage: ReleaseWeb
   dependsOn: BuildWeb
+  condition: $[ eq(variables['Build.SourceBranch'], 'release') ]
   jobs:
   - job: Docker
     steps:
@@ -79,7 +86,7 @@ stages:
         packageForLinux: 'web/Squil.Web'
 
 - stage: BuildMauiWindows
-  condition: eq(variables['revision'], 0)
+  condition: eq(variables['revision-version'], 0)
   pool:
     vmImage: windows-latest
   jobs:
