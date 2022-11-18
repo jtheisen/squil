@@ -12,7 +12,7 @@ variables:
 
   revision-version: $[counter(variables['base-version-with-branch'], 0)]
   revision-suffix: $[ replace(replace(eq(variables['revision-version'], 0), 'True', ''), 'False', format('-p{0}', variables['revision-version'])) ]
-  squilversion: $[ format('{0}{1}', variables['base-version'], variables['revision-suffix']) ]
+  squilversion: $[ format('{0}{1}', variables['base-version-with-branch'], variables['revision-suffix']) ]
   squilmauiversion: $[ format('{0}.0', variables['base-version'] ) ]
 
   is-main-release: $[ and(eq(variables['revision-version'], 0), eq(variables['Build.SourceBranchName'], 'release')) ]
@@ -95,7 +95,7 @@ stages:
         packageForLinux: '$(Build.BinariesDirectory)/Squil.Web'
 
 - stage: BuildMauiWindows
-  condition: eq(variables['revision-version'], 0)
+  condition: and(succeeded(), eq(variables['revision-version'], 0))
   pool:
     vmImage: windows-latest
   jobs:
