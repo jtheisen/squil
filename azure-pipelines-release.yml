@@ -76,7 +76,7 @@ stages:
         azureSubscription: '$(WebDemoSubscriptionName)'
         appType: 'webAppLinux'
         WebAppName: 'squil-staging'
-        packageForLinux: 'web'
+        packageForLinux: 'web/Squil.Web'
 
 - stage: BuildMauiWindows
   condition: eq(variables['revision'], 0)
