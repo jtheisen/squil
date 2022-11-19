@@ -3,19 +3,22 @@ variables:
   squilversionminor: 1
   squilversionpatch: 13
 
-  release: True
-
   branchname: $(Build.SourceBranchName)
   versionkey: $[ format('{0}.{1}.{2}-{3}', variables['squilversionmajor'], variables['squilversionminor'], variables['squilversionpatch'], variables['Build.SourceBranchName']) ]
   squilrevision: $[counter(variables['versionkey'], 0)]
 
   build-windows: ${{ parameters['build-windows'] }}
+  release-web: ${{ parameters['release-web'] }}
 
 parameters:
 - name: build-windows
   displayName: Build Windows
   type: boolean
   default: false
+- name: release-web
+  displayName: Build Windows
+  type: boolean
+  default: true
 
 trigger:
 - dev
@@ -56,7 +59,7 @@ stages:
 
 - stage: ReleaseWeb
   dependsOn: BuildWeb
-  condition: and(eq(variables['Build.SourceBranchName'], 'release'), eq(variables['release'], 'True'))
+  condition: and(eq(variables['Build.SourceBranchName'], 'release'), eq(variables['release-web'], 'True'))
   jobs:
   - job: Docker
     steps:
