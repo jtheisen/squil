@@ -1,8 +1,8 @@
-$major = "$SQUILVERSIONMAJOR"
-$minor = "$SQUILVERSIONMINOR"
-$patch = "$SQUILVERSIONPATCH"
-$revision = "$SQUILREVISION"
-$branch = "$BRANCHNAME"
+$major = "$env:SQUILVERSIONMAJOR"
+$minor = "$env:SQUILVERSIONMINOR"
+$patch = "$env:SQUILVERSIONPATCH"
+$revision = "$env:SQUILREVISION"
+$branch = "$env:BRANCHNAME"
 
 function Format-Xml ([xml]$xml, $indent=2)
 {
