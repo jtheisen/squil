@@ -36,7 +36,7 @@ stages:
     - task: PowerShell@2
       displayName: Set derived versions (PS)
       env:
-        SQUILREVISION: $[counter(variables['base-version-with-branch'], 0)]
+        SQUILREVISION: $[counter(variables['squilversionkey'], 0)]
       inputs:
         filePath: 'version.ps1'
         showWarnings: true
