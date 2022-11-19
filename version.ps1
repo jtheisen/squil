@@ -1,5 +1,8 @@
+$major = "$SQUILVERSIONMAJOR"
+$minor = "$SQUILVERSIONMINOR"
+$patch = "$SQUILVERSIONPATCH"
 $revision = "$SQUILREVISION"
-$branch = "$BRANCHNAME$BUILD_SOURCEBRANCHNAME"
+$branch = "$BRANCHNAME"
 
 function Format-Xml ([xml]$xml, $indent=2)
 {
@@ -14,15 +17,8 @@ function Format-Xml ([xml]$xml, $indent=2)
 }
 
 [xml]$versionXml = Get-Content version.xml
-$major = $versionXml.Version.Major
-$minor = $versionXml.Version.Minor
-$patch = $versionXml.Version.Patch
-
-$baseVersion = "$major.$minor.$patch$"
 
 $branchSuffix = if ($branch -eq "release") { "" } else { "-$branch" }
-
-$fullVersion = "$baseVersion$branchSuffix"
 
 $withMajor = "$major$branchSuffix"
 $withMinor = "$major.$minor$branchSuffix"

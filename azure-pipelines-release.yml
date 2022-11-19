@@ -1,15 +1,13 @@
-parameters:
-- name: build-windows
-  displayName: Build Windows
-  type: boolean
-  default: false
-
 variables:
+  squilversionmajor: 1
+  squilversionminor: 1
+  squilversionpatch: 9
+
   release: True
 
-  squilrevision: $[counter(variables['base-version-with-branch'], 0)]
-
-  build-windows: ${{ parameters['build-windows'] }}
+  branchname: $(Build.SourceBranchName)
+  versionkey: $[ format('{0}.{1}.{2}-{3}', variables['squilversionmajor'], variables['squilversionminor'], variables['squilversionpatch'], variables['Build.SourceBranchName']) ]
+  squilrevision: $[counter(variables['versionkey'], 0)]
 
 trigger:
 - dev
@@ -47,8 +45,42 @@ stages:
         artifact: 'web'
         publishLocation: 'pipeline'
 
+- stage: ReleaseWeb
+  dependsOn: BuildWeb
+  condition: and(eq(variables['Build.SourceBranchName'], 'release'), eq(variables['release'], 'True'))
+  jobs:
+  - job: Docker
+    steps:
+    - checkout: none
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'web'
+        targetPath: '$(Build.SourcesDirectory)'
+    - task: Docker@2
+      displayName: buildAndPush
+      inputs:
+        containerRegistry: 'Squil Docker Hub'
+        repository: squiltech/squil
+        tags: $(squildockertags)
+  - job: Demo
+    steps:
+    - checkout: none
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'web'
+        targetPath: '$(Build.BinariesDirectory)'
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Deploy Azure App Service'
+      inputs:
+        azureSubscription: '$(WebDemoSubscriptionName)'
+        appType: 'webAppLinux'
+        WebAppName: 'squil'
+        packageForLinux: '$(Build.BinariesDirectory)/Squil.Web'
+
 - stage: BuildMauiWindows
-  condition: eq(variables['build-windows'], true)
+  condition: and(succeeded(), eq(variables['revision-version'], 0))
   pool:
     vmImage: windows-latest
   jobs:
@@ -79,3 +111,20 @@ stages:
           targetPath: 'maui-windows-package'
           artifact: 'maui-windows-msix'
           publishLocation: 'pipeline'
+
+- stage: ReleaseMauiWindows
+  dependsOn: BuildMauiWindows
+  jobs:
+  - job: ReleaseToStore
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'web'
+        targetPath: '$(Build.SourcesDirectory)'
+    - task: store-publish@0
+      inputs:
+        serviceEndpoint: 'microsoft-store-deployment'
+        appId: '$(MicrosoftStoreAppId)'
+        packagePath: '**/*.msix'
+        skipPolling: true
