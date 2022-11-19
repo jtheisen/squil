@@ -1,7 +1,7 @@
 variables:
   squilversionmajor: 1
   squilversionminor: 1
-  squilversionpatch: 14
+  squilversionpatch: 13
 
   branchname: $(Build.SourceBranchName)
   versionkey: $[ format('{0}.{1}.{2}-{3}', variables['squilversionmajor'], variables['squilversionminor'], variables['squilversionpatch'], variables['Build.SourceBranchName']) ]
