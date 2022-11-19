@@ -1,38 +1,24 @@
 variables:
-  major-version: 1
-  minor-version: 1
-  patch-version: 12
+  squilversionmajor: 1
+  squilversionminor: 1
+  squilversionpatch: 14
 
-  release: True
-
-  branch-suffix: $[ replace(replace(eq(variables['Build.SourceBranchName'], 'release'), 'True', ''), 'False', format('-{0}', variables['Build.SourceBranchName'])) ]
-  major-minor-version: $[ format('{0}.{1}', variables['major-version'], variables['minor-version']) ]
-  base-version: $[ format('{0}.{1}.{2}', variables['major-version'], variables['minor-version'], variables['patch-version']) ]
-  base-version-with-branch: $[ format('{0}.{1}.{2}{3}', variables['major-version'], variables['minor-version'], variables['patch-version'], variables['branch-suffix']) ]
-
-  revision-version: $[counter(variables['base-version-with-branch'], 0)]
-  revision-suffix: $[ replace(replace(eq(variables['revision-version'], 0), 'True', ''), 'False', format('-p{0}', variables['revision-version'])) ]
-  squilversion: $[ format('{0}{1}', variables['base-version-with-branch'], variables['revision-suffix']) ]
-  squilmauiversion: $[ format('{0}.{1}', variables['base-version'], '0' ) ]
-
-  is-main-release: $[ and(eq(variables['revision-version'], 0), eq(variables['Build.SourceBranchName'], 'release')) ]
-  docker-latest-tag: $[ replace(replace(variables['is-main-release'], 'True', 'latest'), 'False', '') ]
-
-  allsquildockertags: |
-    $(major-minor-version)
-    $(base-version)
-    $(squilversion)
-    $(docker-latest-tag)
-
-  squildockertags: $[ replace(replace(eq(variables['Build.SourceBranchName'], 'release'), 'True', variables['allsquildockertags']), 'False', variables['squilversion']) ]
+  branchname: $(Build.SourceBranchName)
+  versionkey: $[ format('{0}.{1}.{2}-{3}', variables['squilversionmajor'], variables['squilversionminor'], variables['squilversionpatch'], variables['Build.SourceBranchName']) ]
+  squilrevision: $[counter(variables['versionkey'], 0)]
 
   build-windows: ${{ parameters['build-windows'] }}
+  release-web: ${{ parameters['release-web'] }}
 
 parameters:
 - name: build-windows
   displayName: Build Windows
   type: boolean
   default: false
+- name: release-web
+  displayName: Build Windows
+  type: boolean
+  default: true
 
 trigger:
 - dev
@@ -48,6 +34,7 @@ stages:
   - job: build
     steps:
     - task: PowerShell@2
+      displayName: Versioning (PS)
       inputs:
         filePath: 'version.ps1'
         showWarnings: true
@@ -72,7 +59,7 @@ stages:
 
 - stage: ReleaseWeb
   dependsOn: BuildWeb
-  condition: and(eq(variables['Build.SourceBranchName'], 'release'), eq(variables['release'], 'True'))
+  condition: and(eq(variables['Build.SourceBranchName'], 'release'), eq(variables['release-web'], 'True'))
   jobs:
   - job: Docker
     steps:
@@ -136,20 +123,3 @@ stages:
           targetPath: 'maui-windows-package'
           artifact: 'maui-windows-msix'
           publishLocation: 'pipeline'
-
-- stage: ReleaseMauiWindows
-  dependsOn: BuildMauiWindows
-  jobs:
-  - job: ReleaseToStore
-    steps:
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        buildType: 'current'
-        artifactName: 'web'
-        targetPath: '$(Build.SourcesDirectory)'
-    - task: store-publish@0
-      inputs:
-        serviceEndpoint: 'microsoft-store-deployment'
-        appId: '$(MicrosoftStoreAppId)'
-        packagePath: '**/*.msix'
-        skipPolling: true

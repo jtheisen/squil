@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\version.txt" Link="version.txt" />
+    <EmbeddedResource Include="..\version.xml" Link="version.xml" />
   </ItemGroup>
 
   <ItemGroup>
