@@ -105,7 +105,7 @@ stages:
         packageForLinux: '$(Build.BinariesDirectory)/Squil.Web'
 
 - stage: BuildMauiWindows
-  condition: eq(variables['build-windows'], true])
+  condition: eq(variables['build-windows'], true)
   pool:
     vmImage: windows-latest
   jobs:
