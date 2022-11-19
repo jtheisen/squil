@@ -26,6 +26,8 @@ stages:
 - stage: BuildWeb
   jobs:
   - job: build
+    variables:
+      SQUILREVISION: $[counter(variables['squilversionkey'], 0)]
     steps:
     - task: PowerShell@2
       displayName: Get base version (PS)
@@ -35,8 +37,6 @@ stages:
         workingDirectory: '$(Build.SourcesDirectory)'
     - task: PowerShell@2
       displayName: Set derived versions (PS)
-      env:
-        SQUILREVISION: $[counter(variables['squilversionkey'], 0)]
       inputs:
         filePath: 'version.ps1'
         showWarnings: true
