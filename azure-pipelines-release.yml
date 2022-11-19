@@ -97,10 +97,15 @@ stages:
         packageForLinux: '$(Build.BinariesDirectory)/Squil.Web'
 
 - stage: BuildMauiWindows
-  condition: and(succeeded(), eq(variables['revision-version'], 0))
   pool:
     vmImage: windows-latest
   jobs:
+  - job: wait
+    pool: server
+    steps:
+    - task: ManualIntervention@8
+      inputs:
+        instructions: 'Approve to build for Windows release'
   - job: build
     steps:
       - checkout: none
