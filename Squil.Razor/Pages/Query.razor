@@ -209,7 +209,7 @@
                         <div class="common-lead-spacer">&nbsp;</div>
                     }
 
-                    <div class="@ClassNames("query-delay-overlay text-light", "querying".If(IsQuerying))">
+                    <div class="@ClassNames("query-delay-overlay text-light"@*, "querying".If(IsQuerying)*@)">
                         <div class="query-delay-overlay-backdrop" />
                         <h2>Querying!</h2>
                     </div>
