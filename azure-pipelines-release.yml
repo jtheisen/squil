@@ -26,7 +26,7 @@ variables:
 
   squildockertags: $[ replace(replace(eq(variables['Build.SourceBranchName'], 'release'), 'True', variables['allsquildockertags']), 'False', variables['squilversion']) ]
 
-  build-windows: ${{ parameters.build-windows }}
+  build-windows: ${{ parameters['build-windows'] }}
 
 parameters:
 - name: build-windows
