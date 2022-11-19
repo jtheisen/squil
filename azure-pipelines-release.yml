@@ -35,8 +35,8 @@ stages:
         workingDirectory: '$(Build.SourcesDirectory)'
     - task: PowerShell@2
       displayName: Set derived versions (PS)
-      variables:
-        squilrevision: ${{ counter(variables['base-version-with-branch'], 0) }}
+      env:
+        SQUILREVISION: ${{ counter(variables['base-version-with-branch'], 0) }}
       inputs:
         filePath: 'version.ps1'
         showWarnings: true
