@@ -1,11 +1,5 @@
 variables:
-  squilversionmajor: 1
-  squilversionminor: 1
-  squilversionpatch: 15
-
   branchname: $(Build.SourceBranchName)
-  versionkey: $[ format('{0}.{1}.{2}-{3}', variables['squilversionmajor'], variables['squilversionminor'], variables['squilversionpatch'], variables['Build.SourceBranchName']) ]
-  squilrevision: $[counter(variables['versionkey'], 0)]
 
   build-windows: ${{ parameters['build-windows'] }}
   release-web: ${{ parameters['release-web'] }}
@@ -34,7 +28,15 @@ stages:
   - job: build
     steps:
     - task: PowerShell@2
-      displayName: Versioning (PS)
+      displayName: Get base version (PS)
+      inputs:
+        filePath: 'retrieve-base-versions.ps1'
+        showWarnings: true
+        workingDirectory: '$(Build.SourcesDirectory)'
+    - task: PowerShell@2
+      displayName: Set derived versions (PS)
+      variables:
+        squilrevision: ${{ counter(variables['base-version-with-branch'], 0) }}
       inputs:
         filePath: 'version.ps1'
         showWarnings: true
