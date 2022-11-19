@@ -31,6 +31,7 @@ $versionXml.Version.Minor = $minor
 $versionXml.Version.Patch = $patch
 $versionXml.Version.Revision = $revision
 $versionXml.Version.Display = $withRevision
+$versionXml.Version.Release = $withPatch
 $versionXml.Version.MauiWindows = $mauiWindows
 $versionXml.Version.Tags.WithMajor = "$withMajor"
 $versionXml.Version.Tags.WithMinor = "$withMinor"

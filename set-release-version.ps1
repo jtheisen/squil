@@ -1,6 +1,6 @@
 [xml]$versionXml = Get-Content version.xml
 
-$releasename = "$($versionXml.Version.Display)"
+$releasename = "$($versionXml.Version.Release)"
 
 if ($env:overridereleasename)
 {
