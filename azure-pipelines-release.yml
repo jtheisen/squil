@@ -1,7 +1,7 @@
 variables:
   major-version: 1
   minor-version: 1
-  patch-version: 11
+  patch-version: 12
 
   release: True
 

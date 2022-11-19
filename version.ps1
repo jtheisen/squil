@@ -20,3 +20,5 @@ else
 }
 
 $fullversion | Out-File version.txt
+$dockertags | Out-File dockertags.txt
+
