@@ -1,9 +1,3 @@
-parameters:
-- name: build-windows
-  displayName: Build Windows
-  type: boolean
-  default: false
-
 variables:
   major-version: 1
   minor-version: 1
@@ -31,6 +25,12 @@ variables:
     $(docker-latest-tag)
 
   squildockertags: $[ replace(replace(eq(variables['Build.SourceBranchName'], 'release'), 'True', variables['allsquildockertags']), 'False', variables['squilversion']) ]
+
+parameters:
+- name: build-windows
+  displayName: Build Windows
+  type: boolean
+  default: false
 
 trigger:
 - dev
@@ -103,7 +103,7 @@ stages:
         packageForLinux: '$(Build.BinariesDirectory)/Squil.Web'
 
 - stage: BuildMauiWindows
-  condition: eq(parameters['build-windows', true])
+  condition: eq(parameters.build-windows, true])
   pool:
     vmImage: windows-latest
   jobs:
