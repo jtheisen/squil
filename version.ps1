@@ -26,6 +26,9 @@ $withPatch = "$major.$minor.$patch$branchSuffix"
 $withRevision = "$major.$minor.$patch.$revision$branchSuffix"
 $mauiWindows = "$major.$minor.$patch.0"
 
+$versionXml.Version.Major = $major
+$versionXml.Version.Minor = $minor
+$versionXml.Version.Patch = $patch
 $versionXml.Version.Revision = $revision
 $versionXml.Version.Display = $withRevision
 $versionXml.Version.MauiWindows = $mauiWindows

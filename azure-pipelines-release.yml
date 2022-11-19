@@ -23,6 +23,7 @@ stages:
   - job: build
     steps:
     - task: PowerShell@2
+      displayName: Versioning (PS)
       inputs:
         filePath: 'version.ps1'
         showWarnings: true

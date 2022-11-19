@@ -2,11 +2,16 @@
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace Squil;
 
-public static class SquilVersion
+[XmlType("Version")]
+public class SquilVersion
 {
+    [XmlElement("Display")]
+    public String Display { get; set; }
+
     static Logger log = LogManager.GetCurrentClassLogger();
 
     public static String ReadSquilVersion()
@@ -15,7 +20,7 @@ public static class SquilVersion
         {
             var assembly = typeof(SquilVersion).Assembly;
 
-            using var stream = assembly.GetManifestResourceStream("Squil.version.txt");
+            using var stream = assembly.GetManifestResourceStream("Squil.version.xml");
 
             if (stream == null)
             {
@@ -24,11 +29,11 @@ public static class SquilVersion
                 return "unknown";
             }
 
-            var ms = new MemoryStream();
+            var serializer = new XmlSerializer(typeof(SquilVersion));
 
-            stream.CopyTo(ms);
+            var version = (SquilVersion)serializer.Deserialize(stream);
 
-            return Encoding.UTF8.GetString(ms.ToArray());
+            return version.Display;
         }
         catch (Exception ex)
         {
