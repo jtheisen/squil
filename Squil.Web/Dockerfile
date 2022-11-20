@@ -3,4 +3,4 @@ EXPOSE 80/tcp
 EXPOSE 443/tcp
 COPY . App/
 WORKDIR /App
-ENTRYPOINT ["dotnet", "Squil.dll"]
+ENTRYPOINT ["dotnet", "Squil.Web.dll"]
