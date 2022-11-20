@@ -158,15 +158,20 @@
                     {
                         <div class="alert alert-danger">
                             <div class="mb-2">
-                                The database sent an unexpected error, this is likely a bug.
+                                The database sent an error.
                             </div>
 
-                            <pre class="mb-0">
-                                @foreach (Microsoft.Data.SqlClient.SqlError msg in se.Errors)
-                                {
+                            @foreach (Microsoft.Data.SqlClient.SqlError msg in se.Errors)
+                            {
+                                <div class="d-flex opacity-50 gap-2" style="font-size: .75rem">
+                                    <span>class=@msg.Class,</span>
+                                    <span>number=@msg.Number,</span>
+                                    <span>state=@msg.State</span>
+                                </div>
+                                <pre class="mb-0">
                                     <div>@msg.Message</div>
-                                }
-                            </pre>
+                                </pre>
+                            }
                         </div>
                     }
                     else if(vm.LastResult.Exception is Exception e)
