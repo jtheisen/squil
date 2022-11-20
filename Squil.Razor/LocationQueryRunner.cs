@@ -136,13 +136,13 @@ public enum CanLoadMoreStatus
 
 public class LocationQueryRunner
 {
-    LiveConfiguration connections;
+    ILiveSourceProvider connections;
 
     ConnectionHolder currentConnectionHolder;
 
     public ConnectionHolder CurrentConnectionHolder => currentConnectionHolder;
 
-    public LocationQueryRunner(LiveConfiguration connections, ConnectionHolder currentConnectionHolder)
+    public LocationQueryRunner(ILiveSourceProvider connections, ConnectionHolder currentConnectionHolder)
     {
         this.connections = connections;
 

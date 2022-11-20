@@ -40,7 +40,6 @@ public static class Startup
 
     public static void AddCommonSquilServices(this IServiceCollection services, AppSettings settings)
     {
-        services.AddSingleton<LiveConfiguration>();
         services.AddSingleton<SqlServerConnectionProvider>();
         services.AddScoped<LocationQueryRunner>();
         services.AddScoped<ConnectionHolder>();
