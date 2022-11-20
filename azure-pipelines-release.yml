@@ -1,7 +1,7 @@
 variables:
   squilversionmajor: 1
   squilversionminor: 1
-  squilversionpatch: 16
+  squilversionpatch: 17
 
   branchname: $(Build.SourceBranchName)
   versionkey: $[ format('{0}.{1}.{2}-{3}', variables['squilversionmajor'], variables['squilversionminor'], variables['squilversionpatch'], variables['Build.SourceBranchName']) ]
@@ -18,7 +18,7 @@ parameters:
 - name: release-web
   displayName: Release Web
   type: boolean
-  default: true
+  default: false
 
 trigger:
 - dev
