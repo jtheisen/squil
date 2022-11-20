@@ -269,39 +269,53 @@
 
                     <div class="@ClassNames("query-delay-overlay", "querying".If(!isFirstRender && IsQuerying))">
                         <div class="common-lead-spacer">&nbsp;</div>
-                        <h2>Query is taking long</h2>
+                        <h2>Investigating slow query</h2>
 
                         <RerenderHelper Observable="@Runner.CurrentConnectionHolder" OnChange="@StateHasChanged" />
 
                         @if (Runner.CurrentConnectionHolder.StallDetective is StallDetective sd)
                         {
-                            <div>Investigating</div>
-
                             <RerenderHelper Observable="@sd" OnChange="@StateHasChanged" />
 
-                            <ul>
-                                @foreach (var item in sd.Probes)
+                            <div>
+                                @switch (sd.Result.Type)
                                 {
-                                    <li>
-                                        @item.Name
-                                        @if (item.Task is Task<StallProbeResult> t)
-                                        {
-                                            if (t.IsCompletedSuccessfully)
-                                            {
-                                                <span>@t.Result.Message</span>
-                                            }
-                                            else if (!t.IsCompleted)
-                                            {
-                                                <div class="spinner-border spinner-border-sm" />
-                                            }
-                                            else
-                                            {
-                                                <div>?</div>
-                                            }
-                                        }
-                                    </li>
+                                    case StallInvestigationResultType.Initial:
+                                        break;
+                                    case StallInvestigationResultType.CantConnect:
+                                        <p>
+                                            The server has become unreachable.
+                                        </p>
+                                        break;
+                                    case StallInvestigationResultType.NoInformation:
+                                        <p>
+                                            The server is reachable, but even though this connection has the required permission,
+                                            no further information about the stalled query could be retrieved.
+                                        </p>
+                                        break;
+                                    case StallInvestigationResultType.NoPermission:
+                                        <p>
+                                            The server is reachable, but this connection doesn't have the necessary
+                                            VIEW SERVER STATE permission required for further stall investigation.
+                                        </p>
+                                        break;
+                                    case StallInvestigationResultType.Blocked:
+                                        <p>
+                                            The query is blocked waiting on a locked resource. It will continue as soon as
+                                            the lock is released.
+                                        </p>
+                                        break;
+                                    case StallInvestigationResultType.Unblocked:
+                                        <p>
+                                            Query status could be retrieved and it is not reported to be blocked.
+                                            The following spinner will move every second the database makes some
+                                            progress on this query. If it doesn't move, then the query is blocked in
+                                            some unreported way.
+                                        </p>
+                                        <i class="fa-solid fa-spinner fa-rotate-@((sd.Result.progress % 8) * 45)"></i>
+                                        break;
                                 }
-                            </ul>
+                            </div>
                         }
                     </div>
 
