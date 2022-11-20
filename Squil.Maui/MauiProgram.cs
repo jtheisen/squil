@@ -19,9 +19,6 @@ public static class MauiProgram
         services.AddMauiBlazorWebView();
         services.AddBlazorWebViewDeveloperTools();
 
-        //services.AddSingleton<ISquilConfigStore, AppSettingsSquilConfigStore>();
-        services.AddSingleton<LocationQueryRunner>();
-
         var squilFolder = GetAndEnsureSquilFolder();
 
         void SetAppSettings(AppSettings s)
@@ -41,7 +38,7 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        app.Services.InitializeDb();
+        app.Services.InitializeDbAndInstallStaticServices();
 
         return app;
     }
