@@ -153,7 +153,7 @@ for xml path('investigation_root')
 
         var investigationRoot = await db.QueryAndParseXmlAsync<InvestigationRoot>(sql);
 
-        var request = investigationRoot.Requests.SingleOrDefault("Unexpectedly got multiple requests");
+        var request = investigationRoot.Requests?.SingleOrDefault("Unexpectedly got multiple requests");
 
         if (request == null)
         {

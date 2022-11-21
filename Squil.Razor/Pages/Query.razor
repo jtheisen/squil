@@ -184,7 +184,8 @@
 		                                    <div>@msg.Message</div>
 		                                </pre>
 		                            }
-		                        </div>                            }
+		                        </div>
+                            }
                             else if (vm.LastResult.Exception is Exception e)
                             {
                                 <div class="alert alert-danger">
@@ -196,6 +197,13 @@
 
                             @if (vm.DisplayedEntity != null)
                             {
+                                if (vm.LastResult.SearchMode == QuerySearchMode.Scan)
+                                {
+                                    <div>
+                                        scanned for <span>@vm.LastRequest.SearchValues[""]</span>
+                                    </div>
+                                }
+
                                 <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsOk))">
                                     <EntityContentView Entity="@vm.DisplayedEntity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
                                 </div>
@@ -340,6 +348,8 @@
     [CascadingParameter]
     public CurrentLocation Location { get; set; }
 
+    CurrentLocation previousLocation;
+
     Boolean IsQuerying => lastQueryTask?.IsCompleted != true;
 
     LocationQueryRequest LastRequest { get; set; }
@@ -358,10 +368,13 @@
 
     Boolean haveQueryPending;
     Boolean jsInitPending;
+    Boolean isDisposed;
 
     LocationQueryVm vm = null;
 
     QueryContext QueryContext { get; set; }
+
+    String currentUri;
 
     void OpenSqlModal() => SqlModalSubscription = () => SqlModalSubscription = null;
 
@@ -370,6 +383,17 @@
     void OpenReportModal() => ReportModalSubscription = () => ReportModalSubscription = null;
 
     Action ReportModalSubscription { get; set; }
+
+    Boolean CheckLocationUri(out Uri uri)
+    {
+        uri = null;
+
+        if (String.IsNullOrEmpty(Location?.Location)) return true;
+
+        uri = new Uri(Location.Location, UriKind.Absolute);
+
+        return uri.Segments.Length < 2 || uri.Segments[0] != "/" || uri.Segments[1] != "query/";
+    }
 
     async void RunQuery(Boolean synchronously = false)
     {
@@ -383,7 +407,18 @@
         {
             log.Debug($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
 
-            lastQueryTask = InnerRunQuery(synchronously);
+            if (CheckLocationUri(out var uri))
+            {
+                log.Info("Query page left, won't run a query");
+
+                return;
+            }
+
+            var queryParams = HttpUtility.ParseQueryString(uri.Query);
+
+            var segments = uri.Segments.Skip(1).ToArray();
+
+            lastQueryTask = InnerRunQuery(segments, queryParams, synchronously);
 
             if (lastQueryTask.IsCompleted)
             {
@@ -396,7 +431,11 @@
 
             StateHasChanged();
 
+            if (isDisposed) return;
+
             await lastQueryTask;
+
+            if (isDisposed) return;
 
             StateHasChanged();
 
@@ -411,13 +450,9 @@
         }
     }
 
-    async Task InnerRunQuery(Boolean synchronously = false)
+    async Task InnerRunQuery(String[] segments, System.Collections.Specialized.NameValueCollection queryParams, Boolean synchronously = false)
     {
-        var query = new Uri(NavigationManager.Uri).Query;
-
-        var queryParams = HttpUtility.ParseQueryString(query);
-
-        var request = new LocationQueryRequest(Path, queryParams, SearchValues.ToNameValueCollection())
+        var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection())
         {
             ListLimit = listLimit
         };
@@ -478,9 +513,11 @@
 
     protected override void OnParametersSet()
     {
-        if (LastRequest?.Path != Path)
+        if (Location != previousLocation)
         {
-            log.Debug($"OnParametersSet path changed from {LastRequest?.Path ?? "null"} to {Path}");
+            log.Debug($"OnParametersSet uri changed from {previousLocation?.Location ?? "null"} to {Location.Location}");
+
+            previousLocation = Location;
 
             haveQueryPending = false;
 
@@ -514,6 +551,7 @@
 
     void IDisposable.Dispose()
     {
+        isDisposed = true;
         Runner.Cancel();
     }
 }

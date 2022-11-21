@@ -15,8 +15,6 @@ public enum QueryControllerQueryType
 
 public class LocationQueryRequest
 {
-    public String Path { get; }
-
     public String Source { get; }
     public String Schema { get; }
     public String Table { get; }
@@ -33,20 +31,16 @@ public class LocationQueryRequest
     public NameValueCollection RestParams { get; }
     public NameValueCollection SearchValues { get; }
 
-    public LocationQueryRequest(String path, NameValueCollection queryParams, NameValueCollection searchValues)
+    public LocationQueryRequest(String[] segments, NameValueCollection queryParams, NameValueCollection searchValues)
     {
-        Path = path;
-
-        var segments = new Uri("https://host/" + path, UriKind.Absolute).Segments;
-        
-        Debug.Assert(segments.GetOrDefault(0) == "/");
-
         String Get(Int32 i)
         {
             var segment = segments.GetOrDefault(i)?.TrimEnd('/');
 
             return segment != UrlRenderer.BlazorDefeatingDummySegment ? segment : null;
         }
+
+        Debug.Assert(Get(0) == "query");
 
         Source = Get(1);
 
@@ -136,6 +130,8 @@ public enum CanLoadMoreStatus
 
 public class LocationQueryRunner
 {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
     ILiveSourceProvider connections;
 
     ConnectionHolder currentConnectionHolder;
@@ -171,6 +167,8 @@ public class LocationQueryRunner
         }
         catch (Exception ex)
         {
+            log.Error(ex, "Query terminated with exception");
+
             result = new LocationQueryResult();
             result.Exception = ex;
         }
@@ -335,6 +333,8 @@ public class LocationQueryRunner
         }
         catch (SqlException ex)
         {
+            log.Error(ex, "Query terminated with exception");
+
             result.Exception = ex;
 
             return result;
