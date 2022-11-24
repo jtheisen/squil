@@ -258,7 +258,6 @@ main.main {
 
     .query-results.querying {
         transition: filter, opacity;
-        transition-delay: 1s;
         transition-duration: 200ms;
         filter: blur(8px);
         opacity: .5;
@@ -280,7 +279,6 @@ main.main {
 
     .query-delay-overlay.querying {
         transition: opacity;
-        transition-delay: 1s;
         transition-duration: 200ms;
         opacity: 1;
         pointer-events: initial;

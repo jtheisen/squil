@@ -13,6 +13,8 @@
     renderCount++;
 
     log.Debug($"Render {instanceId} #{renderCount}, query state: {lastQueryTask?.Status}");
+
+    var sd = Runner.CurrentConnectionHolder.StallDetective;
 }
 
 <PageTitle>@vm?.Response.RootName</PageTitle>
@@ -160,7 +162,8 @@
 
                         <div class="common-lead-spacer">&nbsp;</div>
 
-                        <div class="@ClassNames("query-results", "querying".If(IsQuerying))">
+                        <div class="@ClassNames("query-results", "querying".If(IsQuerying && sd != null))">
+
                             @if (Settings.ShowHelpTexts)
                             {
                                 <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
@@ -272,13 +275,13 @@
                         </Modal>
                     }
 
-                    <div class="@ClassNames("query-delay-overlay", "querying".If(!isFirstRender && IsQuerying))">
+                    <div class="@ClassNames("query-delay-overlay", "querying".If(IsQuerying && sd != null))">
                         <div class="common-lead-spacer">&nbsp;</div>
                         <h2>Investigating slow query</h2>
 
                         <RerenderHelper Observable="@Runner.CurrentConnectionHolder" OnChange="@StateHasChanged" />
 
-                        @if (Runner.CurrentConnectionHolder.StallDetective is StallDetective sd)
+                        @if (sd != null)
                         {
                             <RerenderHelper Observable="@sd" OnChange="@StateHasChanged" />
 
