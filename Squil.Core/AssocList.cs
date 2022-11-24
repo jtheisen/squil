@@ -70,7 +70,7 @@ public class MappingAssocList<K, NV, OV> : IAssocList<K, NV>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public class AssocList<K, V> : ObservableObject, IAssocList<K, V>
+public class AssocList<K, V> : ObservableObject<AssocList<K, V>>, IAssocList<K, V>
 {
     private readonly List<KeyValuePair<K, V>> pairs;
     private readonly Dictionary<K, V> dict;

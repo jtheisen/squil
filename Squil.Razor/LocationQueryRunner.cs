@@ -1,6 +1,6 @@
 ﻿using System.Collections.Specialized;
-using Microsoft.Data.SqlClient;
 using TaskLedgering;
+using static Squil.ExtentFactory;
 
 namespace Squil;
 
@@ -99,26 +99,71 @@ public class LocationQueryRequest
     }
 }
 
-public class LocationQueryResult
+[DebuggerDisplay("{ToString()}")]
+public class LocationQueryResponse
 {
     public QueryControllerQueryType QueryType { get; set; }
     public QuerySearchMode? SearchMode { get; set; }
+    public ExtentFlavorType ExtentFlavorType { get; set; }
     public Boolean MayScan { get; set; }
     public String RootUrl { get; set; }
     public String RootName { get; set; }
     public CMTable Table { get; set; }
     public CMIndexlike Index { get; set; }
-    public Entity Entity { get; set; }
-    public RelatedEntities PrimaryEntities { get; set; }
-    public RelatedEntities PrincipalEntities { get; set; }
     public CMRelationEnd PrincipalRelation { get; set; }
-    public Boolean IsValidationOk { get; set; }
+    public PrincipalLocation PrincipalLocation { get; set; }
+    public Boolean HaveValidationIssues { get; set; }
     public ValidationResult[] ValidatedColumns { get; set; }
+
+    public Extent Extent { get; set; }
+    public LiveSource Context { get; set; }
+
+    public Task<LocationQueryResult> Task { get; set; }
 
     public TaskLedger Ledger { get; set; }
     public Exception Exception { get; set; }
 
-    public Boolean IsOk => IsValidationOk && Exception == null;
+    public Boolean IsOk => !HaveValidationIssues && Exception == null;
+
+    public Boolean IsCanceled => Exception is OperationCanceledException;
+
+    public async Task Wait()
+    {
+        try
+        {
+            await Task;
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    public override String ToString()
+    {
+        if (IsCanceled) return "canceled";
+
+        if (Exception != null) return $"exception: {Exception.Message}";
+
+        if (HaveValidationIssues) return $"validation issues";
+
+        if (Task == null) return "not started";
+
+        return $"status {Task.Status}{Exception?.Apply(e => $", exception: {e.Message}")}";
+    }
+}
+
+public class LocationQueryResult
+{
+    public Entity Entity { get; set; }
+    public RelatedEntities PrimaryEntities { get; set; }
+    public RelatedEntities PrincipalEntities { get; set; }
+
+    public override String ToString()
+    {
+        var items = new[] { "entity".If(Entity != null), "primaries".If(PrimaryEntities != null), "principals".If(PrincipalEntities != null) };
+
+        return $"result with {String.Join(", ", items.Where(i => i != null))}";
+    }
 }
 
 public enum CanLoadMoreStatus
@@ -150,50 +195,13 @@ public class LocationQueryRunner
         currentConnectionHolder.Cancel();
     }
 
-    public async Task<LocationQueryResult> QueryAsync(String connectionName, LocationQueryRequest request)
+    public LocationQueryResponse StartQuery(String connectionName, LocationQueryRequest request)
     {
         if (connections.AppSettings.DebugQueryDelayMillis is Int32 d)
         {
             Thread.Sleep(d);
         }
 
-        using var ledger = InstallTaskLedger();
-
-        LocationQueryResult result = null;
-
-        try
-        {
-            result = await QueryInternal0(connectionName, request);
-        }
-        catch (Exception ex)
-        {
-            log.Error(ex, "Query terminated with exception");
-
-            result = new LocationQueryResult();
-            result.Exception = ex;
-        }
-        finally
-        {
-            result.Ledger = ledger;
-        }
-
-        return result;
-    }
-
-    public async Task<LocationQueryResult> QueryInternal0(String connectionName, LocationQueryRequest request)
-    {
-        try
-        {
-            return await QueryInternal1(connectionName, request);
-        }
-        catch (SchemaChangedException)
-        {
-            return await QueryInternal1(connectionName, request);
-        }
-    }
-
-    async Task<LocationQueryResult> QueryInternal1(String connectionName, LocationQueryRequest request)
-    {
         var context = connections.GetLiveSource(connectionName);
 
         var schema = request.Schema;
@@ -208,11 +216,12 @@ public class LocationQueryRunner
 
         var extentFactory = new ExtentFactory(2);
 
-        var result = new LocationQueryResult
+        var query = new LocationQueryResponse
         {
             RootName = connectionName,
             RootUrl = $"/query/{connectionName}",
-            Table = cmTable
+            Table = cmTable,
+            Context = context
         };
 
         Extent extent;
@@ -221,13 +230,12 @@ public class LocationQueryRunner
 
         if (isRoot)
         {
-            result.QueryType = QueryControllerQueryType.Root;
-            result.IsValidationOk = true;
+            query.QueryType = QueryControllerQueryType.Root;
             extent = extentFactory.CreateRootExtentForRoot(cmTable);
         }
         else
         {
-            var cmIndex = result.Index = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
+            var cmIndex = query.Index = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
             var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
 
@@ -290,9 +298,11 @@ public class LocationQueryRunner
 
             var scanValue = searchMode == QuerySearchMode.Scan ? request.SearchValues[""] ?? "" : null;
 
+            var extentFlavorType = GetExtentFlavor();
+
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
-                GetExtentFlavor(),
+                extentFlavorType,
                 cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
                 principalLocation, scanValue, request.Column
             );
@@ -316,43 +326,71 @@ public class LocationQueryRunner
                 return QueryControllerQueryType.TableSlice;
             }
 
-            result.QueryType = GetQueryType();
-            result.SearchMode = searchMode;
-            result.ValidatedColumns = columnValues;
-            result.IsValidationOk = columnValues?.All(r => r.IsOk) ?? true;
-            result.MayScan = defaultSearchMode == QuerySearchMode.Scan; // ie "is small table/index"
+            query.QueryType = GetQueryType();
+            query.SearchMode = searchMode;
+            query.ExtentFlavorType = extentFlavorType;
+            query.ValidatedColumns = columnValues;
+            query.HaveValidationIssues = !(columnValues?.All(r => r.IsOk) ?? true);
+            query.MayScan = defaultSearchMode == QuerySearchMode.Scan; // ie "is small table/index"
+            
+            if (principalLocation != null)
+            {
+                query.PrincipalRelation = principalLocation.Relation;
+            }
         }
 
-        if (!result.IsValidationOk) return result;
+        query.Extent = extent;
+
+        if (query.HaveValidationIssues) return query;
 
         context.SetConnectionInHolder(currentConnectionHolder);
 
+        query.Task = RunQuery(query);
+
+        return query;
+    }
+
+    async Task<LocationQueryResult> RunQuery(LocationQueryResponse query)
+    {
         try
         {
-            result.Entity = await currentConnectionHolder.RunAsync(c => context.QueryAsync(c, extent));
-        }
-        catch (SqlException ex)
-        {
-            log.Error(ex, "Query terminated with exception");
+            var entity = await currentConnectionHolder.RunAsync(c => query.Context.QueryAsync(c, query.Extent));
 
-            result.Exception = ex;
+            var result = new LocationQueryResult
+            {
+                Entity = entity
+            };
+
+            if (query.QueryType != QueryControllerQueryType.Root)
+            {
+                result.PrimaryEntities = entity.Related.GetRelatedEntities("primary");
+            }
+
+            if (query.PrincipalLocation != null)
+            {
+                result.PrincipalEntities = entity.Related.GetRelatedEntities("principal");
+            }
 
             return result;
         }
-
-        if (!isRoot)
+        catch (Exception ex)
         {
-            result.PrimaryEntities = result.Entity.Related.GetRelatedEntities("primary");
+            if (ex is OperationCanceledException)
+            {
+                log.Info($"Query canceled");
+            }
+            else
+            {
+                log.Error(ex, "Query terminated with exception");
+            }
+
+            query.Exception = ex;
+
+            throw;
         }
 
-        if (principalLocation != null)
-        {
-            result.PrincipalEntities = result.Entity.Related.GetRelatedEntities("principal");
-            result.PrincipalRelation = principalLocation.Relation;
-        }
-
-        return result;
     }
+
 
     ExtentFactory.PrincipalLocation GetPrincipalLocation(CMTable cmTable, LocationQueryRequest request)
     {

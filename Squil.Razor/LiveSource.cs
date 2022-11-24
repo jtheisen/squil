@@ -149,17 +149,13 @@ public class LiveSource
     }
 }
 
-public class ConnectionHolder : ObservableObject, IDisposable
+public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
 {
-    static Logger log = LogManager.GetCurrentClassLogger();
-
     SqlConnection connection;
 
     CancellationTokenSource tcs = new CancellationTokenSource();
 
     SemaphoreSlim semaphore = new SemaphoreSlim(1);
-
-    Int32 runId = 0;
 
     public SqlConnection Connection
     {
@@ -179,42 +175,48 @@ public class ConnectionHolder : ObservableObject, IDisposable
 
     public async Task<T> RunAsync<T>(Func<SqlConnection, Task<T>> action)
     {
-        var runId = ++this.runId % 10;
+        var logIds = LogIds;
 
-        StallDetective = null;
-
-        if (runId == 3)
+        if (semaphore.CurrentCount == 0)
         {
-            StallDetective = null;
+            log.Info($"{logIds} Requesting cancellation of running query");
+
+            Cancel();
         }
+
+        log.Info($"{logIds} Acquiring lock while semaphore at {semaphore.CurrentCount}");
+
+        tcs = new CancellationTokenSource();
+
+        var ct = tcs.Token;
+
+        await semaphore.WaitAsync();
 
         try
         {
-            NotifyChange();
+            StallDetective = null;
 
-            if (semaphore.CurrentCount == 0)
+            if (ct.IsCancellationRequested)
             {
-                log.Info($"{runId}: Requesting cancellation of running query");
+                log.Info($"{logIds} Already canceled, won't start");
 
-                Cancel();
+                throw new OperationCanceledException("Operation canceled before it began");
             }
 
-            log.Info($"{runId}: Acquiring lock");
-
-            await semaphore.WaitAsync();
+            NotifyChange();
 
             if (connection.State == System.Data.ConnectionState.Closed)
             {
-                log.Info($"{runId}: Opening connection");
+                log.Info($"{logIds} Opening connection");
 
                 await connection.OpenAsync();
 
                 NotifyChange();
             }
 
-            using var _ = StaticServiceStack.Install(tcs.Token);
+            using var _ = StaticServiceStack.Install(ct);
 
-            log.Info($"{runId}: Starting query");
+            log.Info($"{logIds} Starting query");
 
             var task = action(connection);
 
@@ -222,7 +224,7 @@ public class ConnectionHolder : ObservableObject, IDisposable
 
             if (!task.IsCompleted)
             {
-                log.Info($"{runId}: Query is delayed, spawning stall detective");
+                log.Info($"{logIds} Query is delayed, spawning stall detective");
 
                 StallDetective = new StallDetective(connection);
 
@@ -239,23 +241,26 @@ public class ConnectionHolder : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            log.Info($"{runId}: Query terminated with exception: " + ex.Message);
-
-            throw;
+            if (ct.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Operation canceled", ex);
+            }
+            else
+            {
+                throw;
+            }
         }
         finally
         {
-            log.Info($"{runId}: Query terminated");
+            var previousCount = semaphore.Release();
 
-            semaphore.Release();
+            log.Info($"{logIds} Query terminated, semaphore now at {semaphore.CurrentCount}");
         }
     }
 
     public void Cancel()
     {
         tcs.Cancel();
-
-        tcs = new CancellationTokenSource();
     }
 
     public void Dispose()

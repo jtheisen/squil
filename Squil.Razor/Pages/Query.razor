@@ -15,14 +15,14 @@
     log.Debug($"Render {instanceId} #{renderCount}, query state: {lastQueryTask?.Status}");
 }
 
-<PageTitle>@vm?.Result.RootName</PageTitle>
+<PageTitle>@vm?.Response.RootName</PageTitle>
 
 <DefaultLayout>
     <NavItems>
-        @if (vm != null)
+        @if (vm?.Result != null)
         {
             <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
-            <BreadcrumbItem><a class="text-muted" href="@vm.Result.RootUrl.If(vm.Result.QueryType != QueryControllerQueryType.Root)">@vm.Result.RootName</a></BreadcrumbItem>
+            <BreadcrumbItem><a class="text-muted" href="@vm.Response.RootUrl.If(vm.Response.QueryType != QueryControllerQueryType.Root)">@vm.Response.RootName</a></BreadcrumbItem>
             <CascadingValue Value="QueryContext">
                 @if (vm.Result.PrincipalEntities != null)
                 {
@@ -30,42 +30,42 @@
 
                     <BreadcrumbItem>
                         <span class="entity-context text-muted">
-                            <EntityHeaderView Table="@vm.Result.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
+                            <EntityHeaderView Table="@vm.Response.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
                         </span>
                     </BreadcrumbItem>
                     <BreadcrumbItem>
-                        <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrincipalRelation" NoColumnInformation="@true" /></span>
+                        <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Response.PrincipalRelation" NoColumnInformation="@true" /></span>
                     </BreadcrumbItem>
                 }
-                else
+                else if (vm.Result.PrimaryEntities is RelatedEntities pe)
                 {
-                    var entity = vm.Result.PrimaryEntities?.List.FirstOrDefault();
+                    var entity = pe.List.FirstOrDefault();
 
-                    switch (vm.Result.QueryType)
+                    switch (vm.Response.QueryType)
                     {
                         case QueryControllerQueryType.Table:
-                            <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></span>
+                            <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></span>
                             break;
                         case QueryControllerQueryType.Row:
 
                             <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
+                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
                                 <span class="text-muted entity-context">
-                                    <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
+                                    <EntityHeaderView Table="@pe.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
                                 </span>
                             </BreadcrumbItem>
                             break;
                         case QueryControllerQueryType.Column:
                             <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Result.Table)"><EntityRelationNameView RelationEnd="@vm.Result.PrimaryEntities.RelationEnd" NoColumnInformation="@true" /></a>
+                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
-                                <a class="text-muted entity-context" href="@QueryContext.RenderEntityUrl(vm.Result.Table, entity)">
-                                    <EntityHeaderView Table="@vm.Result.PrimaryEntities.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
+                                <a class="text-muted entity-context" href="@QueryContext.RenderEntityUrl(vm.Response.Table, entity)">
+                                    <EntityHeaderView Table="@pe.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
                                 </a>
                             </BreadcrumbItem>
 
@@ -94,7 +94,7 @@
         <div class="btn-group">
             @if (Settings.EnableDevMode)
             {
-                <a class="btn btn-outline-dark text-muted" href="/info/@LastRequest.Source">schema</a>
+                <a class="btn btn-outline-dark text-muted" href="/info/@vm?.LastRequest.Source">schema</a>
                 <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">report</button>
             }
             <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
@@ -111,7 +111,7 @@
 
                     @if(Settings.EnableDevMode)
                     {
-                        if (vm?.LastResult?.Ledger != null)
+                        if (vm?.LastResponse?.Ledger != null)
                         {
                             <div>
                                 <span>@queryCount / @renderCount</span>
@@ -119,7 +119,7 @@
                             <div class="common-lead-spacer">&nbsp;</div>
                             <div class="">
                                 <dl>
-                                    @foreach (var entry in vm.LastResult.Ledger.GetEntries())
+                                    @foreach (var entry in vm.LastResponse.Ledger.GetEntries())
                                     {
                                         <dt>@entry.name</dt>
                                         <dd>@entry.time</dd>
@@ -132,7 +132,7 @@
                     {
                         <h5 class="text-muted font-weight-bold border-bottom mb-4">Guidance</h5>
                         <div class="sidebar-helptext small text-muted">
-                            <HelpText QueryType="@vm.LastResult.QueryType" />
+                            <HelpText QueryType="@vm.LastResponse.QueryType" />
                         </div>
                     
                     }
@@ -150,7 +150,7 @@
 
                     @if (vm != null)
                     {
-                        switch (vm.LastResult.QueryType)
+                        switch (vm.LastResponse.QueryType)
                         {
                             case QueryControllerQueryType.Table:
                             case QueryControllerQueryType.TableSlice:
@@ -166,7 +166,7 @@
                                 <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
                             }
 
-                            @if (vm.LastResult.Exception is SqlException se)
+                            @if (vm.LastResponse.Exception is SqlException se)
                             {
 		                        <div class="alert alert-danger">
 		                            <div class="mb-2">
@@ -184,9 +184,13 @@
 		                                    <div>@msg.Message</div>
 		                                </pre>
 		                            }
-		                        </div>
+                                </div>
                             }
-                            else if (vm.LastResult.Exception is Exception e)
+                            else if (vm.LastResponse.Exception is OperationCanceledException)
+                            {
+                                // canceled
+                            }
+                            else if (vm.LastResponse.Exception is Exception e)
                             {
                                 <div class="alert alert-danger">
                                     <div>
@@ -195,17 +199,10 @@
                                 </div>
                             }
 
-                            @if (vm.DisplayedEntity != null)
+                            @if (vm.Result != null)
                             {
-                                if (vm.LastResult.SearchMode == QuerySearchMode.Scan)
-                                {
-                                    <div>
-                                        scanned for <span>@vm.LastRequest.SearchValues[""]</span>
-                                    </div>
-                                }
-
-                                <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResult.IsOk))">
-                                    <EntityContentView Entity="@vm.DisplayedEntity" HideHeaders="@(vm.LastResult.QueryType != QueryControllerQueryType.Root)" />
+                                <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResponse.IsOk))">
+                                    <EntityContentView Entity="@vm.Result.Entity" HideHeaders="@(vm.LastResponse.QueryType != QueryControllerQueryType.Root)" />
                                 </div>
 
                                 @switch (vm.CanLoadMore())
@@ -252,14 +249,14 @@
                                 </small>
                             </HeaderExtra>
                             <Body>
-                                <pre><CopyableContent>@(vm.LastResult?.Ledger.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
+                                <pre><CopyableContent>@(vm.LastResponse?.Ledger.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
                                 </Body>
                             </Modal>
 
                         <Modal OnClose="ReportModalSubscription">
                             <Title>Query report</Title>
                             <Body>
-                                @foreach (var entry in vm.LastResult.Ledger.GetEntries())
+                                @foreach (var entry in vm.LastResponse.Ledger.GetEntries())
                                 {
                                     var result = entry.result.GetReportString();
 
@@ -352,8 +349,6 @@
 
     Boolean IsQuerying => lastQueryTask?.IsCompleted != true;
 
-    LocationQueryRequest LastRequest { get; set; }
-
     Int32 listLimit;
 
     Boolean haveLocationChange = false;
@@ -364,9 +359,8 @@
 
     IMap<String, String> SearchValues => Cs.SearchValuesByLocation[Location.Location];
 
-    Task lastQueryTask;
+    Task<LocationQueryResult> lastQueryTask;
 
-    Boolean haveQueryPending;
     Boolean jsInitPending;
     Boolean isDisposed;
 
@@ -395,93 +389,31 @@
         return uri.Segments.Length < 2 || uri.Segments[0] != "/" || uri.Segments[1] != "query/";
     }
 
-    async void RunQuery(Boolean synchronously = false)
+    async void StartQuery(Boolean synchronously = false)
     {
-        if (lastQueryTask?.IsCompleted == false)
+        log.Debug($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
+
+        if (CheckLocationUri(out var uri))
         {
-            log.Debug("Scheduling query");
+            log.Info("Query page left, won't run a query");
 
-            haveQueryPending = true;
+            return;
         }
-        else
-        {
-            log.Debug($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
 
-            if (CheckLocationUri(out var uri))
-            {
-                log.Info("Query page left, won't run a query");
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
 
-                return;
-            }
+        var segments = uri.Segments.Skip(1).ToArray();
 
-            var queryParams = HttpUtility.ParseQueryString(uri.Query);
-
-            var segments = uri.Segments.Skip(1).ToArray();
-
-            lastQueryTask = InnerRunQuery(segments, queryParams, synchronously);
-
-            if (lastQueryTask.IsCompleted)
-            {
-                log.Debug($"Query completed synchronously");
-            }
-            else
-            {
-                log.Debug($"Query is running asynchronously");
-            }
-
-            StateHasChanged();
-
-            if (isDisposed) return;
-
-            await lastQueryTask;
-
-            if (isDisposed) return;
-
-            StateHasChanged();
-
-            if (haveQueryPending)
-            {
-                log.Debug($"Recursing on scheduled query");
-
-                haveQueryPending = false;
-
-                RunQuery();
-            }
-        }
-    }
-
-    async Task InnerRunQuery(String[] segments, System.Collections.Specialized.NameValueCollection queryParams, Boolean synchronously = false)
-    {
         var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection())
         {
             ListLimit = listLimit
         };
 
-        LastRequest = request;
-
-        var task = Runner.QueryAsync(request.Source, request);
-
-        if (false)
-        {
-            task.Wait();
-        }
-        else
-        {
-            await task;
-        }
-
-        var result = task.Result;
-
-        if (result.Exception != null && result.Exception is not SqlException)
-        {
-            Js.InvokeVoidAsync("console.log", result.Exception.ToString()).Ignore();
-        }
-
-        ++queryCount;
+        var response = Runner.StartQuery(request.Source, request);
 
         if (haveLocationChange)
         {
-            vm = new LocationQueryVm(request, result);
+            vm = new LocationQueryVm(request, response);
 
             QueryContext = new QueryContext(request.Source);
 
@@ -491,24 +423,69 @@
         }
         else
         {
-            vm.Update(request, result);
+            vm.Update(request, response);
         }
 
+        var queryTask = lastQueryTask = AwaitResponse(response, synchronously);
+
+        if (lastQueryTask.IsCompleted)
+        {
+            log.Debug($"Query completed synchronously");
+        }
+        else
+        {
+            log.Debug($"Query is running asynchronously");
+        }
+
+        StateHasChanged();
+
+        var resultOrNull = await lastQueryTask;
+
+        if (lastQueryTask == queryTask)
+        {
+            vm.UpdateResult(resultOrNull);
+
+            StateHasChanged();
+        }
+    }
+
+    async Task<LocationQueryResult> AwaitResponse(LocationQueryResponse response, Boolean synchronously)
+    {
+        if (false)
+        {
+            response.Task.Wait();
+        }
+        else
+        {
+            await response.Wait();
+        }
+
+        if (response.Exception != null && response.Exception is not SqlException && response.Exception is not OperationCanceledException)
+        {
+            Js.InvokeVoidAsync("console.log", response.Exception.ToString()).Ignore();
+        }
+
+        ++queryCount;
+
+        if (!response.Task.IsCompletedSuccessfully) return null;
+
         jsInitPending = true;
+
+        return response.Task.Result;
     }
 
     void HandleSeekValuesChanged()
     {
         log.Debug("Seek values changed");
 
-        RunQuery();
+        StartQuery();
     }
 
     void HandleLoadMoreClick()
     {
         listLimit = Settings.LoadMoreLimit + 1;
 
-        RunQuery();
+        StartQuery();
     }
 
     protected override void OnParametersSet()
@@ -518,8 +495,6 @@
             log.Debug($"OnParametersSet uri changed from {previousLocation?.Location ?? "null"} to {Location.Location}");
 
             previousLocation = Location;
-
-            haveQueryPending = false;
 
             RunQueryAfterLocationChange(false);
         }
@@ -546,7 +521,7 @@
         listLimit = Settings.InitialLimit;
         haveLocationChange = true;
 
-        RunQuery(synchronously);
+        StartQuery(synchronously);
     }
 
     void IDisposable.Dispose()

@@ -11,7 +11,7 @@ public class ProminentSourceConfiguration
     public String DescriptionSnippetType { get; set; }
 }
 
-public class LiveSqlServerHost : ObservableObject
+public class LiveSqlServerHost : ObservableObject<LiveSqlServerHost>
 {
     private readonly SqlServerHostConfiguration configuration;
     private readonly SqlServerConnectionProvider provider;

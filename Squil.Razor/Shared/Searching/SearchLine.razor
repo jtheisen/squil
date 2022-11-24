@@ -46,10 +46,10 @@
     @if (Option.IsCurrent)
     {
         <div class="validation-area">
-            @if (!Vm.LastResult.IsValidationOk)
+            @if (Vm.LastResponse.HaveValidationIssues)
             {
                 <div class="validation-display">
-                    @foreach (var c in Vm.LastResult.ValidatedColumns.Where(c => !c.IsOk))
+                    @foreach (var c in Vm.LastResponse.ValidatedColumns.Where(c => !c.IsOk))
                     {
                         <div>
                             @c.Error
@@ -94,7 +94,7 @@
         {
             if (Option.IsCurrent) return null;
 
-            var result = Vm.LastResult;
+            var result = Vm.Response;
 
             var keys = Vm.LastRequest.KeyParams.AsMap();
 

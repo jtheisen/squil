@@ -21,7 +21,7 @@ public record StallInvestigationResult(StallInvestigationResultType Type, Int32 
         => new StallInvestigationResult(type, 0);
 }
 
-public class StallDetective : ObservableObject
+public class StallDetective : ObservableObject<StallDetective>
 {
     static Logger log = LogManager.GetCurrentClassLogger();
 

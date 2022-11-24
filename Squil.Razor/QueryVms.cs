@@ -60,23 +60,21 @@ public class LocationQueryVm
 {
     public LocationQueryRequest LastRequest { get; private set; }
     
-    public LocationQueryResult Result { get; }
-    public LocationQueryResult LastResult { get; private set; }
+    public LocationQueryResponse Response { get; }
+    public LocationQueryResponse LastResponse { get; private set; }
 
-    public Entity DisplayedEntity { get; private set; }
+    public LocationQueryResult Result { get; private set; }
 
     public Int32 KeyValuesCount { get; }
 
-    public LocationQueryVm(LocationQueryRequest request, LocationQueryResult result)
+    public LocationQueryVm(LocationQueryRequest request, LocationQueryResponse response)
     {
         LastRequest = request;
-        Result = result;
+        Response = response;
 
-        var relation = Result.PrimaryEntities;
-
-        if (relation?.Extent.Flavor.type == ExtentFlavorType.Block)
+        if (response.ExtentFlavorType == ExtentFlavorType.BlockList)
         {
-            var table = relation.RelationEnd.Table;
+            var table = response.Table;
 
             var keyKeysArray = request.KeyParams.Cast<String>().ToArray();
 
@@ -134,12 +132,12 @@ public class LocationQueryVm
                 from i in table.Indexes.Values
                 join itc in indexesToConsider on i equals itc into match
                 where match.Any()
-                select new SearchOptionVm(i, KeyValuesCount) { IsCurrent = request.Index == i.Name && result.SearchMode == QuerySearchMode.Seek }
+                select new SearchOptionVm(i, KeyValuesCount) { IsCurrent = request.Index == i.Name && response.SearchMode == QuerySearchMode.Seek }
             ).ToArray();
 
-            if (Result.MayScan)
+            if (Response.MayScan)
             {
-                ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = result.SearchMode == QuerySearchMode.Scan };
+                ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = response.SearchMode == QuerySearchMode.Scan };
             }
             else
             {
@@ -151,18 +149,13 @@ public class LocationQueryVm
             CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
         }
 
-        Update(request, result);
+        Update(request, response);
     }
 
-    public void Update(LocationQueryRequest request, LocationQueryResult result)
+    public void Update(LocationQueryRequest request, LocationQueryResponse result)
     {
         LastRequest = request;
-        LastResult = result;
-
-        if (LastResult.IsOk)
-        {
-            DisplayedEntity = LastResult.Entity;
-        }
+        LastResponse = result;
 
         if (CurrentIndex != null)
         {
@@ -170,9 +163,19 @@ public class LocationQueryVm
         }
     }
 
+    public void UpdateResult(LocationQueryResult result)
+    {
+        if (result != null)
+        {
+            Result = result;
+        }
+    }
+
     public CanLoadMoreStatus CanLoadMore()
     {
-        var r = LastResult.PrimaryEntities;
+        if (!LastResponse.Task.IsCompletedSuccessfully) return CanLoadMoreStatus.Unavailable;
+
+        var r = LastResponse.Task.Result.PrimaryEntities;
 
         if (r == null) return CanLoadMoreStatus.Unavailable;
 
