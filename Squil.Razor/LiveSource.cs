@@ -1,6 +1,4 @@
 using Microsoft.Data.SqlClient;
-using System.Threading;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Squil;
 
@@ -179,12 +177,12 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
 
         if (semaphore.CurrentCount == 0)
         {
-            log.Info($"{logIds} Requesting cancellation of running query");
+            log.Debug($"{logIds} Requesting cancellation of running query");
 
             Cancel();
         }
 
-        log.Info($"{logIds} Acquiring lock while semaphore at {semaphore.CurrentCount}");
+        log.Debug($"{logIds} Acquiring lock while semaphore at {semaphore.CurrentCount}");
 
         tcs = new CancellationTokenSource();
 
@@ -198,7 +196,7 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
 
             if (ct.IsCancellationRequested)
             {
-                log.Info($"{logIds} Already canceled, won't start");
+                log.Debug($"{logIds} Already canceled, won't start");
 
                 throw new OperationCanceledException("Operation canceled before it began");
             }
@@ -207,7 +205,7 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
 
             if (connection.State == System.Data.ConnectionState.Closed)
             {
-                log.Info($"{logIds} Opening connection");
+                log.Debug($"{logIds} Opening connection");
 
                 await connection.OpenAsync();
 
@@ -216,7 +214,7 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
 
             using var _ = StaticServiceStack.Install(ct);
 
-            log.Info($"{logIds} Starting query");
+            log.Debug($"{logIds} Starting query");
 
             var task = action(connection);
 
@@ -224,7 +222,7 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
 
             if (!task.IsCompleted)
             {
-                log.Info($"{logIds} Query is delayed, spawning stall detective");
+                log.Debug($"{logIds} Query is delayed, spawning stall detective");
 
                 StallDetective = new StallDetective(connection);
 
@@ -254,7 +252,7 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
         {
             var previousCount = semaphore.Release();
 
-            log.Info($"{logIds} Query terminated, semaphore now at {semaphore.CurrentCount}");
+            log.Debug($"{logIds} Query terminated, semaphore now at {semaphore.CurrentCount}");
         }
     }
 

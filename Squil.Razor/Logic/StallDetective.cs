@@ -13,7 +13,7 @@ public enum StallInvestigationResultType
     Unblocked
 }
 
-public record StallInvestigationPublicResult(StallInvestigationResultType Type, Int32 progress);
+public record StallInvestigationPublicResult(StallInvestigationResultType Type, Int32? SessionId, Int32 progress);
 
 public record StallInvestigationResult(StallInvestigationResultType Type, Int32 CpuTime)
 {
@@ -28,6 +28,7 @@ public class StallDetective : ObservableObject<StallDetective>
     private readonly String connectionString;
     private readonly SqlConnection connection;
 
+    Int32? lastSessionId;
     StallInvestigationResult lastResult;
     public StallInvestigationPublicResult Result { get; private set; }
 
@@ -40,7 +41,7 @@ public class StallDetective : ObservableObject<StallDetective>
         cb.ConnectTimeout = 6;
         connectionString = cb.ConnectionString;
 
-        Result = new StallInvestigationPublicResult(StallInvestigationResultType.Initial, 0);
+        Result = new StallInvestigationPublicResult(StallInvestigationResultType.Initial, null, 0);
     }
 
     public async Task Investigate()
@@ -69,7 +70,7 @@ public class StallDetective : ObservableObject<StallDetective>
             }
 
             lastResult = result;
-            Result = new StallInvestigationPublicResult(type, progress);
+            Result = new StallInvestigationPublicResult(type, lastSessionId, progress);
 
             if (haveChange)
             {
@@ -123,6 +124,8 @@ public class StallDetective : ObservableObject<StallDetective>
 
     async Task<StallInvestigationResult> CheckSession()
     {
+        lastSessionId = null;
+
         using var db = new SqlConnection(connectionString);
 
         try
@@ -135,6 +138,8 @@ public class StallDetective : ObservableObject<StallDetective>
 
             return StallInvestigationResultType.CantConnect;
         }
+
+        lastSessionId = connection.ServerProcessId;
 
         var sql = $@"
 select (

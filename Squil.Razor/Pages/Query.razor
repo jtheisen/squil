@@ -285,6 +285,10 @@
                         {
                             <RerenderHelper Observable="@sd" OnChange="@StateHasChanged" />
 
+                            <div class="text-muted">
+                                <small>Session ID: @sd.Result.SessionId</small>
+                            </div>
+
                             <div>
                                 @switch (sd.Result.Type)
                                 {
@@ -320,7 +324,7 @@
                                             progress on this query. If it doesn't move, then the query is blocked in
                                             some unreported way.
                                         </p>
-                                        <i class="fa-solid fa-spinner fa-rotate-@((sd.Result.progress % 8) * 45)"></i>
+                                        <i class="fas fa-spinner" style="transform: rotate(@((sd.Result.progress % 8) * 45)deg)"></i>
                                         break;
                                 }
                             </div>
