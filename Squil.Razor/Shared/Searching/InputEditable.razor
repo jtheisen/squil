@@ -2,7 +2,7 @@
 
 @if (IsActive)
 {
-    <input @ref="element" class="@Class" value="@Value" oninput="@HandleChanged" autofocus="@Focus" />
+    <input @ref="element" class="@Class" value="@Value" @oninput="HandleChanged" autofocus="@Focus" />
 }
 else
 {
@@ -10,6 +10,8 @@ else
 }
 
 @code {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
     [Parameter]
     public String Class { get; set; }
 
@@ -25,17 +27,16 @@ else
     [Parameter]
     public EventCallback<String> ValueChanged { get; set; }
 
-
-
     ElementReference element;
 
     Boolean wasActive;
 
-    String DesiredInnerText => Value ?? "";
-
     public ValueTask FocusAsync() => element.FocusAsync();
 
-    async Task HandleChanged(ChangeEventArgs e)
+    // Blazor Server two-way bindings don't work smoothly under load, hence we never update the input
+    protected override bool ShouldRender() => false;
+
+    void HandleChanged(ChangeEventArgs e)
     {
         var newText = ((String)e.Value).Replace('\u00a0', ' ');
 
@@ -43,7 +44,7 @@ else
 
         if (newValue != Value)
         {
-            await ValueChanged.InvokeAsync(newValue);
+            ValueChanged.InvokeAsync(newValue);
         }
     }
 
