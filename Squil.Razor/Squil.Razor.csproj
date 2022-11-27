@@ -16,6 +16,7 @@
     <PackageReference Include="Blazor-Analytics" Version="3.11.0" />
     <PackageReference Include="BlazorOcticons" Version="1.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.10" />
+    <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
     <PackageReference Include="NLog" Version="5.0.4" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.0.4" />
   </ItemGroup>

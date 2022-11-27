@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Nito.AsyncEx;
 
 namespace Squil;
 
@@ -11,6 +12,14 @@ public class SchemaChangedException : Exception
     { }
 }
 
+public enum LiveSourceState
+{
+    Stale,
+    Building,
+    Broken,
+    Ready
+}
+
 public class LiveSource
 {
     readonly string connectionString;
@@ -19,28 +28,32 @@ public class LiveSource
 
     Exception exceptionOnModelBuilding;
 
+    LiveSourceState state = LiveSourceState.Stale;
+
+    AsyncLock modelBuildingLock = new AsyncLock();
+
+    AsyncManualResetEvent isModelReady = new AsyncManualResetEvent();
+
     record Model(CMRoot CMRoot, QueryGenerator QueryGenerator);
+
+    public LiveSourceState State => state;
 
     public Exception ExceptionOnModelBuilding => exceptionOnModelBuilding;
 
-    public CMRoot CircularModel
-    {
-        get
-        {
-            if (currentModel == null)
-            {
-                UpdateModel();
-            }
-
-            return currentModel.CMRoot;
-        }
-    }
+    public CMRoot CircularModel => currentModel.CMRoot;
 
     public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
 
     public LiveSource(String connectionString)
     {
         this.connectionString = connectionString;
+    }
+
+    public async Task EnsureModelAsync()
+    {
+        BeginUpdateModelIfApplicable();
+
+        await isModelReady.WaitAsync();
     }
 
     public SqlConnection GetConnection()
@@ -71,9 +84,9 @@ public class LiveSource
 
     public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
     {
-        if (currentModel == null)
+        if (currentModel == null || !isModelReady.IsSet)
         {
-            UpdateModel();
+            throw new SchemaChangedException();
         }
 
         Entity entity;
@@ -84,8 +97,10 @@ public class LiveSource
         }
         catch (SqlException ex)
         {
-            if (CheckAndUpdateIfApplicable())
+            if (CheckModelInvalid())
             {
+                InvalidateModel();
+
                 throw new SchemaChangedException(ex);
             }
             else
@@ -96,14 +111,37 @@ public class LiveSource
 
         if (entity.SchemaDate > CircularModel.TimeStamp)
         {
-            UpdateModel();
+            InvalidateModel();
 
-            return await QueryGenerator.QueryAsync(connection, extent);
+            throw new SchemaChangedException();
         }
         else
         {
             return entity;
         }
+    }
+
+    void InvalidateModel()
+    {
+        lock (this)
+        {
+            state = LiveSourceState.Stale;
+
+            isModelReady.Reset();
+        }
+    }
+
+    async void BeginUpdateModelIfApplicable()
+    {
+        if (isModelReady.IsSet) return;
+
+        var lockHandle = modelBuildingLock.LockAsync();
+
+        if (isModelReady.IsSet) return;
+
+        state = LiveSourceState.Building;
+
+        await Task.Factory.Run(UpdateModel);
     }
 
     void UpdateModel()
@@ -117,18 +155,28 @@ public class LiveSource
             var qg = new QueryGenerator(cmRoot);
 
             currentModel = new Model(cmRoot, qg);
+
+            lock (this)
+            {
+                exceptionOnModelBuilding = null;
+
+                state = LiveSourceState.Ready;
+
+                isModelReady.Set();
+            }
         }
         catch (Exception ex)
         {
-            exceptionOnModelBuilding = ex;
+            lock (this)
+            {
+                state = LiveSourceState.Broken;
 
-            throw;
+                exceptionOnModelBuilding = ex;
+            }
         }
-
-        exceptionOnModelBuilding = null;
     }
 
-    Boolean CheckAndUpdateIfApplicable()
+    Boolean CheckModelInvalid()
     {
         var connection = GetConnection();
 
@@ -136,8 +184,6 @@ public class LiveSource
 
         if (modifiedAt > currentModel.CMRoot.TimeStamp)
         {
-            UpdateModel();
-
             return true;
         }
         else

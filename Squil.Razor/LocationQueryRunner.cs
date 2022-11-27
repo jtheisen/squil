@@ -195,14 +195,17 @@ public class LocationQueryRunner
         currentConnectionHolder.Cancel();
     }
 
-    public LocationQueryResponse StartQuery(String connectionName, LocationQueryRequest request)
+    public LiveSource GetLiveSource(String connectionName)
+    {
+        return connections.GetLiveSource(connectionName);
+    }
+
+    public LocationQueryResponse StartQuery(LiveSource source, String connectionName, LocationQueryRequest request)
     {
         if (connections.AppSettings.DebugQueryDelayMillis is Int32 d)
         {
             Thread.Sleep(d);
         }
-
-        var context = connections.GetLiveSource(connectionName);
 
         var schema = request.Schema;
         var table = request.Table;
@@ -212,7 +215,7 @@ public class LocationQueryRunner
 
         var settings = connections.AppSettings;
 
-        var cmTable = isRoot ? context.CircularModel.RootTable : context.CircularModel.GetTable(new ObjectName(schema, table));
+        var cmTable = isRoot ? source.CircularModel.RootTable : source.CircularModel.GetTable(new ObjectName(schema, table));
 
         var extentFactory = new ExtentFactory(2);
 
@@ -221,7 +224,7 @@ public class LocationQueryRunner
             RootName = connectionName,
             RootUrl = $"/ui/{connectionName}",
             Table = cmTable,
-            Context = context
+            Context = source
         };
 
         Extent extent;
@@ -343,7 +346,7 @@ public class LocationQueryRunner
 
         if (query.HaveValidationIssues) return query;
 
-        context.SetConnectionInHolder(currentConnectionHolder);
+        source.SetConnectionInHolder(currentConnectionHolder);
 
         query.Task = RunQuery(query);
 

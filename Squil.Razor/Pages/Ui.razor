@@ -136,7 +136,6 @@
                         <div class="sidebar-helptext small text-muted">
                             <HelpText QueryType="@vm.LastResponse.QueryType" />
                         </div>
-                    
                     }
                 </RightContent>
 
@@ -150,7 +149,21 @@
 
                 <ChildContent>
 
-                    @if (vm != null)
+                    <div class="common-lead-spacer">&nbsp;</div>
+
+                    @if (currentSource?.State == LiveSourceState.Broken)
+                    {
+                        <div class="alert alert-danger">
+                            Can't build model for database schema.
+                        </div>
+                    }
+                    else if (currentSource?.State == LiveSourceState.Building)
+                    {
+                        <div class="alert alert-info">
+                            Building model for database schema. <span class="spinner-border spinner-border-sm"></span>
+                        </div>
+                    }
+                    else if (vm != null)
                     {
                         switch (vm.LastResponse.QueryType)
                         {
@@ -159,8 +172,6 @@
                                 <div class="search-panel-spacer">&nbsp;</div>
                                 break;
                         }
-
-                        <div class="common-lead-spacer">&nbsp;</div>
 
                         <div class="@ClassNames("query-results", "querying".If(IsQuerying && sd != null))">
 
@@ -352,6 +363,8 @@
     [CascadingParameter]
     public CurrentLocation Location { get; set; }
 
+    LiveSource currentSource;
+
     CurrentLocation previousLocation;
 
     Boolean IsQuerying => lastQueryTask?.IsCompleted != true;
@@ -416,7 +429,13 @@
             ListLimit = listLimit
         };
 
-        var response = Runner.StartQuery(request.Source, request);
+        var source = currentSource = Runner.GetLiveSource(request.Source);
+
+        StateHasChanged();
+
+        await source.EnsureModelAsync();
+
+        var response = Runner.StartQuery(source, request.Source, request);
 
         if (haveLocationChange)
         {
