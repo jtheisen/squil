@@ -458,6 +458,15 @@
 
     async Task<LocationQueryResult> AwaitResponse(LocationQueryResponse response, Boolean synchronously)
     {
+        static Boolean ShouldLogExceptionToBrowser(Exception ex) => ex switch
+        {
+            null => false,
+            SqlException => false,
+            OperationCanceledException => false,
+            SchemaChangedException => false,
+            _ => true
+        };
+
         if (false)
         {
             response.Task.Wait();
@@ -467,7 +476,7 @@
             await response.Wait();
         }
 
-        if (response.Exception != null && response.Exception is not SqlException && response.Exception is not OperationCanceledException)
+        if (ShouldLogExceptionToBrowser(response.Exception))
         {
             Js.InvokeVoidAsync("console.log", response.Exception.ToString()).Ignore();
         }
