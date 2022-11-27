@@ -12,7 +12,7 @@ public class QueryContext
     }
 
     public static UrlRenderer MakeUrlRenderer(String source)
-        => new UrlRenderer("query/" + source);
+        => new UrlRenderer("ui/" + source);
 
     public String RenderEntityUrl(CMTable table, Entity entity, String focusColumn = null)
     {

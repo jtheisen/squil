@@ -21,7 +21,7 @@
     {
         foreach (var catalog in catalogs)
         {
-            <a @key="catalog" href="/query/@catalog.Name@@@Host.Name" class="list-group-item list-group-item-action">
+            <a @key="catalog" href="/ui/@catalog.Name@@@Host.Name" class="list-group-item list-group-item-action">
                 <i class="text-muted fas fa-database ms-2 me-2" />@catalog.Name
             </a>
         }

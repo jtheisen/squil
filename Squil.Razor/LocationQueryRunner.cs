@@ -40,7 +40,7 @@ public class LocationQueryRequest
             return segment != UrlRenderer.BlazorDefeatingDummySegment ? segment : null;
         }
 
-        Debug.Assert(Get(0) == "query");
+        Debug.Assert(Get(0) == "ui");
 
         Source = Get(1);
 
@@ -219,7 +219,7 @@ public class LocationQueryRunner
         var query = new LocationQueryResponse
         {
             RootName = connectionName,
-            RootUrl = $"/query/{connectionName}",
+            RootUrl = $"/ui/{connectionName}",
             Table = cmTable,
             Context = context
         };
