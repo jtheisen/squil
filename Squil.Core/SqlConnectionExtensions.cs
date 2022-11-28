@@ -17,11 +17,16 @@ public static class SqlConnectionExtensions
         return command;
     }
 
-    public static String QueryXmlString(this SqlConnection connection, String sql)
+    public static String QueryXmlString(this SqlConnection connection, String sql, Boolean dontWrap = false)
     {
         using var scope = GetCurrentLedger().TimedScope("query");
 
-        var command = connection.CreateSqlCommandFromSql($"select ({sql})");
+        if (!dontWrap)
+        {
+            sql = $"select ({sql})";
+        }
+
+        var command = connection.CreateSqlCommandFromSql(sql);
 
         using var reader = command.ExecuteReader();
 
@@ -30,11 +35,16 @@ public static class SqlConnectionExtensions
         return scope.SetResult(reader.GetString(0));
     }
 
-    public static async Task<String> QueryXmlStringAsync(this SqlConnection connection, String sql)
+    public static async Task<String> QueryXmlStringAsync(this SqlConnection connection, String sql, Boolean dontWrap = false)
     {
         using var scope = GetCurrentLedger().TimedScope("query");
 
-        var command = connection.CreateSqlCommandFromSql($"select ({sql})");
+        if (!dontWrap)
+        {
+            sql = $"select ({sql})";
+        }
+
+        var command = connection.CreateSqlCommandFromSql(sql);
 
         using var reader = await command.ExecuteReaderAsync();
 
@@ -65,18 +75,18 @@ public static class SqlConnectionExtensions
         return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql, out xml));
     }
 
-    public static X QueryAndParseXml<X>(this SqlConnection connection, String sql)
+    public static X QueryAndParseXml<X>(this SqlConnection connection, String sql, Boolean dontWrap = false)
         where X : class
     {
         using var scope = GetCurrentLedger().TimedScope("querying-parsing-and-binding");
 
-        return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql, out _));
+        return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql, out _, dontWrap));
     }
 
-    public static X QueryAndParseXmlSeparately<X>(this SqlConnection connection, String sql, out String xml)
+    public static X QueryAndParseXmlSeparately<X>(this SqlConnection connection, String sql, out String xml, Boolean dontWrap = false)
         where X : class
     {
-        xml = connection.QueryXmlString(sql);
+        xml = connection.QueryXmlString(sql, dontWrap);
 
         return Parse<X>(xml);
     }

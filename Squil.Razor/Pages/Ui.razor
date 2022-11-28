@@ -307,6 +307,13 @@
                                 <small>Session ID: @sd.Result.SessionId</small>
                             </div>
 
+                            @if(sd.Result.headBlockerSessionId is Int32 blockerSessionId)
+                            {
+                                <div class="text-muted">
+                                    <small>Blocking session ID: @blockerSessionId</small>
+                                </div>                                
+                            }
+
                             <div>
                                 @switch (sd.Result.Type)
                                 {
