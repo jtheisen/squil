@@ -57,18 +57,26 @@ public static class SqlConnectionExtensions
         return scope.SetResult(result as X);
     }
 
+    public static X QueryAndParseXml<X>(this SqlConnection connection, String sql, out String xml)
+        where X : class
+    {
+        using var scope = GetCurrentLedger().TimedScope("querying-parsing-and-binding");
+
+        return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql, out xml));
+    }
+
     public static X QueryAndParseXml<X>(this SqlConnection connection, String sql)
         where X : class
     {
         using var scope = GetCurrentLedger().TimedScope("querying-parsing-and-binding");
 
-        return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql));
+        return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql, out _));
     }
 
-    public static X QueryAndParseXmlSeparately<X>(this SqlConnection connection, String sql)
+    public static X QueryAndParseXmlSeparately<X>(this SqlConnection connection, String sql, out String xml)
         where X : class
     {
-        var xml = connection.QueryXmlString(sql);
+        xml = connection.QueryXmlString(sql);
 
         return Parse<X>(xml);
     }

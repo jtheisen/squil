@@ -274,11 +274,11 @@ public class QueryGenerator
         return MakeDummyEntity(extent, rootTable);
     }
 
-    public X Query<X>(SqlConnection connection, Extent extent)
+    public X Query<X>(SqlConnection connection, Extent extent, out String xml)
         where X : class
     {
         var sql = GetCompleteSql(extent);
 
-        return connection.QueryAndParseXml<X>(sql.Sql);
+        return connection.QueryAndParseXml<X>(sql.Sql, out xml);
     }
 }

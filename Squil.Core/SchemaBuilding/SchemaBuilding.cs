@@ -1,5 +1,9 @@
 using Squil.SchemaBuilding;
 using Microsoft.Data.SqlClient;
+using Squil;
+using System.Security.Cryptography;
+using System.Globalization;
+using System.Text;
 
 namespace Squil;
 
@@ -56,7 +60,7 @@ public static class SchemaBuildingExtensions
                     }
                 }
             }
-        });
+        }, out var xml);
 
         return cSchema;
     }
@@ -84,129 +88,161 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
 select value from sys.extended_properties ep where class = 1 and name = 'MS_Description' and ep.major_id = {a}.[object_id] and ep.minor_id = {a}.column_id
 ";
 
-    static SysRoot GetSysSchema(this SqlConnection connection)
+    static Extent schemaQueryExtent = new Extent
     {
-        using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
-
-        var cmRootForSys = new CMRoot("sys");
-        cmRootForSys.Populate(SystemSchema.GetSchema());
-        cmRootForSys.PopulateRoot();
-        cmRootForSys.Populate(SystemSchema.GetRelations().ToArray());
-
-        var sysGenerator = new QueryGenerator(cmRootForSys, false);
-
-        var cSchema = sysGenerator.Query<SysRoot>(connection, new Extent
-        {
-            RelationName = "",
-            SqlSelectables = new[]
+        RelationName = "",
+        SqlSelectables = new[]
             {
                 // doesn't yet work
                 new SqlSelectable(GetCatalogCommentSql, "comment"),
             },
-            Children = new[]
+        Children = new[]
+        {
+            new Extent
             {
-                new Extent
+                RelationName = "sys.schemas",
+                Alias = "s",
+                SqlSelectables = new[]
                 {
-                    RelationName = "sys.schemas",
-                    Alias = "s",
-                    SqlSelectables = new[]
-                    {
-                        new SqlSelectable(GetSchemaCommentSql, "comment"),
-                    },
-                    Children = new[]
-                    {
-                            new Extent
+                    new SqlSelectable(GetSchemaCommentSql, "comment"),
+                },
+                Children = new[]
+                {
+                        new Extent
+                        {
+                            RelationName = "tables",
+                            Alias = "t",
+                            SqlSelectables = new[]
                             {
-                                RelationName = "tables",
-                                Alias = "t",
-                                SqlSelectables = new[]
+                                new SqlSelectable(GetTableCommentSql, "comment"),
+                            },
+                            Children = new[]
+                            {
+                                new Extent
                                 {
-                                    new SqlSelectable(GetTableCommentSql, "comment"),
+                                    Order = new DirectedColumnName[] { "column_id" },
+                                    RelationName = "columns",
+                                    Alias = "c",
+                                    SqlSelectables = new[]
+                                    {
+                                        new SqlSelectable(GetColumnCommentSql, "comment"),
+                                    },
+                                    Children = new[]
+                                    {
+                                        new Extent
+                                        {
+                                            RelationName = "systemtype",
+                                            Alias = "tp"
+                                        },
+                                        new Extent
+                                        {
+                                            RelationName = "usertype",
+                                            Alias = "tp"
+                                        }
+                                    }
                                 },
-                                Children = new[]
+                                new Extent
                                 {
-                                    new Extent
+                                    Order = new DirectedColumnName[] { "index_id" },
+                                    RelationName = "indexes",
+                                    Alias = "ix",
+                                    SqlSelectables = new[]
                                     {
-                                        Order = new DirectedColumnName[] { "column_id" },
-                                        RelationName = "columns",
-                                        Alias = "c",
-                                        SqlSelectables = new[]
-                                        {
-                                            new SqlSelectable(GetColumnCommentSql, "comment"),
-                                        },
-                                        Children = new[]
-                                        {
-                                            new Extent
-                                            {
-                                                RelationName = "systemtype",
-                                                Alias = "tp"
-                                            },
-                                            new Extent
-                                            {
-                                                RelationName = "usertype",
-                                                Alias = "tp"
-                                            }
-                                        }
+                                        new SqlSelectable(GetUsedPagesSql, "used_pages")
                                     },
-                                    new Extent
+                                    Children = new[]
                                     {
-                                        Order = new DirectedColumnName[] { "index_id" },
-                                        RelationName = "indexes",
-                                        Alias = "ix",
-                                        SqlSelectables = new[]
+                                        new Extent
                                         {
-                                            new SqlSelectable(GetUsedPagesSql, "used_pages")
-                                        },
-                                        Children = new[]
-                                        {
-                                            new Extent
-                                            {
-                                                Order = new DirectedColumnName[] { "key_ordinal", "index_column_id" },
-                                                RelationName = "columns",
-                                                Alias = "ix_c"
-                                            }
+                                            Order = new DirectedColumnName[] { "key_ordinal", "index_column_id" },
+                                            RelationName = "columns",
+                                            Alias = "ix_c"
                                         }
-                                    },
-                                    new Extent
+                                    }
+                                },
+                                new Extent
+                                {
+                                    RelationName = "foreign_keys",
+                                    Alias = "fk",
+                                    Children = new[]
                                     {
-                                        RelationName = "foreign_keys",
-                                        Alias = "fk",
-                                        Children = new[]
+                                        new Extent
                                         {
-                                            new Extent
+                                            Order = new DirectedColumnName[] { "constraint_column_id" },
+                                            RelationName = "columns",
+                                            Alias = "fk_c"
+                                        },
+                                        new Extent
+                                        {
+                                            RelationName = "referenced_table",
+                                            Alias = "o_r",
+                                            Children = new[]
                                             {
-                                                Order = new DirectedColumnName[] { "constraint_column_id" },
-                                                RelationName = "columns",
-                                                Alias = "fk_c"
-                                            },
-                                            new Extent
-                                            {
-                                                RelationName = "referenced_table",
-                                                Alias = "o_r",
-                                                Children = new[]
+                                                new Extent
                                                 {
-                                                    new Extent
-                                                    {
-                                                        RelationName = "schema",
-                                                        Alias = "s"
-                                                    }
+                                                    RelationName = "schema",
+                                                    Alias = "s"
                                                 }
-                                            },
-                                            new Extent
-                                            {
-                                                RelationName = "referenced_index",
-                                                Alias = "ix_r"
-                                            },
-                                        }
+                                            }
+                                        },
+                                        new Extent
+                                        {
+                                            RelationName = "referenced_index",
+                                            Alias = "ix_r"
+                                        },
                                     }
                                 }
                             }
-                    }
+                        }
                 }
             }
-        });
+        }
+    };
 
-        return cSchema;
+    class SysRequester
+    {
+        QueryGenerator sysGenerator;
+
+        MD5 hasher = MD5.Create();
+
+        public SysRequester()
+        {
+            var cmRootForSys = new CMRoot("sys");
+            cmRootForSys.Populate(SystemSchema.GetSchema());
+            cmRootForSys.PopulateRoot();
+            cmRootForSys.Populate(SystemSchema.GetRelations().ToArray());
+
+            sysGenerator = new QueryGenerator(cmRootForSys, false);
+        }
+
+        public SysRoot Query(SqlConnection connection, out String hash)
+        {
+            var root = sysGenerator.Query<SysRoot>(connection, schemaQueryExtent, out var xml);
+
+            var bytes = Encoding.UTF8.GetBytes(xml);
+
+            var hashBytes = hasher.ComputeHash(bytes);
+
+            hash = Convert.ToBase64String(hashBytes);
+
+            return root;
+        }
+    }
+
+    static SysRequester sysRequester = new SysRequester();
+
+    static SysRoot GetSysSchema(this SqlConnection connection, out String hash)
+    {
+        using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
+
+        return sysRequester.Query(connection, out hash);
+    }
+
+    public static String GetHashForModel(this SqlConnection connection)
+    {
+        connection.GetSysSchema(out var hash);
+
+        return hash;
     }
 
     public static CMRoot GetCircularModel(this SqlConnection connection)
@@ -214,13 +250,13 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
         using var _ = GetCurrentLedger().GroupingScope(nameof(GetCircularModel));
 
         //var isSchema = connection.GetISSchema();
-        var sysSchema = connection.GetSysSchema();
+        var sysSchema = connection.GetSysSchema(out var hash);
 
         // populate from sysschema
         {
             using var __ = GetCurrentLedger().TimedScope("circular-model-building");
 
-            var cmRootForCs = new CMRoot("business model");
+            var cmRootForCs = new CMRoot("business model", hash);
             cmRootForCs.Populate(sysSchema.CreateCsd());
             cmRootForCs.PopulateRoot();
             cmRootForCs.PopulateRelationsFromForeignKeys();
@@ -230,25 +266,25 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
         }
     }
 
-    public static DateTime GetSchemaModifiedAt(this SqlConnection connection)
-    {
-        var cmd = connection.CreateSqlCommandFromSql($"select max(modify_date) from sys.objects");
+    //public static DateTime GetSchemaModifiedAt(this SqlConnection connection)
+    //{
+    //    var cmd = connection.CreateSqlCommandFromSql($"select max(modify_date) from sys.objects");
 
-        var result = cmd.ExecuteScalar();
+    //    var result = cmd.ExecuteScalar();
 
-        var modifiedAt = (DateTime)result;
+    //    var modifiedAt = (DateTime)result;
 
-        return modifiedAt;
-    }
+    //    return modifiedAt;
+    //}
 
-    public static async Task<DateTime> GetSchemaModifiedAtAsync(this SqlConnection connection)
-    {
-        var cmd = connection.CreateSqlCommandFromSql($"select max(modify_date) from sys.objects");
+    //public static async Task<DateTime> GetSchemaModifiedAtAsync(this SqlConnection connection)
+    //{
+    //    var cmd = connection.CreateSqlCommandFromSql($"select max(modify_date) from sys.objects");
 
-        var result = await cmd.ExecuteScalarAsync();
+    //    var result = await cmd.ExecuteScalarAsync();
 
-        var modifiedAt = (DateTime)result;
+    //    var modifiedAt = (DateTime)result;
 
-        return modifiedAt;
-    }
+    //    return modifiedAt;
+    //}
 }

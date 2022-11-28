@@ -34,6 +34,8 @@ public enum LiveSourceState
 
 public class LiveSource
 {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
     readonly string connectionString;
 
     volatile Model currentModel;
@@ -232,14 +234,18 @@ public class LiveSource
     {
         var connection = GetConnection();
 
-        var modifiedAt = connection.GetSchemaModifiedAt();
+        var hash = connection.GetHashForModel();
 
-        if (modifiedAt > currentModel.CMRoot.TimeStamp)
+        if (hash != currentModel.CMRoot.Hash)
         {
+            log.Info($"Checking model validity yielded model is stale");
+
             return true;
         }
         else
         {
+            log.Info($"Checking model validity yielded model is still valid");
+
             return false;
         }
     }

@@ -12,6 +12,8 @@ public class CMRoot
     AssocList<ObjectName, CMTable> tables;
     AssocList<ObjectName, CMIndexlike> keys = new AssocList<ObjectName, CMIndexlike>();
 
+    public String Hash { get; }
+
     public DateTime TimeStamp { get; private set; }
 
     public IEnumerable<CMIndexlike> GetAllIndexes() =>
@@ -22,8 +24,9 @@ public class CMRoot
     public CMTable GetTable(ObjectName name) => tables[name];
     public IEnumerable<CMTable> GetTables() => tables.Values;
 
-    public CMRoot(String name)
+    public CMRoot(String name, String hash = null)
     {
+        Hash = hash;
         this.name = name;
     }
 

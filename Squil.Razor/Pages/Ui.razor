@@ -200,6 +200,17 @@
                             {
                                 // canceled
                             }
+                            else if (vm.LastResponse.Exception is SchemaChangedException)
+                            {
+                                if (showSchemaChangedException)
+                                {
+                                    <div class="alert alert-danger">
+                                        <div>
+                                            A schema change occured and the attempt to rebuild the model has failed.
+                                        </div>
+                                    </div>                                    
+                                }
+                            }
                             else if (vm.LastResponse.Exception is Exception e)
                             {
                                 <div class="alert alert-danger">
@@ -373,6 +384,8 @@
 
     Int32 renderCount, queryCount;
 
+    Boolean showSchemaChangedException;
+
     IMap<String, String> SearchValues => Cs.SearchValuesByLocation[Location.Location];
 
     Task<LocationQueryResult> lastQueryTask;
@@ -405,7 +418,7 @@
         return uri.Segments.Length < 2 || uri.Segments[0] != "/" || uri.Segments[1] != "ui/";
     }
 
-    async void StartQuery(Boolean synchronously = false)
+    async void StartQuery(Boolean synchronously = false, Int32 attempt = 0)
     {
         log.Debug($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
 
@@ -427,12 +440,14 @@
 
         var source = currentSource = Runner.GetLiveSource(request.Source);
 
+        var ensureModelTask = source.EnsureModelAsync();
+
         if (source.State != LiveSourceState.Ready)
         {
-            StateHasChanged();            
+            StateHasChanged();
         }
 
-        await source.EnsureModelAsync();
+        await ensureModelTask;
 
         var response = Runner.StartQuery(source, request.Source, request);
 
@@ -466,9 +481,28 @@
 
         var resultOrNull = await lastQueryTask;
 
-        if (lastQueryTask == queryTask)
+        if (response.Exception is SchemaChangedException)
+        {
+            if (attempt == 0)
+            {
+                log.Info($"Got SchemaChangedException at attempt #{attempt}, re-running query");
+
+                StartQuery(synchronously, attempt + 1);
+            }
+            else
+            {
+                log.Info($"Got SchemaChangedException at attempt #{attempt}, giving up");
+
+                showSchemaChangedException = true;
+
+                StateHasChanged();
+            }
+        }
+        else if (lastQueryTask == queryTask)
         {
             vm.UpdateResult(resultOrNull);
+
+            showSchemaChangedException = false;
 
             StateHasChanged();
         }
