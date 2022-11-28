@@ -538,8 +538,6 @@
 
     protected override async Task OnAfterRenderAsync(Boolean firstRender)
     {
-        log.Debug($"rendered content");
-
         if (jsInitPending)
         {
             jsInitPending = false;
@@ -560,6 +558,8 @@
 
     void IDisposable.Dispose()
     {
+        log.Debug($"Disposing ui page");
+
         isDisposed = true;
         Runner.Cancel();
     }

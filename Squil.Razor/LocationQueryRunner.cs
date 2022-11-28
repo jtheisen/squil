@@ -192,7 +192,7 @@ public class LocationQueryRunner
 
     public void Cancel()
     {
-        currentConnectionHolder.Cancel();
+        currentConnectionHolder.CancelAndReset();
     }
 
     public LiveSource GetLiveSource(String connectionName)

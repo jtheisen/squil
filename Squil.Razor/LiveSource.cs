@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Nito.AsyncEx;
+using System.Threading;
 
 namespace Squil;
 
@@ -275,15 +276,11 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
         if (semaphore.CurrentCount == 0)
         {
             log.Debug($"{logIds} Requesting cancellation of running query");
-
-            Cancel();
         }
 
+        var ct = CancelAndReset();
+
         log.Debug($"{logIds} Acquiring lock while semaphore at {semaphore.CurrentCount}");
-
-        tcs = new CancellationTokenSource();
-
-        var ct = tcs.Token;
 
         await semaphore.WaitAsync();
 
@@ -347,13 +344,22 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
         }
         finally
         {
+            semaphore.Release();
+
             log.Debug($"{logIds} Query terminated, semaphore now at {semaphore.CurrentCount}");
         }
     }
 
-    public void Cancel()
+    public CancellationToken CancelAndReset()
     {
-        tcs.Cancel();
+        lock (this)
+        {
+            tcs.Cancel();
+
+            tcs = new CancellationTokenSource();
+
+            return tcs.Token;
+        }
     }
 
     public void Dispose()
