@@ -215,17 +215,26 @@ public class LocationQueryRunner
 
         var settings = connections.AppSettings;
 
-        var cmTable = isRoot ? source.CircularModel.RootTable : source.CircularModel.GetTable(new ObjectName(schema, table));
-
-        var extentFactory = new ExtentFactory(2);
-
         var query = new LocationQueryResponse
         {
             RootName = connectionName,
             RootUrl = $"/ui/{connectionName}",
-            Table = cmTable,
             Context = source
         };
+
+        if (source.ExceptionOnModelBuilding != null)
+        {
+            query.Exception = source.ExceptionOnModelBuilding;
+            query.Task = Task.FromException<LocationQueryResult>(source.ExceptionOnModelBuilding);
+
+            return query;
+        }
+
+        var cmTable = isRoot ? source.CircularModel.RootTable : source.CircularModel.GetTable(new ObjectName(schema, table));
+
+        var extentFactory = new ExtentFactory(2);
+
+        query.Table = cmTable;
 
         Extent extent;
 

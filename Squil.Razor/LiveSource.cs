@@ -12,6 +12,17 @@ public class SchemaChangedException : Exception
     { }
 }
 
+public class ModelBrokenException : Exception
+{
+    public ModelBrokenException()
+    {
+    }
+
+    public ModelBrokenException(Exception nested)
+        : base("An error occured building the internal model from the schema", nested)
+    { }
+}
+
 public enum LiveSourceState
 {
     Stale,
@@ -32,7 +43,11 @@ public class LiveSource
 
     AsyncLock modelBuildingLock = new AsyncLock();
 
-    AsyncManualResetEvent isModelReady = new AsyncManualResetEvent();
+    AsyncManualResetEvent modelReadyOrBroken = new AsyncManualResetEvent();
+
+    DateTime lastAttemptAt = DateTime.MinValue;
+
+    static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(1);
 
     record Model(CMRoot CMRoot, QueryGenerator QueryGenerator);
 
@@ -40,7 +55,15 @@ public class LiveSource
 
     public Exception ExceptionOnModelBuilding => exceptionOnModelBuilding;
 
-    public CMRoot CircularModel => currentModel.CMRoot;
+    public CMRoot CircularModel
+    {
+        get
+        {
+            AssertModelReady();
+
+            return currentModel.CMRoot;
+        }
+    }
 
     public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
 
@@ -53,7 +76,7 @@ public class LiveSource
     {
         BeginUpdateModelIfApplicable();
 
-        await isModelReady.WaitAsync();
+        await modelReadyOrBroken.WaitAsync();
     }
 
     public SqlConnection GetConnection()
@@ -82,12 +105,24 @@ public class LiveSource
         return connection;
     }
 
+    void AssertModelReady()
+    {
+        lock (this)
+        {
+            if (state == LiveSourceState.Broken)
+            {
+                throw new ModelBrokenException(exceptionOnModelBuilding);
+            }
+            else if (!modelReadyOrBroken.IsSet)
+            {
+                throw new SchemaChangedException();
+            }
+        }
+    }
+
     public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
     {
-        if (currentModel == null || !isModelReady.IsSet)
-        {
-            throw new SchemaChangedException();
-        }
+        AssertModelReady();
 
         Entity entity;
 
@@ -127,17 +162,27 @@ public class LiveSource
         {
             state = LiveSourceState.Stale;
 
-            isModelReady.Reset();
+            modelReadyOrBroken.Reset();
         }
     }
 
     async void BeginUpdateModelIfApplicable()
     {
-        if (isModelReady.IsSet) return;
+        lock (this)
+        {
+            if (state == LiveSourceState.Broken && DateTime.Now - lastAttemptAt > RetryInterval)
+            {
+                state = LiveSourceState.Stale;
+
+                modelReadyOrBroken.Reset();
+            }
+        }
+
+        if (modelReadyOrBroken.IsSet) return;
 
         var lockHandle = modelBuildingLock.LockAsync();
 
-        if (isModelReady.IsSet) return;
+        if (modelReadyOrBroken.IsSet) return;
 
         state = LiveSourceState.Building;
 
@@ -162,16 +207,22 @@ public class LiveSource
 
                 state = LiveSourceState.Ready;
 
-                isModelReady.Set();
+                modelReadyOrBroken.Set();
+
+                lastAttemptAt = DateTime.Now;
             }
         }
         catch (Exception ex)
         {
             lock (this)
             {
+                exceptionOnModelBuilding = ex;
+
                 state = LiveSourceState.Broken;
 
-                exceptionOnModelBuilding = ex;
+                modelReadyOrBroken.Set();
+
+                lastAttemptAt = DateTime.Now;
             }
         }
     }
@@ -296,8 +347,6 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
         }
         finally
         {
-            var previousCount = semaphore.Release();
-
             log.Debug($"{logIds} Query terminated, semaphore now at {semaphore.CurrentCount}");
         }
     }

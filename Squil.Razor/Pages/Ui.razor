@@ -21,9 +21,10 @@
 
 <DefaultLayout>
     <NavItems>
+        <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
+
         @if (vm?.Result != null)
         {
-            <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
             <BreadcrumbItem><a class="text-muted" href="@vm.Response.RootUrl.If(vm.Response.QueryType != QueryControllerQueryType.Root)">@vm.Response.RootName</a></BreadcrumbItem>
             <CascadingValue Value="QueryContext">
                 @if (vm.Result.PrincipalEntities != null)
@@ -151,14 +152,9 @@
 
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    @if (currentSource?.State == LiveSourceState.Broken)
+                    @if (currentSource?.State == LiveSourceState.Building)
                     {
-                        <div class="alert alert-danger">
-                            Can't build model for database schema.
-                        </div>
-                    }
-                    else if (currentSource?.State == LiveSourceState.Building)
-                    {
+                        // All other states should lead to a quick error display
                         <div class="alert alert-info">
                             Building model for database schema. <span class="spinner-border spinner-border-sm"></span>
                         </div>
@@ -431,7 +427,10 @@
 
         var source = currentSource = Runner.GetLiveSource(request.Source);
 
-        StateHasChanged();
+        if (source.State != LiveSourceState.Ready)
+        {
+            StateHasChanged();            
+        }
 
         await source.EnsureModelAsync();
 
