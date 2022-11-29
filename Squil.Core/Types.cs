@@ -421,7 +421,7 @@ public class IntegerColumnType : ColumnType
     {
         normalized = error = null;
 
-        if (BigInteger.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var number))
+        if (BigInteger.TryParse(text, NumberStyles.AllowExponent | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var number))
         {
             error = CheckRange(number);
 
