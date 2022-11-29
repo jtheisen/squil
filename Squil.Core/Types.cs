@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Numerics;
+using System.Text;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Squil;
@@ -193,9 +194,23 @@ public class DateOrTimeColumnType : ColumnType
             var pid = Char.GetUnicodeCategory(lpattern[i]);
             var tid = Char.GetUnicodeCategory(text[i]);
 
-            var isMatchingClass = pid == UnicodeCategory.SpaceSeparator || pid == UnicodeCategory.DecimalDigitNumber;
+            if (i == 10)
+            {
+                if (tid != UnicodeCategory.SpaceSeparator && text[i] != 'T' && text[i] != 't') return Issue(error);
 
-            if (pid != tid || (!isMatchingClass && (lpattern[i] != text[i]))) return Issue(error);
+                if (text[i] != ' ')
+                {
+                    var builder = new StringBuilder(text);
+                    builder[i] = ' ';
+                    text = builder.ToString();
+                }
+            }
+            else
+            {
+                if (pid != tid) return Issue(error);
+
+                if (pid != UnicodeCategory.DecimalDigitNumber && lpattern[i] != text[i]) return Issue(error);                
+            }
         }
 
         var result = Validate(text);
