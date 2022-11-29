@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Components;
-using Squil.SchemaBuilding;
-using System.Text;
-using System.Web;
+﻿using Squil.SchemaBuilding;
 
 namespace Squil;
 
-public record UnsuitableIndexesVm(CsdUnsupportedReason Reason, IEnumerable<SearchOptionVm> Indexes);
+public record UnsuitableIndexesVm(CsdUnsupportedReason Reason, SearchOptionVm[] Indexes)
+{
+    public UnsuitableIndexesVm(CsdUnsupportedReason reason, IEnumerable<SearchOptionVm> indexes)
+        : this(reason, indexes.ToArray())
+    {
+    }
+}
 
 public record SearchFieldVm(String ColumnName, String DisplayName);
 
