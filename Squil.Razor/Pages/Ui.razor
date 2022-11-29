@@ -526,6 +526,8 @@
             _ => true
         };
 
+        if (response.Task == null) return null;
+
         if (false)
         {
             response.Task.Wait();

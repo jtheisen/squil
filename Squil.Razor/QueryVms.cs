@@ -173,6 +173,8 @@ public class LocationQueryVm
 
     public CanLoadMoreStatus CanLoadMore()
     {
+        if (LastResponse.Task == null) return CanLoadMoreStatus.Unavailable;
+
         if (!LastResponse.Task.IsCompletedSuccessfully) return CanLoadMoreStatus.Unavailable;
 
         var r = LastResponse.Task.Result.PrimaryEntities;
