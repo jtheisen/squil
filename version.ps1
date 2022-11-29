@@ -20,11 +20,13 @@ function Format-Xml ([xml]$xml, $indent=2)
 
 $branchSuffix = if ($branch -eq "release") { "" } else { "-$branch" }
 
+$mauiRevision = if ($branch -eq "release") { "0" } else { "$revision" }
+
 $withMajor = "$major$branchSuffix"
 $withMinor = "$major.$minor$branchSuffix"
 $withPatch = "$major.$minor.$patch$branchSuffix"
 $withRevision = "$major.$minor.$patch.$revision$branchSuffix"
-$mauiWindows = "$major.$minor.$patch.0"
+$mauiWindows = "$major.$minor.$patch.$mauiRevision"
 
 $versionXml.Version.Major = $major
 $versionXml.Version.Minor = $minor
