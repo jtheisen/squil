@@ -111,7 +111,6 @@ public class LocationQueryResponse
     public CMTable Table { get; set; }
     public CMIndexlike Index { get; set; }
     public CMRelationEnd PrincipalRelation { get; set; }
-    public PrincipalLocation PrincipalLocation { get; set; }
     public Boolean HaveValidationIssues { get; set; }
     public ValidationResult[] ValidatedColumns { get; set; }
 
@@ -382,7 +381,7 @@ public class LocationQueryRunner
                 result.PrimaryEntities = entity.Related.GetRelatedEntities("primary");
             }
 
-            if (query.PrincipalLocation != null)
+            if (query.PrincipalRelation != null)
             {
                 result.PrincipalEntities = entity.Related.GetRelatedEntities("principal");
             }
