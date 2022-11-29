@@ -270,14 +270,14 @@
                                 </small>
                             </HeaderExtra>
                             <Body>
-                                <pre><CopyableContent>@(vm.LastResponse?.Ledger.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
+                                <pre><CopyableContent>@(vm.LastResponse?.Ledger?.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
                                 </Body>
                             </Modal>
 
                         <Modal OnClose="ReportModalSubscription">
                             <Title>Query report</Title>
                             <Body>
-                                @foreach (var entry in vm.LastResponse.Ledger.GetEntries())
+                                @foreach (var entry in vm.LastResponse.Ledger?.GetEntries())
                                 {
                                     var result = entry.result.GetReportString();
 

@@ -364,6 +364,10 @@ public class LocationQueryRunner
 
     async Task<LocationQueryResult> RunQuery(LocationQueryResponse query)
     {
+        using var ledger = LedgerControl.InstallTaskLedger();
+
+        query.Ledger = ledger;
+
         try
         {
             var entity = await currentConnectionHolder.RunAsync(c => query.Context.QueryAsync(c, query.Extent));
