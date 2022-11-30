@@ -31,6 +31,24 @@ public class QueryGenerator
         return "x";
     }
 
+    public String GetIdPredicateSql(Extent primaryExtent, String aliasPrefix)
+    {
+        var valuesLength = primaryExtent.Values?.Length;
+
+        if (primaryExtent.KeyValueCount == 0) return null;
+
+        String MakePredicate(String value, Int32 i)
+        {
+            var column = primaryExtent.Order[i];
+
+            return $"{aliasPrefix}{column.Sql} = {value.ToSqlServerStringLiteral()}";
+        }
+
+        var sql = String.Join(" AND ", primaryExtent.Values.Take(primaryExtent.KeyValueCount).Select(MakePredicate));
+
+        return sql;
+    }
+
     public QuerySql GetCompleteSql(Extent rootExtent)
     {
         using var scope = GetCurrentLedger().TimedScope("create-query");
@@ -71,26 +89,20 @@ public class QueryGenerator
 
         var alias = extent.Alias ?? (aliasPrefix + CreateSymbolForIdentifier(forwardEnd.Table.Name.LastPart));
 
-        var children = (
-                from e in (extent.Children ?? Enumerable.Empty<Extent>())
-                select $"{GetSql(e, forwardEnd.Table, alias, indent + 1)}"
-            )
-            .ToArray();
-
         var joinPredicates = forwardEnd.Columns.Zip(forwardEnd.OtherEnd.Columns, (s, p) => $"{alias}.{s.Name} = {aliasPrefix}.{p.Name}");
 
         if ((extent.Values?.Length ?? 0) > (extent.Order?.Length ?? 0)) throw new Exception("More filter values than order columns");
 
         var valuesLength = extent.Values?.Length;
 
-        (DirectedColumnName column, String value, String op) MakeFilterItem(String value, Int32 i)
+        (DirectedColumnName column, String value, String op, Boolean isKeyValue) MakeFilterItem(String value, Int32 i)
         {
             var column = extent.Order[i];
             // We currently only allow the last value to be unequal as otherwise we need a convoluted filter
             // predicate with uncertain performance characteristics.
             var op = column.d.GetOperator(i < valuesLength - 1 || i < extent.KeyValueCount);
 
-            return (column, value, op);
+            return (column, value, op, i < extent.KeyValueCount);
         }
 
         var filterItems = extent.Values?.Select(MakeFilterItem);
@@ -128,6 +140,12 @@ public class QueryGenerator
         var allPredicates = predicates.ToArray();
 
         var whereLine = allPredicates.Length > 0 ? $"{ispace}where {string.Join($"\n{ispace}  and ", allPredicates)}\n" : "";
+
+        var children = (
+            from e in (extent.Children ?? Enumerable.Empty<Extent>())
+            select $"{GetSql(e, forwardEnd.Table, alias, indent + 1)}"
+        )
+        .ToArray();
 
         var selectables = new List<String>();
 

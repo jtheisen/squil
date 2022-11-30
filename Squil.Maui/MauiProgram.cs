@@ -27,6 +27,7 @@ public static class MauiProgram
             s.SquilDbProviderName = "Sqlite";
             s.SquilDbSqliteConnectionString = $"Filename={Path.Combine(squilFolder, "squil-config.db")}";
             s.ShowNavigationChrome = true;
+            s.EnablePrimaryIdSqlCopy = true;
         };
 
         var settings = new AppSettings();

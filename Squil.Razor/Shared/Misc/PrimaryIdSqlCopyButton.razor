@@ -1,0 +1,19 @@
+﻿@{
+    String sql = Response?.GetPrimaryIdPredicateSql(primaryIdPredicateAlias);
+
+    Boolean disabled = String.IsNullOrWhiteSpace(sql);
+
+    String disabledClass = disabled ? "opacity-50" : "";
+}
+
+<div class="input-group me-3 @disabledClass">
+    <input type="text" class="form-control" size="1" placeholder="alias" @bind="primaryIdPredicateAlias" disabled="@disabled">
+    <CopyButton ButtonClass="btn btn-outline-dark" TextToCopy="@sql" Disabled="@disabled" />
+</div>
+
+@code {
+    [Parameter]
+    public LocationQueryResponse Response { get; set; }
+
+    String primaryIdPredicateAlias;
+}

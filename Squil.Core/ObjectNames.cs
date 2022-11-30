@@ -136,4 +136,22 @@ public static class ObjectNames
     {
         return $"[{p.Replace("]", "]]")}]";
     }
+
+    public static String EscapeNamePartIfNecessary(this String p)
+    {
+        return p.NeedsPartEscaping() ? p.EscapeNamePart() : p;
+    }
+
+    public static Boolean NeedsPartEscaping(this String p)
+    {
+        if (String.IsNullOrEmpty(p)) return true;
+
+        var first = p[0];
+
+        if (!Char.IsLetter(first) && first != '_') return true;
+
+        if (!p.All(c => Char.IsLetterOrDigit(c) || c == '_')) return true;
+
+        return false;
+    }
 }

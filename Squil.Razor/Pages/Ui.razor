@@ -15,6 +15,8 @@
     log.Debug($"Render {instanceId} #{renderCount}, query state: {lastQueryTask?.Status}");
 
     var sd = Runner.CurrentConnectionHolder.StallDetective;
+
+    var settings = Options.Value;
 }
 
 <PageTitle>@vm?.Response.RootName</PageTitle>
@@ -90,6 +92,10 @@
     </NavItems>
 
     <ActionItems>
+        @if (settings.EnablePrimaryIdSqlCopy)
+        {
+            <PrimaryIdSqlCopyButton Response="@vm?.LastResponse" />            
+        }
         <div class="btn-group">
             @if (Settings.EnableDevMode)
             {

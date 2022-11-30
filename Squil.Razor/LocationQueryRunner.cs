@@ -113,6 +113,7 @@ public class LocationQueryResponse
     public CMRelationEnd PrincipalRelation { get; set; }
     public Boolean HaveValidationIssues { get; set; }
     public ValidationResult[] ValidatedColumns { get; set; }
+    public String PrimaryIdPredicateSql { get; set; }
 
     public Extent Extent { get; set; }
     public LiveSource Context { get; set; }
@@ -148,6 +149,13 @@ public class LocationQueryResponse
         if (Task == null) return "not started";
 
         return $"status {Task.Status}{Exception?.Apply(e => $", exception: {e.Message}")}";
+    }
+
+    public String GetPrimaryIdPredicateSql(String alias)
+    {
+        var aliasPrefix = String.IsNullOrWhiteSpace(alias) ? "" : alias.EscapeNamePart() + ".";
+
+        return PrimaryIdPredicateSql?.Replace("\ue000", aliasPrefix);
     }
 }
 
@@ -343,7 +351,11 @@ public class LocationQueryRunner
             query.ValidatedColumns = columnValues;
             query.HaveValidationIssues = !(columnValues?.All(r => r.IsOk) ?? true);
             query.MayScan = defaultSearchMode == QuerySearchMode.Scan; // ie "is small table/index"
-            
+
+            var primaryExtent = extent.Children.Single(c => c.RelationAlias == "primary");
+
+            query.PrimaryIdPredicateSql = source.QueryGenerator.GetIdPredicateSql(primaryExtent, "\ue000");
+
             if (principalLocation != null)
             {
                 query.PrincipalRelation = principalLocation.Relation;

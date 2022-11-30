@@ -26,8 +26,6 @@ public class LoggingObject<D>
 
 public class ObservableObject<D> : LoggingObject<D>, INotifyPropertyChanged
 {
-
-
     static readonly PropertyChangedEventArgs eventArgs = new PropertyChangedEventArgs(null);
 
     protected void NotifyChange() => PropertyChanged?.Invoke(this, eventArgs);

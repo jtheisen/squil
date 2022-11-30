@@ -1,0 +1,29 @@
+﻿@inject IJSRuntime Js
+
+<button class="@ButtonClass" @onclick="HandleCopyClick" disabled="@Disabled">
+    <ContentWithTooltip @ref="tooltip" IsManual="@true"><ChildContent>copied!</ChildContent><InlineContent>@ChildContent</InlineContent></ContentWithTooltip>
+</button>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = @<i class="text-muted fa fa-copy" />;
+
+    [Parameter]
+    public String TextToCopy { get; set; }
+
+    [Parameter]
+    public Boolean Disabled { get; set; }
+
+    [Parameter]
+    public String ButtonClass { get; set; } = "btn btn-sm btn-outline-dark";
+
+    ElementReference element;
+    ContentWithTooltip tooltip;
+
+    async Task HandleCopyClick()
+    {
+        await Js.InvokeVoidAsync("navigator.clipboard.writeText", TextToCopy);
+
+        await tooltip.Show();
+    }
+}
