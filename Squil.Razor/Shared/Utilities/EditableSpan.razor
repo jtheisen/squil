@@ -1,0 +1,39 @@
+﻿@inject IJSRuntime Js
+
+<span @ref="element" class="@Class" contenteditable="@IsEditable" @onfocus="Focused" @onblur="HandleChange">@Value.ToUpper()</span>
+
+@code {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
+    [Parameter]
+    public String Class { get; set; }
+
+    [Parameter]
+    public Boolean IsEditable { get; set; }
+
+    [Parameter]
+    public String Value { get; set; }
+
+    [Parameter]
+    public Boolean Focus { get; set; }
+
+    [Parameter]
+    public EventCallback<String> ValueChanged { get; set; }
+
+    [Parameter]
+    public EventCallback Focused { get; set; }
+
+
+    ElementReference element;
+
+    public ValueTask FocusAsync() => element.FocusAsync();
+
+    async Task HandleChange()
+    {
+        var innerTextFromElement = await Js.InvokeAsync<String>("getInnerText", element);
+
+        var newValue = innerTextFromElement.Replace('\u00a0', ' ');
+
+        await ValueChanged.InvokeAsync(newValue);
+    }
+}

@@ -216,6 +216,10 @@
 .entity-context .entity-relation-name-view span:not(:first-child).entity-relation-name-fk-column-order + .entity-relation-name-fk-column-order:before {
   content: ", ";
 }
+.entity-context .entity-column {
+  margin: -5px -10px;
+  padding: 5px 10px;
+}
 .entity-context .entity-column > label {
   font-size: 0.8em;
 }
@@ -229,8 +233,15 @@
   text-overflow: ellipsis;
   line-height: 1.25em;
 }
+.entity-context .entity-column > div span:focus-visible, .entity-context .entity-column > div span:focus {
+  outline: 3px solid white;
+}
 .entity-context .entity-column[data-is-focus-column] > div {
   white-space: pre-wrap;
+}
+.entity-context .entity-column.entity-column-editing > div {
+  text-overflow: initial;
+  background: white;
 }
 .entity-context .null-value:before {
   font-style: italic;

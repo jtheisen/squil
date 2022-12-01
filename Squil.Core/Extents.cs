@@ -18,7 +18,32 @@ public class Entity
 
     public Dictionary<String, String> ColumnValues { get; set; }
 
+    public Dictionary<String, String> EditValues { get; private set; }
+
     public RelatedEntities[] Related { get; set; }
+
+    public String GetDisplayValue(String columnName)
+    {
+        if (EditValues != null)
+        {
+            if (EditValues.ContainsKey(columnName))
+            {
+                return EditValues[columnName];
+            }
+        }
+
+        return ColumnValues[columnName];
+    }
+
+    public void SetEditValue(String columnName, String value)
+    {
+        if (EditValues == null)
+        {
+            EditValues = new Dictionary<String, String>();
+        }
+
+        EditValues[columnName] = value;
+    }
 }
 
 [DebuggerDisplay("{RelationName}")]

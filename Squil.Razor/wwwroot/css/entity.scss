@@ -313,6 +313,9 @@ $bg-light-2: #e7e5e4;
     }
 
     .entity-column {
+        margin: -5px -10px;
+        padding: 5px 10px;
+
         > label {
             font-size: .8em;
         }
@@ -325,10 +328,25 @@ $bg-light-2: #e7e5e4;
         > div {
             @include text-ellipsis;
             line-height: 1.25em;
+
+            span {
+                &:focus-visible,
+                &:focus {
+                    outline: 3px solid white;
+                }
+            }
         }
 
         &[data-is-focus-column] > div {
             white-space: pre-wrap;
+        }
+
+        &.entity-column-editing {
+
+            > div {
+                text-overflow: initial;
+                background: white;
+            }
         }
     }
 

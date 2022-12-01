@@ -1,4 +1,4 @@
-﻿<div class="entity-column" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
+﻿<div class="@ClassNames("entity-column", "entity-column-editing".If(isEditing))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
     <label>
         <a href="@Url">
             @Column.Name
@@ -12,10 +12,10 @@
             }
 *@        </a>
     </label>
-    <div>
-        <a>
+    <div class="entity-column-content">
+        <span>
             @{
-                var value = Entity.ColumnValues[Column.Name];
+                var value = Entity.GetDisplayValue(Column.Name);
 
                 if (value == null)
                 {
@@ -35,10 +35,10 @@
                 }
                 else
                 {
-                    <text>@value</text>
+                    <EditableSpan Value="@value" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@true" />
                 }
             }
-        </a>
+        </span>
     </div>
 </div>
 
@@ -63,4 +63,18 @@
 
     [CascadingParameter]
     public QueryContext Context { get; set; }
+
+    Boolean isEditing;
+
+    void HandleValueChanged(String value)
+    {
+        isEditing = false;
+
+        Entity.SetEditValue(Column.Name, value);
+    }
+
+    void HandledFocused()
+    {
+        isEditing = true;
+    }
 }
