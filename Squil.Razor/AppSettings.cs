@@ -18,7 +18,7 @@ public class AppSettings
 
     public Boolean ShowNavigationChrome { get; set; }
 
-    // Something is off about how SQL Server reports the sizes, they seem to large.
+    // Something is off about how SQL Server reports the sizes, they seem too large.
     public Int32 PreferScanningUnderKb { get; set; } = 100000;
 
     public Boolean EnablePrimaryIdSqlCopy { get; set; }
