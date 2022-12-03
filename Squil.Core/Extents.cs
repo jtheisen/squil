@@ -7,7 +7,7 @@ public class EntityKey
 {
     public ObjectName TableName { get; set; }
 
-    public String KeyValues { get; set; }
+    public String[] KeyValues { get; set; }
 }
 
 public class ChangeEntry
@@ -17,6 +17,13 @@ public class ChangeEntry
     public Dictionary<String, String> EditValues { get; set; }
 }
 
+public enum EntityEditState
+{
+    Original,
+    Modified,
+    Closed
+}
+
 public class Entity
 {
     public DateTime? SchemaDate { get; set; }
@@ -24,6 +31,8 @@ public class Entity
     public Boolean? IsMatching { get; set; }
 
     public Dictionary<String, String> ColumnValues { get; set; }
+
+    public EntityEditState EditState { get; set; }
 
     public Dictionary<String, String> EditValues { get; private set; }
 
@@ -44,6 +53,10 @@ public class Entity
 
     public void SetEditValue(String columnName, String value)
     {
+        if (EditState == EntityEditState.Closed) throw new Exception("Can't edit closed entity");
+
+        EditState = EntityEditState.Modified;
+
         if (EditValues == null)
         {
             EditValues = new Dictionary<String, String>();
@@ -198,4 +211,11 @@ public static class Extensions
 {
     public static String GetRelationAlias(this Extent extent)
         => extent.RelationAlias ?? extent.RelationName.EscapeSqlServerXmlName();
+
+    public static EntityKey GetEntityKey(this CMTable table, Entity entity)
+    {
+        var columnValues = from c in table.PrimaryKey.Columns select entity.ColumnValues[c.c.Name];
+
+        return new EntityKey { TableName = table.Name, KeyValues = columnValues.ToArray() };
+    }
 }

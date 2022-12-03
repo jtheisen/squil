@@ -163,6 +163,8 @@
                     }
                     else if (vm != null)
                     {
+                        <RerenderHelper Observable="@vm" OnChange="@HandleVmChanged" />
+
                         switch (vm.LastResponse.QueryType)
                         {
                             case QueryControllerQueryType.Table:
@@ -440,7 +442,9 @@
 
         var segments = uri.Segments.Skip(1).ToArray();
 
-        var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection())
+        var accessMode = vm?.Changes != null ? LocationQueryAccessMode.Rollback : LocationQueryAccessMode.QueryOnly;
+
+        var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection(), vm?.Changes, accessMode)
         {
             ListLimit = listLimit
         };
@@ -561,6 +565,14 @@
         listLimit = Settings.LoadMoreLimit + 1;
 
         StartQuery();
+    }
+
+    void HandleVmChanged()
+    {
+        if (vm.ResultIsStale)
+        {
+            StartQuery();
+        }
     }
 
     protected override void OnParametersSet()

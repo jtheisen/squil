@@ -71,6 +71,8 @@
         isEditing = false;
 
         Entity.SetEditValue(Column.Name, value);
+
+        QueryVm.AddChange(Table, Entity);
     }
 
     void HandledFocused()

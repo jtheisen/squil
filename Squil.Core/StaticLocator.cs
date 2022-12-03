@@ -28,6 +28,7 @@ public static class StaticServiceStack<T>
     }
 
     public static T Get() => implementations.Value is Stack<T> s && s.Count > 0 ? s.Peek() : throw new Exception($"No service of type {typeof(T).Name} was installed");
+    public static T GetOptional() => implementations.Value is Stack<T> s && s.Count > 0 ? s.Peek() : default;
 }
 
 public class ActionDisposable : IDisposable
@@ -44,5 +45,6 @@ public static class StaticServiceStack
     public static IDisposable Install<T>(T implementation) => StaticServiceStack<T>.Install(implementation);
 
     public static T Get<T>() => StaticServiceStack<T>.Get();
+    public static T GetOptional<T>() => StaticServiceStack<T>.GetOptional();
 }
 

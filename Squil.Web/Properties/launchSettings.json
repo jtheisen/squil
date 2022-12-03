@@ -3,7 +3,7 @@
     "Squil": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "ui/StackOverflow2013-remote/tables/dbo/Posts/PK_Posts_Id",
+      "launchUrl": "ui/playground/tables/dbo/Foo/PK__Foo__3213E83F81F5E96B?$id=1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

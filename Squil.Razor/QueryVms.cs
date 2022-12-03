@@ -59,17 +59,7 @@ public class SearchOptionVm
     }
 }
 
-public class LocationQueryEditVm
-{
-    List<ChangeEntry> changes = new List<ChangeEntry>();
-
-    public void AddChange(ChangeEntry change)
-    {
-        changes.Add(change);
-    }
-}
-
-public class LocationQueryVm
+public class LocationQueryVm : ObservableObject<LocationQueryVm>
 {
     public LocationQueryRequest LastRequest { get; private set; }
     
@@ -180,6 +170,11 @@ public class LocationQueryVm
         {
             CurrentIndex.SetValidatedValues(result.ValidatedColumns);
         }
+
+        if (result.IsOk)
+        {
+            resultIsStale = false;
+        }
     }
 
     public void UpdateResult(LocationQueryResult result)
@@ -192,6 +187,8 @@ public class LocationQueryVm
 
     public CanLoadMoreStatus CanLoadMore()
     {
+        if (areEditing) return CanLoadMoreStatus.Unavailable;
+
         if (LastResponse.Task == null) return CanLoadMoreStatus.Unavailable;
 
         if (!LastResponse.Task.IsCompletedSuccessfully) return CanLoadMoreStatus.Unavailable;
@@ -223,4 +220,33 @@ public class LocationQueryVm
     public SearchOptionVm[] SearchOptions { get; }
 
     public UnsuitableIndexesVm[] UnsuitableIndexes { get; set; }
+
+    #region Editing
+
+    public Boolean ResultIsStale => resultIsStale;
+
+    Boolean areEditing = false;
+    Boolean resultIsStale = false;
+
+    List<ChangeEntry> changes = new List<ChangeEntry>();
+
+    public ChangeEntry[] Changes => changes.ToArray();
+
+    public void AddChange(CMTable table, Entity entity)
+    {
+        if (entity.EditState == EntityEditState.Original) return;
+
+        var change = new ChangeEntry { EntityKey = table.GetEntityKey(entity), EditValues = entity.EditValues };
+
+        changes.Add(change);
+
+        entity.EditState = EntityEditState.Closed;
+
+        areEditing = true;
+        resultIsStale = true;
+
+        NotifyChange();
+    }
+
+    #endregion
 }

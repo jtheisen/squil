@@ -11,9 +11,12 @@ public static class SqlConnectionExtensions
 {
     public static SqlCommand CreateSqlCommandFromSql(this SqlConnection connection, String sql)
     {
+        var transaction = StaticServiceStack.GetOptional<IDbTransaction>();
+
         var command = connection.CreateCommand();
         command.CommandText = sql;
         command.CommandType = CommandType.Text;
+        (command as IDbCommand).Transaction = transaction;
         return command;
     }
 

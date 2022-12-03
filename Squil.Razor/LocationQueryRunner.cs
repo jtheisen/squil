@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Collections.Specialized;
+using System.Data;
 using TaskLedgering;
 using static Squil.ExtentFactory;
 using static Squil.GlobalBlockingReport;
@@ -28,10 +29,10 @@ public class LocationQueryRequest
     public String Schema { get; }
     public String Table { get; }
     public String Index { get; }
-    public String Column { get; set; }
+    public String Column { get; }
 
-    public ChangeEntry[] Changes { get; set; }
-    public LocationQueryAccessMode AccessMode { get; set; }
+    public ChangeEntry[] Changes { get; }
+    public LocationQueryAccessMode AccessMode { get; }
 
     public QuerySearchMode? SearchMode { get; set; }
 
@@ -43,8 +44,17 @@ public class LocationQueryRequest
     public NameValueCollection RestParams { get; }
     public NameValueCollection SearchValues { get; }
 
-    public LocationQueryRequest(String[] segments, NameValueCollection queryParams, NameValueCollection searchValues)
+    public LocationQueryRequest(
+        String[] segments,
+        NameValueCollection queryParams,
+        NameValueCollection searchValues,
+        ChangeEntry[] changes = null,
+        LocationQueryAccessMode accessMode = default
+    )
     {
+        Changes = changes;
+        AccessMode = accessMode;
+
         String Get(Int32 i)
         {
             var segment = segments.GetOrDefault(i)?.TrimEnd('/');
@@ -392,6 +402,8 @@ public class LocationQueryRunner
         var ct = StaticServiceStack.Get<CancellationToken>();
 
         await using var transaction = request.Changes != null ? await connection.BeginTransactionAsync(ct) : null;
+
+        StaticServiceStack.Install<IDbTransaction>(transaction);
 
         try
         {
