@@ -1,12 +1,10 @@
 ﻿namespace Squil;
 
-public class QueryContext
+public class QueryUrlCreator
 {
-    public Boolean InDebug { get; set; }
-
     public UrlRenderer UrlRenderer { get; }
 
-    public QueryContext(String source)
+    public QueryUrlCreator(String source)
     {
         UrlRenderer = MakeUrlRenderer(source);
     }

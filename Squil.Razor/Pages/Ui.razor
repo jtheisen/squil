@@ -28,7 +28,7 @@
         @if (vm?.Result != null)
         {
             <BreadcrumbItem><a class="text-muted" href="@vm.Response.RootUrl.If(vm.Response.QueryType != QueryControllerQueryType.Root)">@vm.Response.RootName</a></BreadcrumbItem>
-            <CascadingValue Value="QueryContext">
+            <CascadingValue Value="vm">
                 @if (vm.Result.PrincipalEntities != null)
                 {
                     var entity = vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
@@ -54,7 +54,7 @@
                         case QueryControllerQueryType.Row:
 
                             <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
+                                <a class="entity-context text-muted" href="@vm.UrlCreateor.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
@@ -65,11 +65,11 @@
                             break;
                         case QueryControllerQueryType.Column:
                             <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@QueryContext.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
+                                <a class="entity-context text-muted" href="@vm.UrlCreateor.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
-                                <a class="text-muted entity-context" href="@QueryContext.RenderEntityUrl(vm.Response.Table, entity)">
+                                <a class="text-muted entity-context" href="@vm.UrlCreateor.RenderEntityUrl(vm.Response.Table, entity)">
                                     <EntityHeaderView Table="@pe.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
                                 </a>
                             </BreadcrumbItem>
@@ -108,7 +108,7 @@
 
     <ChildContent>
 
-        <CascadingValue Value="QueryContext">
+        <CascadingValue Value="vm">
 
             <SidebarLayout>
                 <RightContent>
@@ -146,7 +146,7 @@
                     @if (vm?.SearchOptions != null)
                     {
                         <div class="common-lead-spacer">&nbsp;</div>
-                        <SearchPanel Vm="vm" SearchValues="SearchValues" />
+                        <SearchPanel SearchValues="SearchValues" />
                     }
                 </LeftContent>
 
@@ -404,8 +404,6 @@
 
     LocationQueryVm vm = null;
 
-    QueryContext QueryContext { get; set; }
-
     String currentUri;
 
     void OpenSqlModal() => SqlModalSubscription = () => SqlModalSubscription = null;
@@ -464,9 +462,7 @@
         {
             vm = new LocationQueryVm(request, response);
 
-            QueryContext = new QueryContext(request.Source);
-
-            QueryContext.InDebug = queryParams["debug"] != null;
+            vm.InDebug = queryParams["debug"] != null;
 
             haveLocationChange = false;
         }

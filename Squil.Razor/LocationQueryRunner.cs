@@ -1,6 +1,8 @@
-﻿using System.Collections.Specialized;
+﻿using Microsoft.Data.SqlClient;
+using System.Collections.Specialized;
 using TaskLedgering;
 using static Squil.ExtentFactory;
+using static Squil.GlobalBlockingReport;
 
 namespace Squil;
 
@@ -13,6 +15,13 @@ public enum QueryControllerQueryType
     Column
 }
 
+public enum LocationQueryAccessMode
+{
+    QueryOnly,
+    Rollback,
+    Commit
+}
+
 public class LocationQueryRequest
 {
     public String Source { get; }
@@ -20,6 +29,9 @@ public class LocationQueryRequest
     public String Table { get; }
     public String Index { get; }
     public String Column { get; set; }
+
+    public ChangeEntry[] Changes { get; set; }
+    public LocationQueryAccessMode AccessMode { get; set; }
 
     public QuerySearchMode? SearchMode { get; set; }
 
@@ -116,7 +128,7 @@ public class LocationQueryResponse
     public String PrimaryIdPredicateSql { get; set; }
 
     public Extent Extent { get; set; }
-    public LiveSource Context { get; set; }
+    public LiveSource Source { get; set; }
 
     public Task<LocationQueryResult> Task { get; set; }
 
@@ -226,7 +238,7 @@ public class LocationQueryRunner
         {
             RootName = connectionName,
             RootUrl = $"/ui/{connectionName}",
-            Context = source
+            Source = source
         };
 
         if (source.ExceptionOnModelBuilding != null)
@@ -368,25 +380,32 @@ public class LocationQueryRunner
 
         source.SetConnectionInHolder(currentConnectionHolder);
 
-        query.Task = RunQuery(query);
+        query.Task = RunQuery(request, query);
 
         return query;
     }
 
-    async Task<LocationQueryResult> RunQuery(LocationQueryResponse query)
+    async Task<LocationQueryResult> RunQueryInternal(SqlConnection connection, LocationQueryRequest request, LocationQueryResponse query)
     {
-        using var ledger = LedgerControl.InstallTaskLedger();
+        var result = new LocationQueryResult();
 
-        query.Ledger = ledger;
+        var ct = StaticServiceStack.Get<CancellationToken>();
+
+        await using var transaction = request.Changes != null ? await connection.BeginTransactionAsync(ct) : null;
 
         try
         {
-            var entity = await currentConnectionHolder.RunAsync(c => query.Context.QueryAsync(c, query.Extent));
-
-            var result = new LocationQueryResult
+            if (request.Changes is ChangeEntry[] changes)
             {
-                Entity = entity
-            };
+                foreach (var change in changes)
+                {
+                    await query.Source.ExcecuteChange(connection, change);
+                }
+            }
+
+            var entity = await query.Source.QueryAsync(connection, query.Extent);
+
+            result.Entity = entity;
 
             if (query.QueryType != QueryControllerQueryType.Root)
             {
@@ -415,7 +434,15 @@ public class LocationQueryRunner
 
             throw;
         }
+    }
 
+    async Task<LocationQueryResult> RunQuery(LocationQueryRequest request, LocationQueryResponse query)
+    {
+        using var ledger = LedgerControl.InstallTaskLedger();
+
+        query.Ledger = ledger;
+
+        return await currentConnectionHolder.RunAsync(c => RunQueryInternal(c, request, query));
     }
 
 

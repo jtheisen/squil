@@ -49,6 +49,13 @@ public class QueryGenerator
         return sql;
     }
 
+    public String GetChangeSql(ChangeEntry entry)
+    {
+        var setters = from p in entry.EditValues select $"set {p.Key.EscapeNamePart()} = {p.Value.ToSqlServerStringLiteral()}";
+
+        return $"update {entry.EntityKey.TableName.Escaped} {String.Join(", ", setters)}";
+    }
+
     public QuerySql GetCompleteSql(Extent rootExtent)
     {
         using var scope = GetCurrentLedger().TimedScope("create-query");
@@ -258,21 +265,14 @@ public class QueryGenerator
         };
     }
 
-    public DebugEntity InterpretXml(XElement element)
+    public async Task ExecuteChange(SqlConnection connection, ChangeEntry change)
     {
-        return new DebugEntity
-        {
-            Columns = element.Attributes()
-                .ToDictionary(a => a.Name.LocalName, a => a.Value),
-            Relations = element.Elements()
-                .ToDictionary(
-                    e => new String(e.Name.LocalName),
-                    e => e.Elements().Select(e2 => InterpretXml(e2)).ToArray()
-                )
-        };
+        var sql = GetChangeSql(change);
+
+        await connection.ExecuteAsync(sql);
     }
 
-    public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
+    public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent, ChangeEntry[] changes = null)
     {
         var sql = GetCompleteSql(extent);
 

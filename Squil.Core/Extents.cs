@@ -3,11 +3,18 @@ using Newtonsoft.Json;
 
 namespace Squil;
 
-public class DebugEntity
+public class EntityKey
 {
-    public Dictionary<String, String> Columns { get; set; }
+    public ObjectName TableName { get; set; }
 
-    public Dictionary<String, DebugEntity[]> Relations { get; set; }
+    public String KeyValues { get; set; }
+}
+
+public class ChangeEntry
+{
+    public EntityKey EntityKey { get; set; }
+
+    public Dictionary<String, String> EditValues { get; set; }
 }
 
 public class Entity

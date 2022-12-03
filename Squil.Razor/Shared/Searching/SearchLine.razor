@@ -46,10 +46,10 @@
     @if (Option.IsCurrent)
     {
         <div class="validation-area">
-            @if (Vm.LastResponse.HaveValidationIssues)
+            @if (QueryVm.LastResponse.HaveValidationIssues)
             {
                 <div class="validation-display">
-                    @foreach (var c in Vm.LastResponse.ValidatedColumns.Where(c => !c.IsOk))
+                    @foreach (var c in QueryVm.LastResponse.ValidatedColumns.Where(c => !c.IsOk))
                     {
                         <div>
                             @c.Error
@@ -69,10 +69,7 @@
 
 @code {
     [CascadingParameter]
-    public QueryContext Context { get; set; }
-
-    [Parameter]
-    public LocationQueryVm Vm { get; set; }
+    public LocationQueryVm QueryVm { get; set; }
 
     [Parameter]
     public SearchOptionVm Option { get; set; }
@@ -94,16 +91,16 @@
         {
             if (Option.IsCurrent) return null;
 
-            var result = Vm.Response;
+            var result = QueryVm.Response;
 
-            var keys = Vm.LastRequest.KeyParams.AsMap();
+            var keys = QueryVm.LastRequest.KeyParams.AsMap();
 
             switch (Option.OptionType)
             {
                 case SearchOptionType.Seek:
-                    return Context.RenderIndexOrTableUrl(result.Table, Option.Index, keys, Vm.LastRequest.BackRelation, QuerySearchMode.Seek);
+                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, Option.Index, keys, QueryVm.LastRequest.BackRelation, QuerySearchMode.Seek);
                 case SearchOptionType.Scan:
-                    return Context.RenderIndexOrTableUrl(result.Table, result.Index, keys, Vm.LastRequest.BackRelation, QuerySearchMode.Scan);
+                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, result.Index, keys, QueryVm.LastRequest.BackRelation, QuerySearchMode.Scan);
                 default:
                     throw new Exception($"Unexpected option type {Option.OptionType}");
             }

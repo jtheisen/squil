@@ -28,12 +28,12 @@
     @if (!HideHeader)
     {
         <label>
-            <a href="@Context.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
+            <a href="@QueryVm.UrlCreateor.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
                 <EntityRelationNameView RelationEnd="@entities.RelationEnd" />
             </a>
         </label>
     }
-    @if (Context.InDebug)
+    @if (QueryVm.InDebug)
     {
         <DebugTooltip IsOpen="true">
             <RelationInfoView End0="@entities.RelationEnd" Index="@entities.Extent.IndexName" />
@@ -109,7 +109,7 @@
     public Boolean HideHeader { get; set; }
 
     [CascadingParameter]
-    public QueryContext Context { get; set; }
+    public LocationQueryVm QueryVm { get; set; }
 
     String GetColorForHue(Double hue, Int32 s, Int32 l)
     {

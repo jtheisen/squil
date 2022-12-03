@@ -18,15 +18,15 @@
         </ContentWithTooltip>
     </h6>
 
-    @if (Vm.ScanOption != null)
+    @if (QueryVm.ScanOption != null)
     {
         <div class="indexes-form">
-            <SearchLine Vm="@Vm" Option="@Vm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            <SearchLine Option="@QueryVm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
         </div>
     }
     else
     {
-        <p>@Vm.NoScanOptionReason</p>
+        <p>@QueryVm.NoScanOptionReason</p>
     }
 
     <h6 class="text-end mt-4">
@@ -45,27 +45,27 @@
     </h6>
 
     <div class="indexes-form mb-4">
-        @if (Vm.SearchOptions.Length > 0)
+        @if (QueryVm.SearchOptions.Length > 0)
         {
-            foreach (var option in Vm.SearchOptions)
+            foreach (var option in QueryVm.SearchOptions)
             {
                 if (!option.Index.IsSupported) continue;
 
-                <SearchLine Vm="@Vm" Option="@option" HiddenPrefixLength="@Vm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+                <SearchLine Option="@option" HiddenPrefixLength="@QueryVm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
             }
         }
-        else if (Vm.ScanOption?.IsCurrent ?? false == false)
+        else if (QueryVm.ScanOption?.IsCurrent ?? false == false)
         {
-            <SearchLine Vm="@Vm" Option="@Vm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            <SearchLine Option="@QueryVm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
         }
     </div>
 
-    @if (Vm.SearchOptions.Length == 0)
+    @if (QueryVm.SearchOptions.Length == 0)
     {
         <p>There are no suitable indexes to seek by.</p>
     }
 
-    <UnsupportedIndexesPanel Indexes="@Vm.UnsuitableIndexes" />
+    <UnsupportedIndexesPanel Indexes="@QueryVm.UnsuitableIndexes" />
 
 </div>
 
@@ -76,10 +76,7 @@
     Action HideSearchOptions => () => showSearchOptions = false;
 
     [CascadingParameter]
-    public QueryContext QueryContext { get; set; }
-
-    [Parameter]
-    public LocationQueryVm Vm { get; set; }
+    public LocationQueryVm QueryVm { get; set; }
 
     [Parameter]
     public IMap<String, String> SearchValues { get; set; }

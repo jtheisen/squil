@@ -47,7 +47,7 @@
     public RelatedEntities ParentCollection { get; set; }
 
     [CascadingParameter]
-    public QueryContext Context { get; set; }
+    public LocationQueryVm QueryVm { get; set; }
 
     struct Fieldset
     {
@@ -99,7 +99,7 @@
             Column = c,
             StringLengthClass = slc,
             IsFocusColumn = c.Name == extent?.FocusColumn,
-            FocusColumnUrl = slc > StringLengthClass.Short ? Context.RenderEntityUrl(table, entity, c.Name) : null
+                FocusColumnUrl = slc > StringLengthClass.Short ? QueryVm.UrlCreateor.RenderEntityUrl(table, entity, c.Name) : null
         };
 
         var legend = rc.ToString().ToLower();

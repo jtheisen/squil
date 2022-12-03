@@ -144,6 +144,17 @@ public static class SqlConnectionExtensions
         return scope.SetResult(rootRow);
     }
 
+    public static async Task ExecuteAsync(this SqlConnection connection, String sql)
+    {
+        using var scope = GetCurrentLedger().TimedScope("executing");
+
+        var command = connection.CreateSqlCommandFromSql(sql);
+
+        var ct = StaticServiceStack.Get<CancellationToken>();
+
+        await command.ExecuteNonQueryAsync(ct);
+    }
+
     [XmlRoot("results")]
     public class ResultRoot<T>
     {

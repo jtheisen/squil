@@ -59,6 +59,16 @@ public class SearchOptionVm
     }
 }
 
+public class LocationQueryEditVm
+{
+    List<ChangeEntry> changes = new List<ChangeEntry>();
+
+    public void AddChange(ChangeEntry change)
+    {
+        changes.Add(change);
+    }
+}
+
 public class LocationQueryVm
 {
     public LocationQueryRequest LastRequest { get; private set; }
@@ -70,10 +80,16 @@ public class LocationQueryVm
 
     public Int32 KeyValuesCount { get; }
 
+    public Boolean InDebug { get; set; }
+
+    public QueryUrlCreator UrlCreateor { get; }
+
     public LocationQueryVm(LocationQueryRequest request, LocationQueryResponse response)
     {
         LastRequest = request;
         Response = response;
+
+        UrlCreateor = new QueryUrlCreator(request.Source);
 
         if (response.ExtentFlavorType == ExtentFlavorType.BlockList)
         {

@@ -7,7 +7,7 @@
 @if (Entity != null)
 {
     <header>
-        <a href="@Context.RenderEntityUrl(table, Entity).If(ShowLink)">
+        <a href="@QueryVm.UrlCreateor.RenderEntityUrl(table, Entity).If(ShowLink)">
             <span class="entity-thumb">@table.Abbreviation</span>
             @if (name != null)
             {
@@ -32,5 +32,5 @@ else
     public Boolean ShowLink { get; set; } = true;
 
     [CascadingParameter]
-    public QueryContext Context { get; set; }
+    public LocationQueryVm QueryVm { get; set; }
 }

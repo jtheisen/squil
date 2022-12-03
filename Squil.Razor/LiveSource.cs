@@ -123,6 +123,11 @@ public class LiveSource
         }
     }
 
+    public async Task ExcecuteChange(SqlConnection connection, ChangeEntry change)
+    {
+        await QueryGenerator.ExecuteChange(connection, change);
+    }
+
     public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
     {
         AssertModelReady();
