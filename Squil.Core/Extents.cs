@@ -3,11 +3,32 @@ using Newtonsoft.Json;
 
 namespace Squil;
 
-public class EntityKey
+public class EntityKey : IEquatable<EntityKey>
 {
-    public ObjectName TableName { get; set; }
+    String hashable;
+    Int32 hashcode;
 
-    public String[] KeyValues { get; set; }
+    public ObjectName TableName { get; }
+
+    public String[] KeyValues { get; }
+
+    public EntityKey(ObjectName tableName, String[] keyValues)
+    {
+        TableName = tableName;
+        KeyValues = keyValues;
+
+        hashable = $"{TableName.Escaped}\ue000{String.Join("\ue000", keyValues)}";
+        hashcode = hashable.GetHashCode();
+    }
+
+    public override Int32 GetHashCode() => hashcode;
+
+    public override Boolean Equals(Object obj) => obj is EntityKey other ? this.Equals(other) : false;
+
+    public Boolean Equals(EntityKey other) => hashable == other.hashable;
+
+    public static Boolean operator ==(EntityKey left, EntityKey right) => left.Equals(right);
+    public static Boolean operator !=(EntityKey left, EntityKey right) => !left.Equals(right);
 }
 
 public class ChangeEntry
@@ -26,6 +47,10 @@ public enum EntityEditState
 
 public class Entity
 {
+    public Extent Extent { get; set; }
+
+    public CMTable Table { get; set; }
+
     public DateTime? SchemaDate { get; set; }
 
     public Boolean? IsMatching { get; set; }
@@ -49,6 +74,16 @@ public class Entity
         }
 
         return ColumnValues[columnName];
+    }
+
+    public void SetEditValues(ChangeEntry changes)
+    {
+        if (changes.EntityKey != this.GetEntityKey()) throw new Exception($"Key mismatch");
+
+        foreach (var change in changes.EditValues)
+        {
+            SetEditValue(change.Key, change.Value);
+        }
     }
 
     public void SetEditValue(String columnName, String value)
@@ -212,10 +247,10 @@ public static class Extensions
     public static String GetRelationAlias(this Extent extent)
         => extent.RelationAlias ?? extent.RelationName.EscapeSqlServerXmlName();
 
-    public static EntityKey GetEntityKey(this CMTable table, Entity entity)
+    public static EntityKey GetEntityKey(this Entity entity)
     {
-        var columnValues = from c in table.PrimaryKey.Columns select entity.ColumnValues[c.c.Name];
+        var columnValues = from c in entity.Table.PrimaryKey.Columns select entity.ColumnValues[c.c.Name];
 
-        return new EntityKey { TableName = table.Name, KeyValues = columnValues.ToArray() };
+        return new EntityKey(entity.Table.Name, columnValues.ToArray());
     }
 }

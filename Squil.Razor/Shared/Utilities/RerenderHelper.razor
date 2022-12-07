@@ -9,6 +9,8 @@
     [Parameter]
     public Action OnChange { get; set; }
 
+    static Logger log = LogManager.GetCurrentClassLogger();
+
     INotifyPropertyChanged currentObservable;
     INotifyPropertyChanged CurrentObservable
     {
@@ -32,6 +34,15 @@
 
     void Handle(Object o, EventArgs e)
     {
+        if (OnChange != null)
+        {
+            log.Debug($"Firing OnChange handler for {Observable}");
+        }
+        else
+        {
+            log.Warn($"No OnChange handler to fire for {Observable}");
+        }
+
         OnChange?.Invoke();
     }
 

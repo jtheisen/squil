@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Humanizer;
+using Microsoft.Data.SqlClient;
 using System.Collections.Specialized;
 using System.Data;
 using TaskLedgering;
@@ -143,7 +144,10 @@ public class LocationQueryResponse
     public Task<LocationQueryResult> Task { get; set; }
 
     public TaskLedger Ledger { get; set; }
+    public Exception ChangeException { get; set; }
     public Exception Exception { get; set; }
+
+    public Boolean IsChangeOk => ChangeException == null;
 
     public Boolean IsOk => !HaveValidationIssues && Exception == null;
 
@@ -170,7 +174,11 @@ public class LocationQueryResponse
 
         if (Task == null) return "not started";
 
-        return $"status {Task.Status}{Exception?.Apply(e => $", exception: {e.Message}")}";
+        if (!Task.IsCompleted) return $"status {Task.Status}";
+
+        if (IsChangeOk) return "ok";
+
+        return $"change exception: {ChangeException.Message}";
     }
 
     public String GetPrimaryIdPredicateSql(String alias)
@@ -392,6 +400,12 @@ public class LocationQueryRunner
 
         query.Task = RunQuery(request, query);
 
+        query.Task.ContinueWith((task, result) =>
+        {
+            log.Info($"Ran {request.AccessMode.ToString().ToLower()} query: {query}");
+        },
+        null);
+
         return query;
     }
 
@@ -407,11 +421,24 @@ public class LocationQueryRunner
 
         try
         {
+            ChangeEntry problematicChangeEntry = null;
+
             if (request.Changes is ChangeEntry[] changes)
             {
                 foreach (var change in changes)
                 {
-                    await query.Source.ExcecuteChange(connection, change);
+                    try
+                    {
+                        await query.Source.ExcecuteChange(connection, change);
+                    }
+                    catch (SqlException ex)
+                    {
+                        problematicChangeEntry = change;
+
+                        query.ChangeException = ex;
+
+                        break;
+                    }
                 }
             }
 
@@ -427,6 +454,24 @@ public class LocationQueryRunner
             if (query.PrincipalRelation != null)
             {
                 result.PrincipalEntities = entity.Related.GetRelatedEntities("principal");
+            }
+
+            if (request.AccessMode == LocationQueryAccessMode.Commit && query.ChangeException == null)
+            {
+                await transaction.CommitAsync();
+            }
+
+            if (problematicChangeEntry != null)
+            {
+                var key = problematicChangeEntry.EntityKey;
+
+                foreach (var e in result.PrimaryEntities.List)
+                {
+                    if (e.GetEntityKey() == key)
+                    {
+                        e.SetEditValues(problematicChangeEntry);
+                    }
+                }
             }
 
             return result;

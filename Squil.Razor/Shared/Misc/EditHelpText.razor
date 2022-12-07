@@ -1,0 +1,11 @@
+﻿@inject IOptions<AppSettings> Options
+
+<h6>About editing</h6>
+<p>
+    Even before saving, edits are sent to the database for validation and nontrivial feedback
+    but are rolled back immediately. Clicking save will then do the same and commit to the changes.
+</p>
+
+@code {
+    AppSettings Settings => Options.Value;
+}

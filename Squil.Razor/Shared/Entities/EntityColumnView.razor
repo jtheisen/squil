@@ -35,7 +35,7 @@
                 }
                 else
                 {
-                    <EditableSpan Value="@value" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@true" />
+                    <EditableSpan Value="@value" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
                 }
             }
         </span>
@@ -64,6 +64,8 @@
     [CascadingParameter]
     public LocationQueryVm QueryVm { get; set; }
 
+    Boolean CanEdit => QueryVm.AreEditing;
+
     Boolean isEditing;
 
     void HandleValueChanged(String value)
@@ -72,7 +74,7 @@
 
         Entity.SetEditValue(Column.Name, value);
 
-        QueryVm.AddChange(Table, Entity);
+        QueryVm.AddChange(Entity);
     }
 
     void HandledFocused()

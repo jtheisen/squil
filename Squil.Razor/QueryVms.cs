@@ -173,8 +173,15 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
         if (result.IsOk)
         {
-            resultIsStale = false;
+            IsQueryRequired = false;
+
+            if (result.IsChangeOk && AreSaving)
+            {
+                areEditing = false;
+            }
         }
+
+        AreSaving = false;
     }
 
     public void UpdateResult(LocationQueryResult result)
@@ -187,7 +194,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
     public CanLoadMoreStatus CanLoadMore()
     {
-        if (areEditing) return CanLoadMoreStatus.Unavailable;
+        if (haveChanges) return CanLoadMoreStatus.Unavailable;
 
         if (LastResponse.Task == null) return CanLoadMoreStatus.Unavailable;
 
@@ -223,27 +230,79 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
     #region Editing
 
-    public Boolean ResultIsStale => resultIsStale;
+    Boolean areEditing;
 
-    Boolean areEditing = false;
-    Boolean resultIsStale = false;
+    Boolean haveChanges = false;
 
-    List<ChangeEntry> changes = new List<ChangeEntry>();
+    List<ChangeEntry> changes;
 
-    public ChangeEntry[] Changes => changes.ToArray();
+    public Boolean CanEdit
+    {
+        get
+        {
+            if (!LastResponse.IsOk) return false;
 
-    public void AddChange(CMTable table, Entity entity)
+            switch (LastResponse.QueryType)
+            {
+                case QueryControllerQueryType.Row:
+                case QueryControllerQueryType.Column:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    public Boolean IsQueryRequired { get; private set; }
+
+    public Boolean AreSaving { get; private set; }
+
+    public ChangeEntry[] Changes => changes?.ToArray();
+
+    public Boolean AreEditing => areEditing;
+
+    public void StartEditing()
+    {
+        areEditing = true;
+
+        NotifyChange();
+    }
+
+    public void CancelEditing()
+    {
+        areEditing = false;
+
+        changes = null;
+
+        NotifyQueryRequired();
+    }
+
+    public void Save()
+    {
+        AreSaving = true;
+
+        NotifyQueryRequired();
+    }
+
+    public void AddChange(Entity entity)
     {
         if (entity.EditState == EntityEditState.Original) return;
 
-        var change = new ChangeEntry { EntityKey = table.GetEntityKey(entity), EditValues = entity.EditValues };
+        var change = new ChangeEntry { EntityKey = entity.GetEntityKey(), EditValues = entity.EditValues };
 
+        changes = new List<ChangeEntry>();
         changes.Add(change);
 
         entity.EditState = EntityEditState.Closed;
 
-        areEditing = true;
-        resultIsStale = true;
+        haveChanges = true;
+
+        NotifyQueryRequired();
+    }
+
+    void NotifyQueryRequired()
+    {
+        IsQueryRequired = true;
 
         NotifyChange();
     }

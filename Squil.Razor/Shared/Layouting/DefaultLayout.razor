@@ -18,10 +18,11 @@
             </nav>
         </LeftContent>
         <ChildContent>
-            <div class="header-height d-flex flex-column justify-content-center">
+            <div class="header-height d-flex flex-row align-items-center">
                 <Breadcrumbs>
                     @NavItems
                 </Breadcrumbs>
+                @BreadcrumbActionItems
             </div>
         </ChildContent>
         <RightContent>
@@ -46,6 +47,9 @@
 
     [Parameter]
     public RenderFragment ActionItems { get; set; }
+
+    [Parameter]
+    public RenderFragment BreadcrumbActionItems { get; set; }
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }

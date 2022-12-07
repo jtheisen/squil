@@ -22,6 +22,14 @@
 <PageTitle>@vm?.Response.RootName</PageTitle>
 
 <DefaultLayout>
+    <BreadcrumbActionItems>
+        @if (vm?.CanEdit == true)
+        {
+            <div class="ms-2">
+                <button @onclick="vm.StartEditing" disabled="@vm.AreEditing" class="btn btn-sm btn-outline-dark text-muted"><i class="fas fa-pen" /></button>
+            </div>
+        }
+    </BreadcrumbActionItems>
     <NavItems>
         <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
 
@@ -87,6 +95,7 @@
                             break;
                     }
                 }
+
             </CascadingValue>
         }
     </NavItems>
@@ -114,7 +123,20 @@
                 <RightContent>
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    @if(Settings.EnableDevMode)
+                    @if (vm?.AreEditing == true)
+                    {
+                        <h5 class="text-muted font-weight-bold border-bottom mb-4">Edit</h5>
+
+                        <div class="sidebar-helptext small text-muted mb-4">
+                            <EditHelpText />
+                        </div>
+
+                        <div class="btn-group mb-4">
+                            <button @onclick="vm.CancelEditing" class="btn btn-outline-dark"><i class="fas fa-times me-2" />Cancel</button>
+                            <button @onclick="vm.Save" class="btn btn-primary"><i class="fas fa-check me-2" /> Save</button>
+                        </div>
+                    }
+                    else if (Settings.EnableDevMode)
                     {
                         if (vm?.LastResponse?.Ledger != null)
                         {
@@ -182,23 +204,7 @@
 
                             @if (vm.LastResponse.Exception is SqlException se)
                             {
-		                        <div class="alert alert-danger">
-		                            <div class="mb-2">
-		                                The database sent an error.
-		                            </div>
-
-		                            @foreach (Microsoft.Data.SqlClient.SqlError msg in se.Errors)
-		                            {
-		                                <div class="d-flex opacity-50 gap-2" style="font-size: .75rem">
-		                                    <span>class=@msg.Class,</span>
-		                                    <span>number=@msg.Number,</span>
-		                                    <span>state=@msg.State</span>
-		                                </div>
-		                                <pre class="mb-0 text-wrap">
-		                                    <div>@msg.Message</div>
-		                                </pre>
-		                            }
-                                </div>
+                                <SqlErrorView AlertClass="alert alert-danger" Exception="@se" />
                             }
                             else if (vm.LastResponse.Exception is OperationCanceledException)
                             {
@@ -222,6 +228,10 @@
                                         An internal exception occurred on during this query, this is likely a bug.
                                     </div>
                                 </div>
+                            }
+                            else if (vm.LastResponse.ChangeException is SqlException cse)
+                            {
+                                <SqlErrorView AlertClass="alert alert-warning" Exception="@cse" />
                             }
 
                             @if (vm.Result != null)
@@ -427,9 +437,18 @@
         return uri.Segments.Length < 2 || uri.Segments[0] != "/" || uri.Segments[1] != "ui/";
     }
 
+    LocationQueryAccessMode GetAccessMode()
+    {
+        if (vm?.Changes == null) return LocationQueryAccessMode.QueryOnly;
+
+        if (vm.AreSaving) return LocationQueryAccessMode.Commit;
+
+        return LocationQueryAccessMode.Rollback;
+    }
+
     async void StartQuery(Boolean synchronously = false, Int32 attempt = 0)
     {
-        log.Debug($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
+        log.Info($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
 
         if (CheckLocationUri(out var uri))
         {
@@ -442,7 +461,7 @@
 
         var segments = uri.Segments.Skip(1).ToArray();
 
-        var accessMode = vm?.Changes != null ? LocationQueryAccessMode.Rollback : LocationQueryAccessMode.QueryOnly;
+        var accessMode = GetAccessMode();
 
         var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection(), vm?.Changes, accessMode)
         {
@@ -569,7 +588,7 @@
 
     void HandleVmChanged()
     {
-        if (vm.ResultIsStale)
+        if (vm.IsQueryRequired)
         {
             StartQuery();
         }

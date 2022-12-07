@@ -86,6 +86,7 @@ a {
 -------------------------------------------------- */
 .squil-breadcrumbs {
     display: grid;
+    flex: 1 1 0%;
     padding: 0;
     list-style: none;
     grid-template-columns: min-content minmax(0, max-content) minmax(0, max-content) minmax(0, max-content) minmax(0, max-content);

@@ -1,0 +1,30 @@
+﻿@using Microsoft.Data.SqlClient;
+
+@if (Exception is SqlException se)
+{
+	<div class="@AlertClass">
+		<div class="mb-2">
+			The database sent an error.
+		</div>
+
+		@foreach (Microsoft.Data.SqlClient.SqlError msg in se.Errors)
+		{
+			<div class="d-flex opacity-50 gap-2" style="font-size: .75rem">
+				<span>class=@msg.Class,</span>
+				<span>number=@msg.Number,</span>
+				<span>state=@msg.State</span>
+			</div>
+			<pre class="mb-0 text-wrap">
+				<span>@msg.Message</span>
+			</pre>
+		}
+	</div>
+}
+
+@code {
+	[Parameter]
+	public String AlertClass { get; set; }
+
+    [Parameter]
+    public SqlException Exception { get; set; }
+}

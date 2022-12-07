@@ -216,6 +216,8 @@ public class QueryGenerator
 
         return new Entity
         {
+            Extent = extent,
+            Table = table,
             SchemaDate = isRoot ? data.GetOrDefault(SchemaDateAlias)?.Apply(DateTime.Parse) : null,
             IsMatching = data.GetOrDefault(IsMatchingAlias)?.Apply(im => im == "1"),
             ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)) ?? Empties<String, String>.Dictionary,
