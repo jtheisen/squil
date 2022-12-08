@@ -1,0 +1,34 @@
+﻿@inject IJSRuntime Js
+
+<textarea @ref="element" @onchange="HandleTextAreaChanged" @onblur="HandleBlur">@(Value ?? "")</textarea>
+
+@code {
+    [Parameter]
+    public String Value { get; set; }
+
+    [Parameter]
+    public Action<String> ValueChanged { get; set; }
+
+    [Parameter]
+    public Boolean AutoFocus { get; set; }
+
+    ElementReference element;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AutoFocus)
+        {
+            await Js.InvokeVoidAsync("setCaretToPos", element, -1);
+        }
+    }
+
+    void HandleTextAreaChanged(ChangeEventArgs e)
+    {
+        Value = e.Value as String ?? "";
+    }
+
+    void HandleBlur(EventArgs e)
+    {
+        ValueChanged?.Invoke(Value);
+    }
+}

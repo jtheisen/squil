@@ -86,6 +86,16 @@ public struct Maybe<T>
 public static class RazorHelpers
 {
     public static String ClassNames(params String[] classes) => String.Join(' ', classes);
+
+    public static String BreakIf(Boolean flag)
+    {
+        if (flag)
+        {
+            Debugger.Break();
+        }
+
+        return "";
+    }
 }
 
 public static partial class Extensions

@@ -345,7 +345,15 @@ $bg-light-2: #e7e5e4;
 
             > div {
                 text-overflow: initial;
-                background: white;
+
+                > span {
+                    background: white;
+                }
+
+                > textarea {
+                    width: 100%;
+                    min-height: 6em;
+                }
             }
         }
     }

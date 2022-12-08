@@ -12,33 +12,56 @@
             }
 *@        </a>
     </label>
-    <div class="entity-column-content">
-        <span>
-            @{
-                var value = Entity.GetDisplayValue(Column.Name);
+    <div class="entity-column-content" @onclick="HandleClick">
+        @{
+            var value = Entity.ColumnValues[Column.Name]; //Entity.GetDisplayValue(Column.Name);
 
-                if (value == null)
+                var pending = false;
+
+                if (!isEditing)
                 {
-                    <span class="null-value" />
+                    if (value == null)
+                    {
+                        <span class="null-value" />
+                    }
+                    else if (value.Length == 0)
+                    {
+                        <span class="empty-value" />
+                    }
+                    else if (String.IsNullOrWhiteSpace(value))
+                    {
+                        <span class="ws-value" />
+                    }
+                    else
+                    {
+                        pending = true;
+                    }
                 }
-                else if (value.Length == 0)
+                else
                 {
-                    <span class="empty-value" />
+                    pending = true;
                 }
-                else if (String.IsNullOrWhiteSpace(value))
+
+                if (!pending)
                 {
-                    <span class="ws-value" />
+                    // done
                 }
                 else if (IsFocusColumn)
                 {
-                    <CopyableContent>@value</CopyableContent>
+                    if (isEditing)
+                    {
+                        <EntityColumnEditTextArea AutoFocus="true" Value="@value" ValueChanged="HandleValueChanged" />
+                    }
+                    else
+                    {
+                        <CopyableContent>@value</CopyableContent>
+                    }
                 }
                 else
                 {
                     <EditableSpan Value="@value" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
                 }
             }
-        </span>
     </div>
 </div>
 
@@ -79,6 +102,13 @@
 
     void HandledFocused()
     {
+        isEditing = true;
+    }
+
+    void HandleClick()
+    {
+        if (!CanEdit) return;
+
         isEditing = true;
     }
 }

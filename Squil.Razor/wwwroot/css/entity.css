@@ -241,7 +241,13 @@
 }
 .entity-context .entity-column.entity-column-editing > div {
   text-overflow: initial;
+}
+.entity-context .entity-column.entity-column-editing > div > span {
   background: white;
+}
+.entity-context .entity-column.entity-column-editing > div > textarea {
+  width: 100%;
+  min-height: 6em;
 }
 .entity-context .null-value:before {
   font-style: italic;

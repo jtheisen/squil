@@ -461,15 +461,21 @@ public class LocationQueryRunner
                 await transaction.CommitAsync();
             }
 
-            if (problematicChangeEntry != null)
-            {
-                var key = problematicChangeEntry.EntityKey;
+            // Error-free commits don't replay
+            var replayRequired = query.ChangeException != null || request.AccessMode == LocationQueryAccessMode.Rollback;
 
-                foreach (var e in result.PrimaryEntities.List)
+            if (replayRequired)
+            {
+                foreach (var change in request.Changes)
                 {
-                    if (e.GetEntityKey() == key)
+                    var key = change.EntityKey;
+
+                    foreach (var e in result.PrimaryEntities.List)
                     {
-                        e.SetEditValues(problematicChangeEntry);
+                        if (e.GetEntityKey() == key)
+                        {
+                            e.SetEditValues(problematicChangeEntry);
+                        }
                     }
                 }
             }
