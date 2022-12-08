@@ -14,7 +14,7 @@
     </label>
     <div class="entity-column-content" @onclick="HandleClick">
         @{
-            var value = Entity.ColumnValues[Column.Name]; //Entity.GetDisplayValue(Column.Name);
+                var value = Entity.GetDisplayValue(Column.Name, isEditing);
 
                 var pending = false;
 

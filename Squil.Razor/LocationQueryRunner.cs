@@ -421,8 +421,6 @@ public class LocationQueryRunner
 
         try
         {
-            ChangeEntry problematicChangeEntry = null;
-
             if (request.Changes is ChangeEntry[] changes)
             {
                 foreach (var change in changes)
@@ -433,8 +431,6 @@ public class LocationQueryRunner
                     }
                     catch (SqlException ex)
                     {
-                        problematicChangeEntry = change;
-
                         query.ChangeException = ex;
 
                         break;
@@ -474,7 +470,7 @@ public class LocationQueryRunner
                     {
                         if (e.GetEntityKey() == key)
                         {
-                            e.SetEditValues(problematicChangeEntry);
+                            e.SetEditValues(change);
                         }
                     }
                 }
