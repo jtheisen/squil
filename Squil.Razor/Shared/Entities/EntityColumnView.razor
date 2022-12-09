@@ -16,11 +16,6 @@
         @{
             var value = Entity.GetDisplayValue(Column.Name, isEditing);
 
-            if (Column.Name == "copiedValue")
-            {
-                log.Info($"value={value}, isEditing={isEditing}, display={Entity.ColumnValues[Column.Name]}");
-            }
-
             var pending = false;
 
             if (!isEditing)
@@ -100,6 +95,8 @@
 
     void HandleValueChanged(String value)
     {
+        log.Debug($"Field edit ended");
+
         isEditing = false;
 
         Entity.SetEditValue(Column.Name, value);
@@ -109,12 +106,16 @@
 
     void HandledFocused()
     {
+        log.Debug($"Field edit started with focus");
+
         isEditing = true;
     }
 
     void HandleClick()
     {
         if (!CanEdit) return;
+
+        log.Debug($"Field edit started with click");
 
         isEditing = true;
     }

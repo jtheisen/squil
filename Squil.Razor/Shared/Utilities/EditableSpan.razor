@@ -1,6 +1,6 @@
 ﻿@inject IJSRuntime Js
 
-<span @ref="element" class="@Class" contenteditable="@IsEditable" @onfocus="Focused" @onblur="HandleChange">@Value</span>
+<span @ref="element" class="@Class" style="display: block" contenteditable="@IsEditable" @onclick:stopPropagation @onfocus="Focused" @onblur="HandleChange">@Value</span>
 
 @code {
     static Logger log = LogManager.GetCurrentClassLogger();

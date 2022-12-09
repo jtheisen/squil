@@ -294,8 +294,10 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
         var change = new ChangeEntry { EntityKey = entity.GetEntityKey(), EditValues = entity.EditValues };
 
-        changes = new List<ChangeEntry>();
-        changes.Add(change);
+        changes = new List<ChangeEntry>
+        {
+            change
+        };
 
         entity.EditState = EntityEditState.Closed;
 
