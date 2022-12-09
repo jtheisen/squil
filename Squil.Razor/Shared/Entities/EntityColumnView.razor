@@ -14,58 +14,65 @@
     </label>
     <div class="entity-column-content" @onclick="HandleClick">
         @{
-                var value = Entity.GetDisplayValue(Column.Name, isEditing);
+            var value = Entity.GetDisplayValue(Column.Name, isEditing);
 
-                var pending = false;
+            if (Column.Name == "copiedValue")
+            {
+                log.Info($"value={value}, isEditing={isEditing}, display={Entity.ColumnValues[Column.Name]}");
+            }
 
-                if (!isEditing)
+            var pending = false;
+
+            if (!isEditing)
+            {
+                if (value == null)
                 {
-                    if (value == null)
-                    {
-                        <span class="null-value" />
-                    }
-                    else if (value.Length == 0)
-                    {
-                        <span class="empty-value" />
-                    }
-                    else if (String.IsNullOrWhiteSpace(value))
-                    {
-                        <span class="ws-value" />
-                    }
-                    else
-                    {
-                        pending = true;
-                    }
+                    <span class="null-value" />
+                }
+                else if (value.Length == 0)
+                {
+                    <span class="empty-value" />
+                }
+                else if (String.IsNullOrWhiteSpace(value))
+                {
+                    <span class="ws-value" />
                 }
                 else
                 {
                     pending = true;
                 }
+            }
+            else
+            {
+                pending = true;
+            }
 
-                if (!pending)
+            if (!pending)
+            {
+                // done
+            }
+            else if (IsFocusColumn)
+            {
+                if (isEditing)
                 {
-                    // done
-                }
-                else if (IsFocusColumn)
-                {
-                    if (isEditing)
-                    {
-                        <EntityColumnEditTextArea AutoFocus="true" Value="@value" ValueChanged="HandleValueChanged" />
-                    }
-                    else
-                    {
-                        <CopyableContent>@value</CopyableContent>
-                    }
+                    <EntityColumnEditTextArea AutoFocus="true" Value="@value" ValueChanged="HandleValueChanged" />
                 }
                 else
                 {
-                    <EditableSpan Value="@value" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
+                    <CopyableContent>@value</CopyableContent>
                 }
             }
+            else
+            {
+                <EditableSpan @key="QueryVm.ResultNumber" Value="@value" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
+            }
+        }
     </div>
 </div>
 
 @code {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
     [Parameter]
     public Entity Entity { get; set; }
 

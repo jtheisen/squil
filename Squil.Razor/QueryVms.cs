@@ -68,6 +68,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
     public LocationQueryResult Result { get; private set; }
 
+    public Int32 ResultNumber { get; private set; }
+
     public Int32 KeyValuesCount { get; }
 
     public Boolean InDebug { get; set; }
@@ -179,6 +181,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
             {
                 areEditing = false;
             }
+
+            ++ResultNumber;
         }
 
         AreSaving = false;

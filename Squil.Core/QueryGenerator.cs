@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using NLog;
 using System.Data;
 using System.Xml.Linq;
 
@@ -11,6 +12,8 @@ public record QuerySql(String Sql) : TaskLedgering.IReportResult
 
 public class QueryGenerator
 {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
     private readonly CMRoot cmRoot;
     private readonly bool selectAllColumns;
     private readonly bool makePrettyQueries;
@@ -270,6 +273,8 @@ public class QueryGenerator
     public async Task ExecuteChange(SqlConnection connection, ChangeEntry change)
     {
         var sql = GetChangeSql(change);
+
+        log.Info("Change SQL: " + sql);
 
         await connection.ExecuteAsync(sql);
     }
