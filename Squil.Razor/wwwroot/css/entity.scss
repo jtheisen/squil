@@ -345,8 +345,22 @@ $bg-light-2: #e7e5e4;
             }
 
             button {
+                position: relative;
+                color: gray;
                 border: 1px solid #ccc;
                 outline: 1px solid #ccc;
+                padding: 0 4px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+
+                > i {
+                    margin-top: 2px;
+                }
+            }
+
+            button:disabled > i {
+                opacity: 50%;
             }
         }
 

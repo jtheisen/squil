@@ -67,7 +67,7 @@
 
         @if (CanEdit && Column.IsNullable && !IsFocusColumn)
         {
-            <button @onclick="HandleSetNullButtonClick" disabled="@(value == null)" class="entity-column-set-null-button"></button>
+            <button @onclick="HandleSetNullButtonClick" disabled="@(value == null)" class="entity-column-set-null-button"><i class="fa-xs fas fa-times" /></button>
         }
     </div>
 </div>
