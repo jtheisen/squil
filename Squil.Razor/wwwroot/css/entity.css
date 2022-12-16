@@ -236,12 +236,12 @@
 .entity-context .entity-column[data-is-focus-column] .entity-column-content {
   white-space: pre-wrap;
 }
-.entity-context .entity-column.entity-column-editable .entity-column-content {
+.entity-context .entity-column.entity-column-editable:not(.entity-column-focus-column) .entity-column-content {
   margin-left: -4px;
   padding-left: 4px;
   outline: 1px solid #ccc;
 }
-.entity-context .entity-column.entity-column-editable button {
+.entity-context .entity-column.entity-column-editable button.entity-column-set-null-button {
   position: relative;
   color: gray;
   border: 1px solid #ccc;
@@ -251,23 +251,27 @@
   flex-direction: column;
   justify-content: center;
 }
-.entity-context .entity-column.entity-column-editable button > i {
+.entity-context .entity-column.entity-column-editable button.entity-column-set-null-button > i {
   margin-top: 2px;
 }
 .entity-context .entity-column.entity-column-editable button:disabled > i {
   opacity: 50%;
 }
-.entity-context .entity-column.entity-column-editing .entity-column-content {
-  margin-left: -4px;
-  padding-left: 4px;
+.entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content {
   text-overflow: initial;
   background: white;
 }
-.entity-context .entity-column.entity-column-editing .entity-column-content > textarea {
+.entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content span {
+  /* prevents newline display */
+  display: flex;
+}
+.entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content span:focus, .entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content span:focus-visible {
+  outline: none;
+}
+.entity-context .entity-column.entity-column-editing.entity-column-focus-column textarea {
   width: 100%;
   min-height: 6em;
-}
-.entity-context .entity-column.entity-column-editing .entity-column-content > span:focus, .entity-context .entity-column.entity-column-editing .entity-column-content > span:focus-visible {
+  border: 1px solid black;
   outline: none;
 }
 .entity-context .null-value:before {

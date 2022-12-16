@@ -1,4 +1,4 @@
-﻿<div class="@ClassNames("entity-column", "entity-column-editing".If(isEditing), "entity-column-editable".If(CanEdit))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
+﻿<div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
     <label>
         <a href="@Url">
             @Column.Name
@@ -12,57 +12,59 @@
             }
 *@        </a>
     </label>
-    <div @key="QueryVm.ResultNumber">
+    <div>
         <div class="entity-column-content" @onclick="HandleClick">
-            @{
-                var value = Entity.GetDisplayValue(Column.Name, isEditing);
+            <div @key="QueryVm.ResultNumber">
+                @{
+                    var value = Entity.GetDisplayValue(Column.Name, IsEditing);
 
-                var pending = false;
+                    var pending = false;
 
-                if (!isEditing)
-                {
-                    if (value == null)
+                    if (!IsEditing)
                     {
-                        <span class="null-value" />
-                    }
-                    else if (value.Length == 0)
-                    {
-                        <span class="empty-value" />
-                    }
-                    else if (String.IsNullOrWhiteSpace(value))
-                    {
-                        <span class="ws-value" />
+                        if (value == null)
+                        {
+                            <span class="null-value" />
+                        }
+                        else if (value.Length == 0)
+                        {
+                            <span class="empty-value" />
+                        }
+                        else if (String.IsNullOrWhiteSpace(value))
+                        {
+                            <span class="ws-value" />
+                        }
+                        else
+                        {
+                            pending = true;
+                        }
                     }
                     else
                     {
                         pending = true;
                     }
-                }
-                else
-                {
-                    pending = true;
-                }
 
-                if (!pending)
-                {
-                    // done
-                }
-                else if (IsFocusColumn)
-                {
-                    if (isEditing)
+                    if (!pending)
                     {
-                        <EntityColumnEditTextArea AutoFocus="true" Value="@value" ValueChanged="HandleValueChanged" />
+                        // done
+                    }
+                    else if (IsFocusColumn)
+                    {
+                        if (IsEditing)
+                        {
+                            <EntityColumnEditTextArea AutoFocus="true" Value="@value" ValueChanged="HandleValueChanged" />
+                        }
+                        else
+                        {
+                            <CopyableContent>@value</CopyableContent>
+                        }
                     }
                     else
                     {
-                        <CopyableContent>@value</CopyableContent>
+                        <EditableSpan Value="@value" AutoFocus="@IsEditing" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
                     }
                 }
-                else
-                {
-                    <EditableSpan Value="@value" AutoFocus="@isEditing" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
-                }
-            }
+            </div>
         </div>
 
         @if (CanEdit && Column.IsNullable && !IsFocusColumn)
@@ -96,9 +98,11 @@
     [CascadingParameter]
     public LocationQueryVm QueryVm { get; set; }
 
-    Boolean CanEdit => QueryVm.AreEditing;
+    Boolean CanEdit => QueryVm.AreEditing && !Column.OrderInPrimaryKey.HasValue && Column.Type.IsSupported;
 
     Boolean isEditing;
+
+    Boolean IsEditing => QueryVm.AreEditing && (isEditing || IsFocusColumn);
 
     void HandleSetNullButtonClick()
     {

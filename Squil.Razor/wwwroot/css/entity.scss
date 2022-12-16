@@ -338,13 +338,15 @@ $bg-light-2: #e7e5e4;
 
         &.entity-column-editable {
 
-            .entity-column-content {
-                margin-left: -4px;
-                padding-left: 4px;
-                outline: 1px solid #ccc;
+            &:not(.entity-column-focus-column) {
+                .entity-column-content {
+                    margin-left: -4px;
+                    padding-left: 4px;
+                    outline: 1px solid #ccc;
+                }
             }
 
-            button {
+            button.entity-column-set-null-button {
                 position: relative;
                 color: gray;
                 border: 1px solid #ccc;
@@ -366,22 +368,28 @@ $bg-light-2: #e7e5e4;
 
         &.entity-column-editing {
 
-            .entity-column-content {
-                margin-left: -4px;
-                padding-left: 4px;
-                text-overflow: initial;
-                background: white;
+            &:not(.entity-column-focus-column) {
+                .entity-column-content {
+                    text-overflow: initial;
+                    background: white;
 
-                > textarea {
+                    span {
+                        &:focus,
+                        &:focus-visible {
+                            outline: none;
+                        }
+                        /* prevents newline display */
+                        display: flex;
+                    }
+                }
+            }
+
+            &.entity-column-focus-column {
+                textarea {
                     width: 100%;
                     min-height: 6em;
-                }
-
-                > span {
-                    &:focus,
-                    &:focus-visible {
-                        outline: none;
-                    }
+                    border: 1px solid black;
+                    outline: none;
                 }
             }
         }

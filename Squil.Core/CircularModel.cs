@@ -527,7 +527,7 @@ public class CMColumn
 
     public String SqlType { get; set; }
 
-    public Int32 OrderInPrimaryKey { get; set; }
+    public Int32? OrderInPrimaryKey { get; set; }
 
     public Int32 OrderInClusteredIndex { get; set; }
 

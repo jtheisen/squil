@@ -18,6 +18,10 @@ body {
     overflow-y: scroll;
 }
 
+*:focus-visible {
+    outline: 1px solid black !important;
+}
+
 /* Bootstrap
 -------------------------------------------------- */
 
