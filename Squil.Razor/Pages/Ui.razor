@@ -131,9 +131,9 @@
                             <EditHelpText />
                         </div>
 
-                        <div class="btn-group mb-4">
-                            <button @onclick="vm.CancelEditing" class="btn btn-outline-dark"><i class="fas fa-times me-2" />Cancel</button>
-                            <button @onclick="vm.Save" class="btn btn-primary"><i class="fas fa-check me-2" /> Save</button>
+                        <div class="d-flex gap-2 flex-wrap mb-4 sidebar-helptext">
+                            <button @onclick="vm.CancelEditing" class="btn btn-outline-dark flex-1 text-nowrap"><i class="fas fa-times me-2" />Cancel</button>
+                            <button @onclick="vm.Save" class="btn btn-primary flex-1 text-nowrap"><i class="fas fa-check me-2" />Save</button>
                         </div>
                     }
                     else if (Settings.EnableDevMode)

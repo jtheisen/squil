@@ -327,7 +327,6 @@ $bg-light-2: #e7e5e4;
         }
 
         .entity-column-content {
-            @include text-ellipsis;
             line-height: 1.25em;
             flex: 1 1 0;
         }
@@ -340,6 +339,7 @@ $bg-light-2: #e7e5e4;
 
             &:not(.entity-column-focus-column) {
                 .entity-column-content {
+                    @include text-ellipsis;
                     margin-left: -4px;
                     padding-left: 4px;
                     outline: 1px solid #ccc;
@@ -356,7 +356,12 @@ $bg-light-2: #e7e5e4;
                 flex-direction: column;
                 justify-content: center;
 
+                &:focus-visible {
+                    outline: 3px solid #ccc;
+                }
+
                 > i {
+                    /* times icon center hack */
                     margin-top: 2px;
                 }
             }
@@ -380,16 +385,19 @@ $bg-light-2: #e7e5e4;
                         }
                         /* prevents newline display */
                         display: flex;
+                        outline: none;
                     }
                 }
             }
 
             &.entity-column-focus-column {
                 textarea {
-                    width: 100%;
-                    min-height: 6em;
-                    border: 1px solid black;
-                    outline: none;
+                    margin: 0 -4px -4px -4px;
+                    padding: 0 4px 4px 4px;
+                    width: calc(100% + 8px);
+                    min-height: 12em;
+                    border: none;
+                    outline: 1px solid black;
                 }
             }
         }

@@ -1,6 +1,12 @@
 ﻿@inject IJSRuntime Js
 
-<textarea @ref="element" @onchange="HandleTextAreaChanged" @onblur="HandleBlur">@(Value ?? "")</textarea>
+@{
+    var value = Value ?? "";
+
+    var lines = value.Split('\n').Length;
+}
+
+<textarea @ref="element" @onchange="HandleTextAreaChanged" @onblur="HandleBlur" rows="@lines">@(Value ?? "")</textarea>
 
 @code {
     [Parameter]

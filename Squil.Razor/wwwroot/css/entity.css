@@ -227,9 +227,6 @@
   margin-top: 0.3em;
 }
 .entity-context .entity-column .entity-column-content {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   line-height: 1.25em;
   flex: 1 1 0;
 }
@@ -237,6 +234,9 @@
   white-space: pre-wrap;
 }
 .entity-context .entity-column.entity-column-editable:not(.entity-column-focus-column) .entity-column-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin-left: -4px;
   padding-left: 4px;
   outline: 1px solid #ccc;
@@ -251,7 +251,11 @@
   flex-direction: column;
   justify-content: center;
 }
+.entity-context .entity-column.entity-column-editable button.entity-column-set-null-button:focus-visible {
+  outline: 3px solid #ccc;
+}
 .entity-context .entity-column.entity-column-editable button.entity-column-set-null-button > i {
+  /* times icon center hack */
   margin-top: 2px;
 }
 .entity-context .entity-column.entity-column-editable button:disabled > i {
@@ -264,15 +268,18 @@
 .entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content span {
   /* prevents newline display */
   display: flex;
+  outline: none;
 }
 .entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content span:focus, .entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content span:focus-visible {
   outline: none;
 }
 .entity-context .entity-column.entity-column-editing.entity-column-focus-column textarea {
-  width: 100%;
-  min-height: 6em;
-  border: 1px solid black;
-  outline: none;
+  margin: 0 -4px -4px -4px;
+  padding: 0 4px 4px 4px;
+  width: calc(100% + 8px);
+  min-height: 12em;
+  border: none;
+  outline: 1px solid black;
 }
 .entity-context .null-value:before {
   font-style: italic;
