@@ -15,6 +15,11 @@ public static class MiscExtensions
         return $"'{s.Replace("'", "''")}'";
     }
 
+    public static String ToSqlServerStringLiteralOrNull(this String s)
+    {
+        return s?.ToSqlServerStringLiteral() ?? "null";
+    }
+
     public static String ToSqlServerLikeLiteralContent(this String s)
     {
         return s.Replace("'", "''").Replace("[", "[[").Replace("%", "[%]").Replace("_", "[_]");

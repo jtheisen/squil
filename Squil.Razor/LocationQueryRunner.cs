@@ -1,10 +1,7 @@
-﻿using Humanizer;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using System.Collections.Specialized;
 using System.Data;
 using TaskLedgering;
-using static Squil.ExtentFactory;
-using static Squil.GlobalBlockingReport;
 
 namespace Squil;
 

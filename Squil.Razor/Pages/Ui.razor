@@ -630,9 +630,16 @@
 
     void IDisposable.Dispose()
     {
-        log.Debug($"Disposing ui page");
+        log.Info($"Disposing ui page");
 
         isDisposed = true;
         Runner.Cancel();
+    }
+
+    new void StateHasChanged()
+    {
+        if (isDisposed) return;
+
+        base.StateHasChanged();
     }
 }

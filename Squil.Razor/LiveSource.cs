@@ -256,9 +256,11 @@ public class LiveSource
     }
 }
 
-public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
+public class ConnectionHolder : ObservableObject<ConnectionHolder>, IAsyncDisposable
 {
     SqlConnection connection;
+
+    Boolean isDisposed;
 
     CancellationTokenSource tcs = new CancellationTokenSource();
 
@@ -282,6 +284,8 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
 
     public async Task<T> RunAsync<T>(Func<SqlConnection, Task<T>> action)
     {
+        if (isDisposed) throw new ObjectDisposedException("Connection holder is dispose and won't run another query");
+
         var logIds = LogIds;
 
         if (semaphore.CurrentCount == 0)
@@ -373,8 +377,21 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IDisposable
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Connection = null;
+        var stackTrace = new StackTrace();
+
+        lock (this)
+        {
+            log.Info($"Disposing connection holder at\n" + stackTrace);
+
+            tcs.Cancel();
+
+            isDisposed = true;
+
+            Connection = null;
+        }
+
+        await semaphore.WaitAsync();
     }
 }

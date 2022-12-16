@@ -15,7 +15,7 @@
     public String Value { get; set; }
 
     [Parameter]
-    public Boolean Focus { get; set; }
+    public Boolean AutoFocus { get; set; }
 
     [Parameter]
     public EventCallback<String> ValueChanged { get; set; }
@@ -27,6 +27,14 @@
     ElementReference element;
 
     public ValueTask FocusAsync() => element.FocusAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AutoFocus)
+        {
+            await FocusAsync();
+        }
+    }
 
     async Task HandleChange()
     {

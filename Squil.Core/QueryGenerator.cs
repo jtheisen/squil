@@ -54,7 +54,7 @@ public class QueryGenerator
 
     public String GetChangeSql(ChangeEntry entry)
     {
-        var setters = from p in entry.EditValues select $"{p.Key.EscapeNamePart()} = {p.Value.ToSqlServerStringLiteral()}";
+        var setters = from p in entry.EditValues select $"{p.Key.EscapeNamePart()} = {p.Value.ToSqlServerStringLiteralOrNull()}";
 
         return $"update {entry.EntityKey.TableName.Escaped} set {String.Join(", ", setters)}";
     }

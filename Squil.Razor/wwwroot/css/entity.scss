@@ -313,46 +313,61 @@ $bg-light-2: #e7e5e4;
     }
 
     .entity-column {
-        margin: -5px -10px;
-        padding: 5px 10px;
-
         > label {
             font-size: .8em;
         }
 
-        &[data-css-type=guid] > div {
+        > div {
+            display: flex;
+        }
+
+        &[data-css-type=guid] .entity-column-content {
             font-size: .7em;
             margin-top: .3em;
         }
 
-        > div {
+        .entity-column-content {
             @include text-ellipsis;
             line-height: 1.25em;
-
-            span {
-                &:focus-visible,
-                &:focus {
-                    outline: 3px solid white;
-                }
-            }
+            flex: 1 1 0;
         }
 
-        &[data-is-focus-column] > div {
+        &[data-is-focus-column] .entity-column-content {
             white-space: pre-wrap;
+        }
+
+        &.entity-column-editable {
+
+            .entity-column-content {
+                margin-left: -4px;
+                padding-left: 4px;
+                outline: 1px solid #ccc;
+            }
+
+            button {
+                border: 1px solid #ccc;
+                outline: 1px solid #ccc;
+            }
         }
 
         &.entity-column-editing {
 
-            > div {
+            .entity-column-content {
+                margin-left: -4px;
+                padding-left: 4px;
                 text-overflow: initial;
-
-                > span {
-                    background: white;
-                }
+                background: white;
 
                 > textarea {
                     width: 100%;
                     min-height: 6em;
+                }
+
+                > span {
+                    &:focus,
+                    &:focus-visible {
+                        outline: none;
+                    }
                 }
             }
         }

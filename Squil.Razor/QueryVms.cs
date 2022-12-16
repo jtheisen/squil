@@ -181,8 +181,6 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
             {
                 areEditing = false;
             }
-
-            ++ResultNumber;
         }
 
         AreSaving = false;
@@ -194,6 +192,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         {
             Result = result;
         }
+
+        ++ResultNumber;
     }
 
     public CanLoadMoreStatus CanLoadMore()

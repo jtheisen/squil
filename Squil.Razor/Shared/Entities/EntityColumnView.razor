@@ -1,4 +1,4 @@
-﻿<div class="@ClassNames("entity-column", "entity-column-editing".If(isEditing))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
+﻿<div class="@ClassNames("entity-column", "entity-column-editing".If(isEditing), "entity-column-editable".If(CanEdit))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
     <label>
         <a href="@Url">
             @Column.Name
@@ -12,55 +12,62 @@
             }
 *@        </a>
     </label>
-    <div class="entity-column-content" @onclick="HandleClick">
-        @{
-            var value = Entity.GetDisplayValue(Column.Name, isEditing);
+    <div @key="QueryVm.ResultNumber">
+        <div class="entity-column-content" @onclick="HandleClick">
+            @{
+                var value = Entity.GetDisplayValue(Column.Name, isEditing);
 
-            var pending = false;
+                var pending = false;
 
-            if (!isEditing)
-            {
-                if (value == null)
+                if (!isEditing)
                 {
-                    <span class="null-value" />
-                }
-                else if (value.Length == 0)
-                {
-                    <span class="empty-value" />
-                }
-                else if (String.IsNullOrWhiteSpace(value))
-                {
-                    <span class="ws-value" />
+                    if (value == null)
+                    {
+                        <span class="null-value" />
+                    }
+                    else if (value.Length == 0)
+                    {
+                        <span class="empty-value" />
+                    }
+                    else if (String.IsNullOrWhiteSpace(value))
+                    {
+                        <span class="ws-value" />
+                    }
+                    else
+                    {
+                        pending = true;
+                    }
                 }
                 else
                 {
                     pending = true;
                 }
-            }
-            else
-            {
-                pending = true;
-            }
 
-            if (!pending)
-            {
-                // done
-            }
-            else if (IsFocusColumn)
-            {
-                if (isEditing)
+                if (!pending)
                 {
-                    <EntityColumnEditTextArea AutoFocus="true" Value="@value" ValueChanged="HandleValueChanged" />
+                    // done
+                }
+                else if (IsFocusColumn)
+                {
+                    if (isEditing)
+                    {
+                        <EntityColumnEditTextArea AutoFocus="true" Value="@value" ValueChanged="HandleValueChanged" />
+                    }
+                    else
+                    {
+                        <CopyableContent>@value</CopyableContent>
+                    }
                 }
                 else
                 {
-                    <CopyableContent>@value</CopyableContent>
+                    <EditableSpan Value="@value" AutoFocus="@isEditing" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
                 }
             }
-            else
-            {
-                <EditableSpan @key="QueryVm.ResultNumber" Value="@value" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
-            }
+        </div>
+
+        @if (CanEdit && Column.IsNullable && !IsFocusColumn)
+        {
+            <button @onclick="HandleSetNullButtonClick" disabled="@(value == null)" class="entity-column-set-null-button"></button>
         }
     </div>
 </div>
@@ -92,6 +99,13 @@
     Boolean CanEdit => QueryVm.AreEditing;
 
     Boolean isEditing;
+
+    void HandleSetNullButtonClick()
+    {
+        Entity.SetEditValue(Column.Name, null);
+
+        QueryVm.AddChange(Entity);
+    }
 
     void HandleValueChanged(String value)
     {
