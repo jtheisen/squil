@@ -63,9 +63,9 @@ public class Entity
 
     public RelatedEntities[] Related { get; set; }
 
-    public String GetDisplayValue(String columnName, Boolean isEditing)
+    public String GetDisplayValue(String columnName, Boolean preferEditValue)
     {
-        if (EditValues != null && isEditing)
+        if (EditValues != null && preferEditValue)
         {
             if (EditValues.ContainsKey(columnName))
             {

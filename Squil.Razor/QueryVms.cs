@@ -163,21 +163,21 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         Update(request, response);
     }
 
-    public void Update(LocationQueryRequest request, LocationQueryResponse result)
+    public void Update(LocationQueryRequest request, LocationQueryResponse response)
     {
         LastRequest = request;
-        LastResponse = result;
+        LastResponse = response;
 
         if (CurrentIndex != null)
         {
-            CurrentIndex.SetValidatedValues(result.ValidatedColumns);
+            CurrentIndex.SetValidatedValues(response.ValidatedColumns);
         }
 
-        if (result.IsOk)
+        if (response.IsOk)
         {
             IsQueryRequired = false;
 
-            if (result.IsChangeOk && AreSaving)
+            if (response.IsChangeOk && AreSaving)
             {
                 areEditing = false;
             }
@@ -250,6 +250,25 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
             {
                 case QueryControllerQueryType.Row:
                 case QueryControllerQueryType.Column:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    public Boolean CanDelete => LastResponse.IsOk && LastResponse.QueryType == QueryControllerQueryType.Row;
+
+    public Boolean CanInsert
+    {
+        get
+        {
+            if (!LastResponse.IsOk) return false;
+
+            switch (LastResponse.QueryType)
+            {
+                case QueryControllerQueryType.Table:
+                case QueryControllerQueryType.TableSlice:
                     return true;
                 default:
                     return false;

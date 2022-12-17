@@ -2,6 +2,8 @@
     var areQueryEditing = QueryVm.AreEditing;
 
     var url = Url.If(!areQueryEditing);
+
+    var showEditValues = !QueryVm.LastResponse.IsChangeOk;
 }
 
 <div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
@@ -22,7 +24,7 @@
         <div class="entity-column-content" @onclick="HandleClick">
             <div @key="QueryVm.ResultNumber">
                 @{
-                    var value = Entity.GetDisplayValue(Column.Name, IsEditing);
+                    var value = Entity.GetDisplayValue(Column.Name, IsEditing || showEditValues);
 
                     var pending = false;
 
@@ -104,7 +106,7 @@
     [CascadingParameter]
     public LocationQueryVm QueryVm { get; set; }
 
-    Boolean CanEdit => QueryVm.AreEditing && !Column.OrderInPrimaryKey.HasValue && Column.Type.IsSupported;
+    Boolean CanEdit => QueryVm.AreEditing && Entity.EditState != EntityEditState.Closed && !Column.OrderInPrimaryKey.HasValue && Column.Type.IsSupported;
 
     Boolean isEditing;
 
@@ -119,7 +121,16 @@
 
     void HandleValueChanged(String value)
     {
-        log.Debug($"Field edit ended");
+        if (!CanEdit)
+        {
+            log.Debug($"Illegitimate field edit ended and is ignored - this can happen when focusing a span while focused on another");
+
+            return;
+        }
+        else
+        {
+            log.Debug($"Field edit ended");
+        }
 
         isEditing = false;
 
