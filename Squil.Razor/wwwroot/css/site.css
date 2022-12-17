@@ -37,6 +37,10 @@ a {
         text-decoration: underline;
     }
 
+.text-muted-unimportant {
+    color: #6c757d;
+}
+
 /* Misc
 -------------------------------------------------- */
 

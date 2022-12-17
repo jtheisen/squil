@@ -179,7 +179,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
             if (response.IsChangeOk && AreSaving)
             {
-                areEditing = false;
+                editType = EditType.NotEditing;
             }
         }
 
@@ -234,7 +234,15 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
     #region Editing
 
-    Boolean areEditing;
+    public enum EditType
+    {
+        NotEditing,
+        Update,
+        Insert,
+        Delete
+    }
+
+    EditType editType;
 
     Boolean haveChanges = false;
 
@@ -282,18 +290,44 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
     public ChangeEntry[] Changes => changes?.ToArray();
 
-    public Boolean AreEditing => areEditing;
+    public Boolean AreInEdit => editType != EditType.NotEditing;
+    public Boolean AreInUpdate => editType == EditType.Update;
+    public Boolean AreInDelete => editType == EditType.Delete;
+    public Boolean AreInInsert => editType == EditType.Insert;
 
-    public void StartEditing()
+    public void StartUpdate() => StartEdit(EditType.Update);
+    public void StartDelete() => StartEdit(EditType.Delete, InitDelete);
+    public void StartInsert() => StartEdit(EditType.Insert);
+
+    public void StartEdit(EditType state, Action init = null)
     {
-        areEditing = true;
+        if (AreInEdit) throw new Exception($"Edit already started");
+
+        if (!LastResponse.IsResultOk) throw new Exception($"No result");
+
+        editType = state;
+
+        init?.Invoke();
 
         NotifyChange();
     }
 
-    public void CancelEditing()
+    void InitDelete()
     {
-        areEditing = false;
+        var entity = Result.PrimaryEntities.List.FirstOrDefault();
+
+        if (entity == null) throw new Exception($"Result has no primary entity");
+
+        var key = entity.GetEntityKey();
+
+        SetChange(ChangeEntry.Delete(key));
+
+        NotifyQueryRequired();
+    }
+
+    public void CancelEdit()
+    {
+        editType = EditType.NotEditing;
 
         changes = null;
 
@@ -307,16 +341,21 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         NotifyQueryRequired();
     }
 
+    void SetChange(ChangeEntry change)
+    {
+        changes = new List<ChangeEntry>
+        {
+            change
+        };
+    }
+
     public void AddChange(Entity entity)
     {
         if (entity.EditState == EntityEditState.Original) return;
 
         var change = new ChangeEntry { EntityKey = entity.GetEntityKey(), EditValues = entity.EditValues };
 
-        changes = new List<ChangeEntry>
-        {
-            change
-        };
+        SetChange(change);
 
         entity.EditState = EntityEditState.Closed;
 

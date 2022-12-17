@@ -23,12 +23,20 @@
 
 <DefaultLayout>
     <BreadcrumbActionItems>
-        @if (vm?.CanEdit == true)
-        {
-            <div class="ms-2">
-                <button @onclick="vm.StartEditing" disabled="@vm.AreEditing" class="btn btn-sm btn-outline-dark text-muted"><i class="fas fa-pen" /></button>
-            </div>
-        }
+        <div class="">
+            @if (vm?.CanDelete == true)
+            {
+                <button @onclick="vm.StartDelete" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-trash" /></button>
+            }
+            @if (vm?.CanInsert == true)
+            {
+                <button @onclick="vm.StartInsert" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-plus" /></button>
+            }
+            @if (vm?.CanEdit == true)
+            {
+                <button @onclick="vm.StartUpdate" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-pen" /></button>
+            }
+        </div>
     </BreadcrumbActionItems>
     <NavItems>
         <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
@@ -123,7 +131,7 @@
                 <RightContent>
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    @if (vm?.AreEditing == true)
+                    @if (vm?.AreInEdit == true)
                     {
                         <h5 class="text-muted font-weight-bold border-bottom mb-4">Edit</h5>
 
@@ -132,7 +140,7 @@
                         </div>
 
                         <div class="d-flex gap-2 flex-wrap mb-4 sidebar-helptext">
-                            <button @onclick="vm.CancelEditing" class="btn btn-outline-dark flex-1 text-nowrap"><i class="fas fa-times me-2" />Cancel</button>
+                            <button @onclick="vm.CancelEdit" class="btn btn-outline-dark flex-1 text-nowrap"><i class="fas fa-times me-2" />Cancel</button>
                             <button @onclick="vm.Save" class="btn btn-primary flex-1 text-nowrap"><i class="fas fa-check me-2" />Save</button>
                         </div>
                     }

@@ -148,6 +148,8 @@ public class LocationQueryResponse
 
     public Boolean IsOk => !HaveValidationIssues && Exception == null;
 
+    public Boolean IsResultOk => Task?.IsCompletedSuccessfully ?? false;
+
     public Boolean IsCanceled => Exception is OperationCanceledException;
 
     public async Task Wait()

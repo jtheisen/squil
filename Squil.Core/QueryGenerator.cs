@@ -54,9 +54,33 @@ public class QueryGenerator
 
     public String GetChangeSql(ChangeEntry entry)
     {
-        var setters = from p in entry.EditValues select $"{p.Key.EscapeNamePart()} = {p.Value.ToSqlServerStringLiteralOrNull()}";
+        var key = entry.EntityKey;
 
-        return $"update {entry.EntityKey.TableName.Escaped} set {String.Join(", ", setters)}";
+        var from = key.TableName.Escaped;
+
+        var where = String.Join(" and ", from p in key.KeyColumnsAndValues select $"{p.c.EscapeNamePart()} = {p.v.ToSqlServerStringLiteralOrNull()}");
+
+        var ev = entry.EditValues;
+
+        switch (entry.Type)
+        {
+            case ChangeOperationType.Update:
+                var setters = from p in ev select $"{p.Key.EscapeNamePart()} = {p.Value.ToSqlServerStringLiteralOrNull()}";
+
+                return $"update {from} set {String.Join(", ", setters)} where {where}";
+
+            case ChangeOperationType.Insert:
+                var columns = String.Join(", ", from p in ev select $"{p.Key.EscapeNamePart()}");
+                var values = String.Join(", ", from p in ev select $"{p.Value.ToSqlServerStringLiteralOrNull()}");
+
+                return $"insert {from} ({columns}) set ({values}) where {where}";
+
+            case ChangeOperationType.Delete:
+                return $"delete {from} where {where}";
+
+            default:
+                throw new Exception($"Unknown change type");
+        }
     }
 
     public QuerySql GetCompleteSql(Extent rootExtent)

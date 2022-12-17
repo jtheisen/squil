@@ -10,14 +10,14 @@ public class EntityKey : IEquatable<EntityKey>
 
     public ObjectName TableName { get; }
 
-    public String[] KeyValues { get; }
+    public (String c, String v)[] KeyColumnsAndValues { get; }
 
-    public EntityKey(ObjectName tableName, String[] keyValues)
+    public EntityKey(ObjectName tableName, (String c, String v)[] keyColumnsAndValues)
     {
         TableName = tableName;
-        KeyValues = keyValues;
+        KeyColumnsAndValues = keyColumnsAndValues;
 
-        hashable = $"{TableName.Escaped}\ue000{String.Join("\ue000", keyValues)}";
+        hashable = $"{TableName.Escaped}\ue000{String.Join("\ue000", from p in keyColumnsAndValues select p.v)}";
         hashcode = hashable.GetHashCode();
     }
 
@@ -31,11 +31,29 @@ public class EntityKey : IEquatable<EntityKey>
     public static Boolean operator !=(EntityKey left, EntityKey right) => !left.Equals(right);
 }
 
+public enum ChangeOperationType
+{
+    Update,
+    Insert,
+    Delete
+}
+
 public class ChangeEntry
 {
+    public ChangeOperationType Type { get; set; }
+
     public EntityKey EntityKey { get; set; }
 
     public Dictionary<String, String> EditValues { get; set; }
+
+    public static ChangeEntry Update(EntityKey key, Dictionary<String, String> values)
+        => new ChangeEntry { Type = ChangeOperationType.Update, EntityKey = key, EditValues = values };
+
+    public static ChangeEntry Insert(EntityKey key, Dictionary<String, String> values)
+        => new ChangeEntry { Type = ChangeOperationType.Insert, EntityKey = key, EditValues = values };
+
+    public static ChangeEntry Delete(EntityKey key)
+        => new ChangeEntry { Type = ChangeOperationType.Delete, EntityKey = key };
 }
 
 public enum EntityEditState
@@ -249,8 +267,8 @@ public static class Extensions
 
     public static EntityKey GetEntityKey(this Entity entity)
     {
-        var columnValues = from c in entity.Table.PrimaryKey.Columns select entity.ColumnValues[c.c.Name];
+        var columnsAndValues = from c in entity.Table.PrimaryKey.Columns select (c.c.Name, entity.ColumnValues[c.c.Name]);
 
-        return new EntityKey(entity.Table.Name, columnValues.ToArray());
+        return new EntityKey(entity.Table.Name, columnsAndValues.ToArray());
     }
 }
