@@ -63,7 +63,7 @@ public enum EntityEditState
     Closed
 }
 
-public class Entity
+public class Entity : IMapping<String, String>
 {
     public Extent Extent { get; set; }
 
@@ -80,6 +80,8 @@ public class Entity
     public Dictionary<String, String> EditValues { get; private set; }
 
     public RelatedEntities[] Related { get; set; }
+
+    String IMapping<String, String>.GetValue(String key) => ColumnValues[key];
 
     public String GetDisplayValue(String columnName, Boolean preferEditValue)
     {

@@ -12,24 +12,25 @@ public class QueryUrlCreator
     public static UrlRenderer MakeUrlRenderer(String source)
         => new UrlRenderer("ui/" + source);
 
-    public String RenderEntityUrl(CMTable table, Entity entity, String focusColumn = null)
+    public String RenderEntityUrl(CMTable table, IMapping<String, String> values, String focusColumn = null)
     {
         if (table == null) return null;
 
-        return table.PrimaryKey?.Apply(k => RenderEntityUrl(entity, k, focusColumn));
+        return table.PrimaryKey?.Apply(k => RenderEntityUrl(k, values, focusColumn));
     }
 
-    public String RenderEntityUrl(Entity entity, CMIndexlike key, String focusColumn = null)
+    public String RenderEntityUrl(CMIndexlike key, IMapping<String, String> values, String focusColumn = null)
     {
         var (schema, table) = key.Table.Name;
 
         var url = UrlRenderer.RenderUrl(
             new[] { "tables", schema, table, key.Name, focusColumn },
-            from c in key.Columns select ("$", c.c.Name, entity.ColumnValues[c.c.Name])
+            from c in key.Columns select ("$", c.c.Name, values.GetValue(c.c.Name))
         );
 
         return url;
     }
+
 
     String RenderColumnTupleUrl(
         CMTable table,

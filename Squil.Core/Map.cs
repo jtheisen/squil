@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Specialized;
 
-public interface IMap<K, V> : IEnumerable<KeyValuePair<K, V>>
+public interface IMap<K, V> : IEnumerable<KeyValuePair<K, V>>, IMapping<K, V>
 {
     V this[K key] { get; set; }
 
@@ -60,6 +60,8 @@ class DefaultMap<K, T> : IMap<K, T>
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public T GetValue(K key) => this[key];
 }
 
 class FromDictionaryMap<K, T> : IMap<K, T>
@@ -104,6 +106,8 @@ class FromDictionaryMap<K, T> : IMap<K, T>
             return default;
         }
     }
+
+    public T GetValue(K key) => this[key];
 }
 
 class FromNvcMap : IMap<String, String>
@@ -134,6 +138,8 @@ class FromNvcMap : IMap<String, String>
     public IEnumerator<KeyValuePair<String, String>> GetEnumerator() => GetEnumerable().GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public String GetValue(String key) => this[key];
 }
 
 class CastingMap<K, T, S> : IMap<K, T>
@@ -161,5 +167,7 @@ class CastingMap<K, T, S> : IMap<K, T>
     public IEnumerator<KeyValuePair<K, T>> GetEnumerator() => GetEnumerable().GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public T GetValue(K key) => this[key];
 }
 

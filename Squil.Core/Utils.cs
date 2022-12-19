@@ -22,6 +22,11 @@ public class MultipleElementsException : InvalidOperationException
     }
 }
 
+public interface IMapping<K, V>
+{
+    V GetValue(K key);
+}
+
 public class Empties<T>
 {
     public static readonly T[] Array = new T[0];

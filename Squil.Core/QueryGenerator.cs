@@ -52,6 +52,48 @@ public class QueryGenerator
         return sql;
     }
 
+    public async Task<(String c, String v)[]> IdentitizeAsync(SqlConnection connection, CMTable table)
+    {
+        var sql = GetIdentitizeSql(table);
+
+        var rows = await connection.QueryRows(sql);
+
+        var row = rows.Single("Identitize request didn't yield a single row");
+
+        return row;
+    }
+
+    public String GetIdentitizeSql(CMTable table)
+    {
+        var columns = table.ColumnsInOrder;
+
+        var keyColumns = from c in table.PrimaryKey.Columns select (column: c.c.Name.EscapeNamePart(), type: c.c.SqlType);
+
+        var tableName = table.Name.Escaped;
+
+        return GetIdentitizeSql(tableName, keyColumns.ToArray());
+    }
+
+    public String GetIdentitizeSql(String table, (String column, String type)[] keyColumns)
+    {
+        var sql = $@"
+begin transaction
+
+declare @output table({String.Join(", ", from c in keyColumns select $"{c.column} {c.type}")});
+
+insert {table}
+output {String.Join(", ", from c in keyColumns select $"INSERTED.{c.column}")} into @output
+default values
+
+select {String.Join(", ", from c in keyColumns select c.column)}
+from @output
+
+rollback
+";
+
+        return sql;
+    }
+
     public String GetChangeSql(ChangeEntry entry)
     {
         var key = entry.EntityKey;
@@ -297,8 +339,6 @@ public class QueryGenerator
     public async Task ExecuteChange(SqlConnection connection, ChangeEntry change)
     {
         var sql = GetChangeSql(change);
-
-        log.Info("Change SQL: " + sql);
 
         await connection.ExecuteAsync(sql);
     }

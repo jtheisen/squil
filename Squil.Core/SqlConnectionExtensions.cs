@@ -20,6 +20,30 @@ public static class SqlConnectionExtensions
         return command;
     }
 
+    public static async Task<(String c, String v)[][]> QueryRows(this SqlConnection connection, String sql)
+    {
+        using var scope = GetCurrentLedger().TimedScope("query");
+
+        var ct = StaticServiceStack.GetOptional<CancellationToken>();
+
+        var command = connection.CreateSqlCommandFromSql(sql);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        var rows = new List<(String c, String v)[]>();
+
+        while (await reader.ReadAsync(ct))
+        {
+            var row =
+                from i in Enumerable.Range(0, reader.FieldCount)
+                select (reader.GetName(i), reader.GetValue(i).ToString());
+
+            rows.Add(row.ToArray());
+        }
+
+        return rows.ToArray();
+    }
+
     public static String QueryXmlString(this SqlConnection connection, String sql, Boolean dontWrap = false)
     {
         using var scope = GetCurrentLedger().TimedScope("query");

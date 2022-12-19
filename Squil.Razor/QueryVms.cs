@@ -173,6 +173,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
             CurrentIndex.SetValidatedValues(response.ValidatedColumns);
         }
 
+        // FIXME: shouldn't this be in UpdateResult?
         if (response.IsOk)
         {
             IsQueryRequired = false;

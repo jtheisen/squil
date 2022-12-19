@@ -30,7 +30,7 @@
             }
             @if (vm?.CanInsert == true)
             {
-                <button @onclick="vm.StartInsert" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-plus" /></button>
+                <button @onclick="HandleInsertClick" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-plus" /></button>
             }
             @if (vm?.CanEdit == true)
             {
@@ -592,6 +592,23 @@
         listLimit = Settings.LoadMoreLimit + 1;
 
         StartQuery();
+    }
+
+    async Task HandleInsertClick()
+    {
+        var source = Runner.GetLiveSource(vm.LastRequest.Source);
+
+        var table = vm.LastResponse.Table;
+
+        var connection = await source.GetConnectionAsync();
+
+        var key = await source.QueryGenerator.IdentitizeAsync(connection, table);
+
+        var keyDict = key.ToDictionary(p => p.c, p => p.v).ToMap();
+
+        var url = vm.UrlCreateor.RenderEntityUrl(table, keyDict, null);
+
+        NavigationManager.NavigateTo(url);
     }
 
     void HandleVmChanged()
