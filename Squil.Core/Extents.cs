@@ -1,5 +1,7 @@
 using Humanizer;
 using Newtonsoft.Json;
+using System.Xml.Linq;
+using static Squil.StaticSqlAliases;
 
 namespace Squil;
 
@@ -273,4 +275,64 @@ public static class Extensions
 
         return new EntityKey(entity.Table.Name, columnsAndValues.ToArray());
     }
+
+    public static Entity MakeEntity(this Extent extent, CMTable table, XElement element, Boolean isRoot = false)
+    {
+        var data = element.Attributes().ToDictionary(a => a.Name.LocalName.UnescapeSqlServerXmlName(), a => a.Value);
+
+        return new Entity
+        {
+            Extent = extent,
+            Table = table,
+            SchemaDate = isRoot ? data.GetOrDefault(SchemaDateAlias)?.Apply(DateTime.Parse) : null,
+            IsMatching = data.GetOrDefault(IsMatchingAlias)?.Apply(im => im == "1"),
+            ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)) ?? Empties<String, String>.Dictionary,
+            Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(c.GetRelationAlias())))).ToArray()
+        };
+    }
+
+    public static RelatedEntities MakeEntities(this Extent extent, CMTable parentTable, XElement element)
+    {
+        var forwardEnd = parentTable.Relations.GetValueOrDefault(extent.RelationName) ?? throw new Exception(
+            $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
+        );
+
+        var table = forwardEnd.OtherEnd.Table;
+
+        return new RelatedEntities
+        {
+            Extent = extent,
+            RelationEnd = forwardEnd,
+            RelationName = extent.RelationName,
+            TableName = forwardEnd.Table.Name,
+            List = element?.Elements().Select(e => MakeEntity(extent, forwardEnd.Table, e)).ToArray() ?? new Entity[0]
+        };
+    }
+
+    public static Entity MakeDummyEntity(this Extent extent, CMTable table)
+    {
+        return new Entity
+        {
+            Extent = extent,
+            Table = table,
+            Related = extent.Children?.Select(c => MakeDummyEntities(c, table)).ToArray()
+        };
+    }
+
+    public static RelatedEntities MakeDummyEntities(this Extent extent, CMTable parentTable)
+    {
+        var forwardEnd = parentTable.Relations.GetValueOrDefault(extent.RelationName) ?? throw new Exception(
+            $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
+        );
+
+        return new RelatedEntities
+        {
+            Extent = extent,
+            RelationEnd = forwardEnd,
+            RelationName = extent.RelationName,
+            TableName = forwardEnd.Table.Name,
+            List = new[] { MakeDummyEntity(extent, forwardEnd.Table) }
+        };
+    }
+
 }

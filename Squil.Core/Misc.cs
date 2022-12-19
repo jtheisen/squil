@@ -8,6 +8,12 @@ public enum QuerySearchMode
     Scan
 }
 
+public static class StaticSqlAliases
+{
+    public static String IsMatchingAlias = "__is-matching";
+    public static String SchemaDateAlias = "__schema-date";
+}
+
 public static class MiscExtensions
 {
     public static String ToSqlServerStringLiteral(this String s)

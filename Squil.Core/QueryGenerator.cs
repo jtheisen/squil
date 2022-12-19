@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using NLog;
 using System.Data;
-using System.Xml.Linq;
+using static Squil.StaticSqlAliases;
 
 namespace Squil;
 
@@ -276,66 +276,6 @@ rollback
         return sql;
     }
 
-    static String IsMatchingAlias = "__is-matching";
-    static String SchemaDateAlias = "__schema-date";
-
-    Entity MakeEntity(Extent extent, CMTable table, XElement element, Boolean isRoot = false)
-    {
-        var data = element.Attributes().ToDictionary(a => a.Name.LocalName.UnescapeSqlServerXmlName(), a => a.Value);
-
-        return new Entity
-        {
-            Extent = extent,
-            Table = table,
-            SchemaDate = isRoot ? data.GetOrDefault(SchemaDateAlias)?.Apply(DateTime.Parse) : null,
-            IsMatching = data.GetOrDefault(IsMatchingAlias)?.Apply(im => im == "1"),
-            ColumnValues = extent.Columns?.ToDictionary(c => c, c => data.GetValueOrDefault(c)) ?? Empties<String, String>.Dictionary,
-            Related = extent.Children?.Select(c => MakeEntities(c, table, element.Element(XName.Get(c.GetRelationAlias())))).ToArray()
-        };
-    }
-
-    RelatedEntities MakeEntities(Extent extent, CMTable parentTable, XElement element)
-    {
-        var forwardEnd = parentTable.Relations.GetValueOrDefault(extent.RelationName) ?? throw new Exception(
-            $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
-        );
-
-        var table = forwardEnd.OtherEnd.Table;
-
-        return new RelatedEntities
-        {
-            Extent = extent,
-            RelationEnd = forwardEnd,
-            RelationName = extent.RelationName,
-            TableName = forwardEnd.Table.Name,
-            List = element?.Elements().Select(e => MakeEntity(extent, forwardEnd.Table, e)).ToArray() ?? new Entity[0]
-        };
-    }
-
-    Entity MakeDummyEntity(Extent extent, CMTable table)
-    {
-        return new Entity
-        {
-            Related = extent.Children?.Select(c => MakeDummyEntities(c, table)).ToArray()
-        };
-    }
-
-    RelatedEntities MakeDummyEntities(Extent extent, CMTable parentTable)
-    {
-        var forwardEnd = parentTable.Relations.GetValueOrDefault(extent.RelationName) ?? throw new Exception(
-            $"Can't find relation for name {extent.RelationName} in table {parentTable.Name.LastPart ?? "<root>"}"
-        );
-
-        return new RelatedEntities
-        {
-            Extent = extent,
-            RelationEnd = forwardEnd,
-            RelationName = extent.RelationName,
-            TableName = forwardEnd.Table.Name,
-            List = new[] { MakeDummyEntity(extent, forwardEnd.Table) }
-        };
-    }
-
     public async Task ExecuteChange(SqlConnection connection, ChangeEntry change)
     {
         var sql = GetChangeSql(change);
@@ -343,7 +283,7 @@ rollback
         await connection.ExecuteAsync(sql);
     }
 
-    public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent, ChangeEntry[] changes = null)
+    public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
     {
         var sql = GetCompleteSql(extent);
 
@@ -351,16 +291,9 @@ rollback
 
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
-        var entity = MakeEntity(extent, rootTable, resultXml, true);
+        var entity = extent.MakeEntity(rootTable, resultXml, true);
 
         return entity;
-    }
-
-    public Entity QueryDummy(Extent extent)
-    {
-        var rootTable = cmRoot.GetTable(ObjectName.RootName);
-
-        return MakeDummyEntity(extent, rootTable);
     }
 
     public X Query<X>(SqlConnection connection, Extent extent, out String xml)
