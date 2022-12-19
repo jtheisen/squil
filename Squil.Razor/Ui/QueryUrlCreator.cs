@@ -12,25 +12,37 @@ public class QueryUrlCreator
     public static UrlRenderer MakeUrlRenderer(String source)
         => new UrlRenderer("ui/" + source);
 
-    public String RenderEntityUrl(CMTable table, IMapping<String, String> values, String focusColumn = null)
+    public String RenderEntityUrl(CMTable table, IMapping<String, String> values, String focusColumn = null, LocationQueryOperationType? insertMode = null)
     {
         if (table == null) return null;
 
-        return table.PrimaryKey?.Apply(k => RenderEntityUrl(k, values, focusColumn));
+        return table.PrimaryKey?.Apply(k => RenderEntityUrl(k, values, focusColumn, insertMode));
     }
 
-    public String RenderEntityUrl(CMIndexlike key, IMapping<String, String> values, String focusColumn = null)
+    public String RenderEntityUrl(CMIndexlike key, IMapping<String, String> values, String focusColumn = null, LocationQueryOperationType? insertMode = null)
     {
         var (schema, table) = key.Table.Name;
 
-        var url = UrlRenderer.RenderUrl(
-            new[] { "tables", schema, table, key.Name, focusColumn },
-            from c in key.Columns select ("$", c.c.Name, values.GetValue(c.c.Name))
-        );
+        var path = new[] { "tables", schema, table, key.Name, focusColumn };
+
+        // Values can be null and should be ommitted when key is actually the backing index
+        // of a foreign key we're using in the location of an insert operation.
+
+        var query =
+            from c in key.Columns
+            let v = values.GetValue(c.c.Name)
+            where v != null
+            select ("$", c.c.Name, v);
+
+        if (insertMode.HasValue)
+        {
+            query = ("", "insert", insertMode.ToString().ToLower()).ToSingleton().Concat(query);
+        }
+
+        var url = UrlRenderer.RenderUrl(path, query);
 
         return url;
     }
-
 
     String RenderColumnTupleUrl(
         CMTable table,

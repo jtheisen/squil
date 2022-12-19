@@ -594,19 +594,18 @@
         StartQuery();
     }
 
-    async Task HandleInsertClick()
+    void HandleInsertClick()
     {
-        var source = Runner.GetLiveSource(vm.LastRequest.Source);
-
         var table = vm.LastResponse.Table;
 
-        var connection = await source.GetConnectionAsync();
+        // Inserting a related entity has an index and will use the key values currently in the location
+        var index = vm.LastResponse.Index ?? table.PrimaryKey;
 
-        var key = await source.QueryGenerator.IdentitizeAsync(connection, table);
+        if (index == null) throw new Exception($"Cant insert into table without primary key");
 
-        var keyDict = key.ToDictionary(p => p.c, p => p.v).ToMap();
+        var keys = vm.LastRequest.KeyParams.AsMap();
 
-        var url = vm.UrlCreateor.RenderEntityUrl(table, keyDict, null);
+        var url = vm.UrlCreateor.RenderEntityUrl(index, keys, insertMode: LocationQueryOperationType.Insert);
 
         NavigationManager.NavigateTo(url);
     }

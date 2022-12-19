@@ -8,6 +8,11 @@ public enum QuerySearchMode
     Scan
 }
 
+public enum LocationQueryOperationType
+{
+    Insert = 1
+}
+
 public static class StaticSqlAliases
 {
     public static String IsMatchingAlias = "__is-matching";

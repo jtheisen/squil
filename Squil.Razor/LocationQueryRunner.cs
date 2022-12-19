@@ -31,6 +31,7 @@ public class LocationQueryRequest
 
     public ChangeEntry[] Changes { get; }
     public LocationQueryAccessMode AccessMode { get; }
+    public LocationQueryOperationType? OperationType { get; }
 
     public QuerySearchMode? SearchMode { get; set; }
 
@@ -47,11 +48,13 @@ public class LocationQueryRequest
         NameValueCollection queryParams,
         NameValueCollection searchValues,
         ChangeEntry[] changes = null,
-        LocationQueryAccessMode accessMode = default
+        LocationQueryAccessMode accessMode = default,
+        LocationQueryOperationType? operationType = null
     )
     {
         Changes = changes;
         AccessMode = accessMode;
+        OperationType = operationType;
 
         String Get(Int32 i)
         {
@@ -190,9 +193,16 @@ public class LocationQueryResponse
 
 public class LocationQueryResult
 {
-    public Entity Entity { get; set; }
-    public RelatedEntities PrimaryEntities { get; set; }
-    public RelatedEntities PrincipalEntities { get; set; }
+    public Entity Entity { get; }
+    public RelatedEntities PrimaryEntities { get; }
+    public RelatedEntities PrincipalEntities { get; }
+
+    public LocationQueryResult(Entity entity)
+    {
+        Entity = entity;
+        PrimaryEntities = entity.Related.GetRelatedEntitiesOrNull("primary");
+        PrincipalEntities = entity.Related.GetRelatedEntitiesOrNull("principal");
+    }
 
     public override String ToString()
     {
@@ -410,8 +420,6 @@ public class LocationQueryRunner
 
     async Task<LocationQueryResult> RunQueryInternal(SqlConnection connection, LocationQueryRequest request, LocationQueryResponse query)
     {
-        var result = new LocationQueryResult();
-
         var ct = StaticServiceStack.Get<CancellationToken>();
 
         await using var transaction = request.Changes != null ? await connection.BeginTransactionAsync(ct) : null;
@@ -439,16 +447,16 @@ public class LocationQueryRunner
 
             var entity = await query.Source.QueryAsync(connection, query.Extent);
 
-            result.Entity = entity;
+            var result = new LocationQueryResult(entity);
 
             if (query.QueryType != QueryControllerQueryType.Root)
             {
-                result.PrimaryEntities = entity.Related.GetRelatedEntities("primary");
+                if (result.PrimaryEntities == null) throw new Exception($"Unexpectedly no primary entities");
             }
 
             if (query.PrincipalRelation != null)
             {
-                result.PrincipalEntities = entity.Related.GetRelatedEntities("principal");
+                if (result.PrincipalEntities == null) throw new Exception($"Unexpectedly no principal entities");
             }
 
             if (request.AccessMode == LocationQueryAccessMode.Commit && query.ChangeException == null)
