@@ -269,6 +269,15 @@ public static class Extensions
     public static String GetRelationAlias(this Extent extent)
         => extent.RelationAlias ?? extent.RelationName.EscapeSqlServerXmlName();
 
+    public static Extent GetSubExtent(this Extent extent, String alias)
+        => extent.Children.FirstOrDefault(e => e.RelationAlias == alias);
+
+    public static Extent GetPrimariesSubExtent(this Extent extent)
+        => extent.GetSubExtent(PrimariesRelationAlias);
+
+    public static Extent GetPrincipalSubExtent(this Extent extent)
+        => extent.GetSubExtent(PrincipalRelationAlias);
+
     public static EntityKey GetEntityKey(this Entity entity)
     {
         var columnsAndValues = from c in entity.Table.PrimaryKey.Columns select (c.c.Name, entity.ColumnValues[c.c.Name]);
@@ -315,6 +324,7 @@ public static class Extensions
         {
             Extent = extent,
             Table = table,
+            ColumnValues = extent.Columns?.ToDictionary(c => c, c => null as String) ?? Empties<String, String>.Dictionary,
             Related = extent.Children?.Select(c => MakeDummyEntities(c, table)).ToArray()
         };
     }

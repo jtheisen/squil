@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Data;
 using TaskLedgering;
+using static Squil.StaticSqlAliases;
 
 namespace Squil;
 
@@ -200,8 +201,8 @@ public class LocationQueryResult
     public LocationQueryResult(Entity entity)
     {
         Entity = entity;
-        PrimaryEntities = entity.Related.GetRelatedEntitiesOrNull("primary");
-        PrincipalEntities = entity.Related.GetRelatedEntitiesOrNull("principal");
+        PrimaryEntities = entity.Related.GetRelatedEntitiesOrNull(PrimariesRelationAlias);
+        PrincipalEntities = entity.Related.GetRelatedEntitiesOrNull(PrincipalRelationAlias);
     }
 
     public override String ToString()
@@ -293,13 +294,15 @@ public class LocationQueryRunner
         }
         else
         {
+            var isInsertQuery = request.OperationType == LocationQueryOperationType.Insert;
+
             var cmIndex = query.Index = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
 
             var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
 
             var keyValueCount = cmIndex?.Columns?.TakeWhile(cv => !String.IsNullOrWhiteSpace(request.KeyParams[cv.c.Name])).Count();
 
-            var isSingletonQuery = table == null || (cmIndex != null && cmIndex.IsUnique && keyValueCount == extentOrder?.Length);
+            var isSingletonQuery = table == null || isInsertQuery || (cmIndex != null && cmIndex.IsUnique && keyValueCount == extentOrder?.Length);
 
             ValidationResult GetColumnValue(CMDirectedColumn column, Int32 no)
             {
@@ -358,10 +361,12 @@ public class LocationQueryRunner
 
             var extentFlavorType = GetExtentFlavor();
 
+            var limit = isInsertQuery ? 0 : request.ListLimit;
+
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
                 extentFlavorType,
-                cmIndex, extentOrder, extentValues, keyValueCount, request.ListLimit,
+                cmIndex, extentOrder, extentValues, keyValueCount, limit,
                 principalLocation, scanValue, request.Column
             );
 
@@ -462,6 +467,11 @@ public class LocationQueryRunner
             if (request.AccessMode == LocationQueryAccessMode.Commit && query.ChangeException == null)
             {
                 await transaction.CommitAsync();
+            }
+
+            if (request.OperationType == LocationQueryOperationType.Insert && result.PrimaryEntities.List.Length == 0)
+            {
+                result.PrimaryEntities.List = new[] { query.Extent.GetPrimariesSubExtent().MakeDummyEntity(query.Table) };
             }
 
             // Error-free commits don't replay

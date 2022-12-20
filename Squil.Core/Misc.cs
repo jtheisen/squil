@@ -17,6 +17,9 @@ public static class StaticSqlAliases
 {
     public static String IsMatchingAlias = "__is-matching";
     public static String SchemaDateAlias = "__schema-date";
+
+    public static String PrimariesRelationAlias = "primary";
+    public static String PrincipalRelationAlias = "principal";
 }
 
 public static class MiscExtensions

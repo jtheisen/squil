@@ -471,7 +471,14 @@
 
         var accessMode = GetAccessMode();
 
-        var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection(), vm?.Changes, accessMode)
+        LocationQueryOperationType? operationType = null;
+
+        if (Enum.TryParse<LocationQueryOperationType>(queryParams["operation"], true, out var parsedOperationType))
+        {
+            operationType = parsedOperationType;
+        }
+
+        var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection(), vm?.Changes, accessMode, operationType)
         {
             ListLimit = listLimit
         };
@@ -605,7 +612,7 @@
 
         var keys = vm.LastRequest.KeyParams.AsMap();
 
-        var url = vm.UrlCreateor.RenderEntityUrl(index, keys, insertMode: LocationQueryOperationType.Insert);
+        var url = vm.UrlCreateor.RenderEntityUrl(index, keys, operationType: LocationQueryOperationType.Insert);
 
         NavigationManager.NavigateTo(url);
     }
