@@ -439,7 +439,14 @@ public class LocationQueryRunner
                 {
                     try
                     {
-                        await query.Source.ExcecuteChange(connection, change);
+                        if (change.IsKeyed)
+                        {
+                            await query.Source.ExcecuteChange(connection, change);
+                        }
+                        else
+                        {
+                            await query.Source.ExecuteIdentitize(connection, change, query.Table);
+                        }
                     }
                     catch (SqlException ex)
                     {
@@ -471,7 +478,9 @@ public class LocationQueryRunner
 
             if (request.OperationType == LocationQueryOperationType.Insert && result.PrimaryEntities.List.Length == 0)
             {
-                result.PrimaryEntities.List = new[] { query.Extent.GetPrimariesSubExtent().MakeDummyEntity(query.Table) };
+                var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(query.Table);
+
+                result.PrimaryEntities.List = new[] { templateEntity };
             }
 
             // Error-free commits don't replay

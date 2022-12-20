@@ -124,10 +124,10 @@ public class SysColumn : SysWithComment
     public Int32 Scale { get; set; }
 
     [XmlAttribute("is_identity")]
-    public Int32 IsIdentity { get; set; }
+    public Boolean IsIdentity { get; set; }
 
     [XmlAttribute("is_computed")]
-    public Int32 IsComputed { get; set; }
+    public Boolean IsComputed { get; set; }
 
     [XmlArray("systemtype")]
     public SysType[] SystemTypes { get; set; } = Empties<SysType>.Array;

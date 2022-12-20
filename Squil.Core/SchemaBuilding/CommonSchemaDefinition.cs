@@ -58,6 +58,10 @@ public class CsdColumn : CsdBase
 
     public Int32 Scale { get; set; }
 
+    public Boolean IsIdentity { get; set; }
+
+    public Boolean IsComputed { get; set; }
+
     public Boolean IsIgnoredByDefault { get; set; }
 
     public Boolean IsSystemType { get; set; }
@@ -154,6 +158,8 @@ public static class CsdExtensions
                         MaxLength = c.MaxLength,
                         Precision = c.Precision,
                         Scale = c.Scale,
+                        IsIdentity = c.IsIdentity,
+                        IsComputed = c.IsComputed,
                         IsSystemType = systemtype != null,
                         IsAssemblyType = usertype?.IsAssemblyType ?? false,
                         IsNullable = c.IsNullable,

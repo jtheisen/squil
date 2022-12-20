@@ -77,6 +77,8 @@ public class CMRoot
                     Comment = c.Comment,
                     SqlType = c.DataType,
                     IsNullable = c.IsNullable,
+                    IsComputed = c.IsComputed,
+                    IsIdentity = c.IsIdentity,
                     IsIgnoredByDefault = c.IsIgnoredByDefault,
                     IsAssemblyType = c.IsAssemblyType,
                     Type = TypeRegistry.Instance.GetTypeOrNull(c.DataType),
@@ -532,6 +534,10 @@ public class CMColumn
     public Int32 OrderInClusteredIndex { get; set; }
 
     public String Escaped => Name.EscapeNamePart();
+
+    public Boolean IsIdentity { get; set; }
+
+    public Boolean IsComputed { get; set; }
 
     public Boolean IsIgnoredByDefault { get; set; }
 

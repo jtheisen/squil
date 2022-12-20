@@ -1,5 +1,5 @@
 ﻿@{
-    var areQueryEditing = QueryVm.AreInUpdate;
+    var areQueryEditing = QueryVm.AreInUpdateOrInsert;
 
     var url = Url.If(!areQueryEditing);
 
@@ -106,11 +106,11 @@
     [CascadingParameter]
     public LocationQueryVm QueryVm { get; set; }
 
-    Boolean CanEdit => QueryVm.AreInUpdate && Entity.EditState != EntityEditState.Closed && !Column.OrderInPrimaryKey.HasValue && Column.Type.IsSupported;
+    Boolean CanEdit => QueryVm.AreInUpdateOrInsert && Entity.EditState != EntityEditState.Closed && !Column.OrderInPrimaryKey.HasValue && Column.Type.IsSupported;
 
     Boolean isEditing;
 
-    Boolean IsEditing => QueryVm.AreInUpdate && (isEditing || IsFocusColumn);
+    Boolean IsEditing => QueryVm.AreInUpdateOrInsert && (isEditing || IsFocusColumn);
 
     void HandleSetNullButtonClick()
     {

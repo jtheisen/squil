@@ -292,6 +292,10 @@
                                 </small>
                             </HeaderExtra>
                             <Body>
+                                @foreach (var change in vm.LastResponse?.Ledger?.GetEntries<ChangeSql>())
+                                {
+                                    <pre><CopyableContent>@change.Sql</CopyableContent></pre>
+                                }
                                 <pre><CopyableContent>@(vm.LastResponse?.Ledger?.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
                                 </Body>
                             </Modal>
@@ -547,7 +551,14 @@
 
             showSchemaChangedException = false;
 
-            StateHasChanged();
+            if (vm.ShouldRedirectAfterInsert(out var newLocationUrl))
+            {
+                NavigationManager.NavigateTo(newLocationUrl);
+            }
+            else
+            {
+                StateHasChanged();
+            }
         }
     }
 

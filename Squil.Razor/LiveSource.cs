@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Nito.AsyncEx;
 using System.Threading;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Squil;
 
@@ -126,6 +127,13 @@ public class LiveSource
     public async Task ExcecuteChange(SqlConnection connection, ChangeEntry change)
     {
         await QueryGenerator.ExecuteChange(connection, change);
+    }
+
+    public async Task ExecuteIdentitize(SqlConnection connection, ChangeEntry change, CMTable table)
+    {
+        var key = await QueryGenerator.IdentitizeAsync(connection, table, change.EditValues);
+
+        change.EntityKey = new EntityKey(table.Name, key);
     }
 
     public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)

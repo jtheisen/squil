@@ -5,6 +5,11 @@ using static Squil.StaticSqlAliases;
 
 namespace Squil;
 
+public record ChangeSql(String Sql) : TaskLedgering.IReportResult
+{
+    public String ToReportString() => Sql;
+}
+
 public record QuerySql(String Sql) : TaskLedgering.IReportResult
 {
     public String ToReportString() => Sql;
@@ -52,9 +57,9 @@ public class QueryGenerator
         return sql;
     }
 
-    public async Task<(String c, String v)[]> IdentitizeAsync(SqlConnection connection, CMTable table)
+    public async Task<(String c, String v)[]> IdentitizeAsync(SqlConnection connection, CMTable table, Dictionary<String, String> values)
     {
-        var sql = GetIdentitizeSql(table);
+        var sql = GetIdentitizeSql(table, values);
 
         var rows = await connection.QueryRows(sql);
 
@@ -63,27 +68,36 @@ public class QueryGenerator
         return row;
     }
 
-    public String GetIdentitizeSql(CMTable table)
+    public String GetIdentitizeSql(CMTable table, Dictionary<String, String> values)
     {
         var columns = table.ColumnsInOrder;
 
         var keyColumns = from c in table.PrimaryKey.Columns select (column: c.c.Name.EscapeNamePart(), type: c.c.SqlType);
 
+        var valueColumns =
+            from c in table.ColumnsInOrder
+            where !c.IsIdentity && !c.IsComputed
+            select (column: c.Name.EscapeNamePart(), value: values.TryGetValue(c.Name, out var cv) ? cv.ToSqlServerStringLiteralOrNull() : "default");
+
         var tableName = table.Name.Escaped;
 
-        return GetIdentitizeSql(tableName, keyColumns.ToArray());
+        return GetIdentitizeSql(tableName, keyColumns.ToArray(), valueColumns.ToArray());
     }
 
-    public String GetIdentitizeSql(String table, (String column, String type)[] keyColumns)
+    public String GetIdentitizeSql(String table, (String column, String type)[] keyColumns, (String column, String value)[] valueColumns)
     {
+        var columnSql = valueColumns?.Apply(vc => $"({String.Join(", ", from c in vc select c.column)})") ?? "";
+        var valuesSql = valueColumns?.Apply(vc => $"({String.Join(", ", from c in vc select c.value)})") ?? "default values";
+
         var sql = $@"
 begin transaction
 
 declare @output table({String.Join(", ", from c in keyColumns select $"{c.column} {c.type}")});
 
 insert {table}
+{columnSql}
 output {String.Join(", ", from c in keyColumns select $"INSERTED.{c.column}")} into @output
-default values
+{valuesSql}
 
 select {String.Join(", ", from c in keyColumns select c.column)}
 from @output
@@ -94,13 +108,23 @@ rollback
         return sql;
     }
 
-    public String GetChangeSql(ChangeEntry entry)
+    ChangeSql GetChangeSql(ChangeEntry entry)
+    {
+        using var scope = GetCurrentLedger().TimedScope("change");
+
+        var sql = GetChangeSqlString(entry);
+
+        return scope.SetResult(new ChangeSql(sql));
+    }
+
+    String GetChangeSqlString(ChangeEntry entry)
     {
         var key = entry.EntityKey;
 
         var from = key.TableName.Escaped;
 
-        var where = String.Join(" and ", from p in key.KeyColumnsAndValues select $"{p.c.EscapeNamePart()} = {p.v.ToSqlServerStringLiteralOrNull()}");
+        var where = key.KeyColumnsAndValues?.Apply(kv
+            => String.Join(" and ", from p in kv select $"{p.c.EscapeNamePart()} = {p.v.ToSqlServerStringLiteralOrNull()}"));
 
         var ev = entry.EditValues;
 
@@ -115,7 +139,20 @@ rollback
                 var columns = String.Join(", ", from p in ev select $"{p.Key.EscapeNamePart()}");
                 var values = String.Join(", ", from p in ev select $"{p.Value.ToSqlServerStringLiteralOrNull()}");
 
-                return $"insert {from} ({columns}) set ({values}) where {where}";
+                var insertSql = $"insert {from} ({columns}) values ({values})";
+
+                if (entry.RequireIdentityOverride)
+                {
+                    return $@"
+set identity_insert {from} on
+{insertSql}
+set identity_insert {from} off
+".Trim();
+                }
+                else
+                {
+                    return insertSql;
+                }
 
             case ChangeOperationType.Delete:
                 return $"delete {from} where {where}";
@@ -280,7 +317,7 @@ rollback
     {
         var sql = GetChangeSql(change);
 
-        await connection.ExecuteAsync(sql);
+        await connection.ExecuteAsync(sql.Sql);
     }
 
     public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)

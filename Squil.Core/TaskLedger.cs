@@ -94,6 +94,11 @@ public class TaskLedger : IDisposable
         return entries.Select(e => e.result).OfType<T>().LastOrDefault();
     }
 
+    public T[] GetEntries<T>()
+    {
+        return entries.Select(e => e.result).OfType<T>().ToArray();
+    }
+
     public void ReportTime(String name, TimeSpan time, Object result) => entries.Add(new LedgerEntry(name, time, result));
 
     public IDisposable GroupingScope(String name)

@@ -1,4 +1,7 @@
-﻿using Squil.SchemaBuilding;
+﻿using Azure.Core;
+using Azure;
+using Microsoft.AspNetCore.Components;
+using Squil.SchemaBuilding;
 
 namespace Squil;
 
@@ -178,6 +181,16 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         {
             IsQueryRequired = false;
 
+            if (request.OperationType == LocationQueryOperationType.Insert)
+            {
+                editType = EditType.Insert;
+
+                if (changes == null)
+                {
+                    SetChange(ChangeEntry.Insert(response.Table.Name, new Dictionary<String, String>()));
+                }
+            }
+
             if (response.IsChangeOk && AreSaving)
             {
                 editType = EditType.NotEditing;
@@ -296,6 +309,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
     public Boolean AreInDelete => editType == EditType.Delete;
     public Boolean AreInInsert => editType == EditType.Insert;
 
+    public Boolean AreInUpdateOrInsert => editType == EditType.Update || editType == EditType.Insert;
+
     public void StartUpdate() => StartEdit(EditType.Update);
     public void StartDelete() => StartEdit(EditType.Delete, InitDelete);
     public void StartInsert() => StartEdit(EditType.Insert);
@@ -350,11 +365,27 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         };
     }
 
+    ChangeEntry GetChangeEntry(Entity entity, Boolean asInsert)
+    {
+        if (entity.IsUnkeyed)
+        {
+            return ChangeEntry.Insert(entity.Table.Name, entity.EditValues);
+        }
+        else if (asInsert)
+        {
+            return ChangeEntry.Insert(entity.GetEntityKey(), entity.EditValues);
+        }
+        else
+        {
+            return ChangeEntry.Update(entity.GetEntityKey(), entity.EditValues);
+        }
+    }
+
     public void AddChange(Entity entity)
     {
         if (entity.EditState == EntityEditState.Original) return;
 
-        var change = new ChangeEntry { EntityKey = entity.GetEntityKey(), EditValues = entity.EditValues };
+        var change = GetChangeEntry(entity, editType == EditType.Insert);
 
         SetChange(change);
 
@@ -363,6 +394,27 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         haveChanges = true;
 
         NotifyQueryRequired();
+    }
+
+    public Boolean ShouldRedirectAfterInsert(out String url)
+    {
+        var request = LastRequest;
+        var response = LastResponse;
+
+        url = null;
+
+        if (request.OperationType == LocationQueryOperationType.Insert && response.IsChangeOk && request.AccessMode == LocationQueryAccessMode.Commit)
+        {
+            var table = response.Table;
+            var change = Changes.Single();
+            var keyColumnsAndValues = change.EntityKey.KeyColumnsAndValues.ToMap();
+
+            url = UrlCreateor.RenderEntityUrl(table, keyColumnsAndValues);
+
+            return true;
+        }
+
+        return false;
     }
 
     void NotifyQueryRequired()

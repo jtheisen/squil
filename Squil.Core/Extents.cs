@@ -27,7 +27,7 @@ public class EntityKey : IEquatable<EntityKey>
 
     public override Boolean Equals(Object obj) => obj is EntityKey other ? this.Equals(other) : false;
 
-    public Boolean Equals(EntityKey other) => hashable == other.hashable;
+    public Boolean Equals(EntityKey other) => hashable == other?.hashable;
 
     public static Boolean operator ==(EntityKey left, EntityKey right) => left.Equals(right);
     public static Boolean operator !=(EntityKey left, EntityKey right) => !left.Equals(right);
@@ -44,18 +44,27 @@ public class ChangeEntry
 {
     public ChangeOperationType Type { get; set; }
 
+    public Boolean RequireIdentityOverride { get; set; }
+
+    public ObjectName Table { get; set; }
+
     public EntityKey EntityKey { get; set; }
 
     public Dictionary<String, String> EditValues { get; set; }
 
-    public static ChangeEntry Update(EntityKey key, Dictionary<String, String> values)
-        => new ChangeEntry { Type = ChangeOperationType.Update, EntityKey = key, EditValues = values };
+    public Boolean IsKeyed => EntityKey != null;
 
-    public static ChangeEntry Insert(EntityKey key, Dictionary<String, String> values)
-        => new ChangeEntry { Type = ChangeOperationType.Insert, EntityKey = key, EditValues = values };
+    public static ChangeEntry Update(EntityKey key, Dictionary<String, String> values)
+        => new ChangeEntry { Type = ChangeOperationType.Update, Table = key.TableName, EntityKey = key, EditValues = values };
+
+    public static ChangeEntry Insert(EntityKey key, Dictionary < String, String> values )
+        => new ChangeEntry { Type = ChangeOperationType.Insert, Table = key.TableName, EntityKey = key, EditValues = values };
+
+    public static ChangeEntry Insert(ObjectName table, Dictionary<String, String> values)
+        => new ChangeEntry { Type = ChangeOperationType.Insert, Table = table, EditValues = values };
 
     public static ChangeEntry Delete(EntityKey key)
-        => new ChangeEntry { Type = ChangeOperationType.Delete, EntityKey = key };
+        => new ChangeEntry { Type = ChangeOperationType.Delete, Table = key.TableName, EntityKey = key };
 }
 
 public enum EntityEditState
@@ -70,6 +79,8 @@ public class Entity : IMapping<String, String>
     public Extent Extent { get; set; }
 
     public CMTable Table { get; set; }
+
+    public Boolean IsUnkeyed { get; set; }
 
     public DateTime? SchemaDate { get; set; }
 
@@ -280,6 +291,8 @@ public static class Extensions
 
     public static EntityKey GetEntityKey(this Entity entity)
     {
+        if (entity.IsUnkeyed) throw new Exception("Can't get key from unkeyed entity");
+
         var columnsAndValues = from c in entity.Table.PrimaryKey.Columns select (c.c.Name, entity.ColumnValues[c.c.Name]);
 
         return new EntityKey(entity.Table.Name, columnsAndValues.ToArray());
