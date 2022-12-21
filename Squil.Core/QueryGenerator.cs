@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using NLog;
 using System.Data;
+using System.Text;
 using static Squil.StaticSqlAliases;
 
 namespace Squil;
@@ -61,15 +62,17 @@ public class QueryGenerator
     {
         var sql = GetIdentitizeSql(table, values);
 
-        var rows = await connection.QueryRows(sql);
+        var rows = await connection.QueryRows(sql.Sql);
 
         var row = rows.Single("Identitize request didn't yield a single row");
 
         return row;
     }
 
-    public String GetIdentitizeSql(CMTable table, Dictionary<String, String> values)
+    public ChangeSql GetIdentitizeSql(CMTable table, Dictionary<String, String> values)
     {
+        using var scope = GetCurrentLedger().TimedScope("create-change-sql");
+
         var columns = table.ColumnsInOrder;
 
         var keyColumns = from c in table.PrimaryKey.Columns select (column: c.c.Name.EscapeNamePart(), type: c.c.SqlType);
@@ -81,17 +84,17 @@ public class QueryGenerator
 
         var tableName = table.Name.Escaped;
 
-        return GetIdentitizeSql(tableName, keyColumns.ToArray(), valueColumns.ToArray());
+        var sql = new ChangeSql(GetIdentitizeSql(tableName, keyColumns.ToArray(), valueColumns.ToArray()));
+
+        return scope.SetResult(sql);
     }
 
-    public String GetIdentitizeSql(String table, (String column, String type)[] keyColumns, (String column, String value)[] valueColumns)
+    String GetIdentitizeSql(String table, (String column, String type)[] keyColumns, (String column, String value)[] valueColumns)
     {
         var columnSql = valueColumns?.Apply(vc => $"({String.Join(", ", from c in vc select c.column)})") ?? "";
-        var valuesSql = valueColumns?.Apply(vc => $"({String.Join(", ", from c in vc select c.value)})") ?? "default values";
+        var valuesSql = valueColumns?.Apply(vc => $"values ({String.Join(", ", from c in vc select c.value)})") ?? "default values";
 
         var sql = $@"
-begin transaction
-
 declare @output table({String.Join(", ", from c in keyColumns select $"{c.column} {c.type}")});
 
 insert {table}
@@ -101,23 +104,21 @@ output {String.Join(", ", from c in keyColumns select $"INSERTED.{c.column}")} i
 
 select {String.Join(", ", from c in keyColumns select c.column)}
 from @output
-
-rollback
 ";
 
         return sql;
     }
 
-    ChangeSql GetChangeSql(ChangeEntry entry)
+    ChangeSql GetChangeSql(CMTable table, ChangeEntry entry)
     {
-        using var scope = GetCurrentLedger().TimedScope("change");
+        using var scope = GetCurrentLedger().TimedScope("create-change-sql");
 
-        var sql = GetChangeSqlString(entry);
+        var sql = GetChangeSqlString(table, entry);
 
         return scope.SetResult(new ChangeSql(sql));
     }
 
-    String GetChangeSqlString(ChangeEntry entry)
+    String GetChangeSqlString(CMTable table, ChangeEntry entry)
     {
         var key = entry.EntityKey;
 
@@ -136,12 +137,23 @@ rollback
                 return $"update {from} set {String.Join(", ", setters)} where {where}";
 
             case ChangeOperationType.Insert:
-                var columns = String.Join(", ", from p in ev select $"{p.Key.EscapeNamePart()}");
-                var values = String.Join(", ", from p in ev select $"{p.Value.ToSqlServerStringLiteralOrNull()}");
+                var keyValues = key.KeyColumnsAndValues.ToDictionary(p => p.c, p => p.v);
+
+                var haveIdentity = table.PrimaryKey.Columns.Any(c => c.c.IsIdentity);
+
+                var columnsAndValues =
+                    from c in table.ColumnsInOrder
+                    where !c.IsComputed
+                    let v = keyValues.GetValueOrDefault(c.Name)?.ToSqlServerStringLiteral()
+                        ?? (ev.TryGetValue(c.Name, out var cv) ? cv.ToSqlServerStringLiteralOrNull() : "default")
+                    select (column: c.Name.EscapeNamePart(), value: v);
+
+                var columns = String.Join(", ", from p in columnsAndValues select $"{p.column}");
+                var values = String.Join(", ", from p in columnsAndValues select $"{p.value}");
 
                 var insertSql = $"insert {from} ({columns}) values ({values})";
 
-                if (entry.RequireIdentityOverride)
+                if (haveIdentity)
                 {
                     return $@"
 set identity_insert {from} on
@@ -313,9 +325,9 @@ set identity_insert {from} off
         return sql;
     }
 
-    public async Task ExecuteChange(SqlConnection connection, ChangeEntry change)
+    public async Task ExecuteChange(SqlConnection connection, CMTable table, ChangeEntry change)
     {
-        var sql = GetChangeSql(change);
+        var sql = GetChangeSql(table, change);
 
         await connection.ExecuteAsync(sql.Sql);
     }

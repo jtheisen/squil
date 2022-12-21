@@ -617,13 +617,14 @@
         var table = vm.LastResponse.Table;
 
         // Inserting a related entity has an index and will use the key values currently in the location
-        var index = vm.LastResponse.Index ?? table.PrimaryKey;
+        var index = vm.LastResponse.Index;
 
-        if (index == null) throw new Exception($"Cant insert into table without primary key");
+        if (table.PrimaryKey == null) throw new Exception($"Cant insert into table without primary key");
 
         var keys = vm.LastRequest.KeyParams.AsMap();
 
-        var url = vm.UrlCreateor.RenderEntityUrl(index, keys, operationType: LocationQueryOperationType.Insert);
+        // FIXME: we need to pass the keys of the current index for default initialization
+        var url = vm.UrlCreateor.RenderEntityUrl(table.PrimaryKey, keys, operationType: LocationQueryOperationType.Insert);
 
         NavigationManager.NavigateTo(url);
     }

@@ -19,6 +19,11 @@ public class EntityKey : IEquatable<EntityKey>
         TableName = tableName;
         KeyColumnsAndValues = keyColumnsAndValues;
 
+        foreach (var kv in KeyColumnsAndValues)
+        {
+            if (kv.v == null) throw new Exception($"Value for column {kv.c} is null, which is invalid for key values");
+        }
+
         hashable = $"{TableName.Escaped}\ue000{String.Join("\ue000", from p in keyColumnsAndValues select p.v)}";
         hashcode = hashable.GetHashCode();
     }
@@ -44,15 +49,13 @@ public class ChangeEntry
 {
     public ChangeOperationType Type { get; set; }
 
-    public Boolean RequireIdentityOverride { get; set; }
-
     public ObjectName Table { get; set; }
 
     public EntityKey EntityKey { get; set; }
 
     public Dictionary<String, String> EditValues { get; set; }
 
-    public Boolean IsKeyed => EntityKey != null;
+    public Boolean IsKeyed => EntityKey is not null;
 
     public static ChangeEntry Update(EntityKey key, Dictionary<String, String> values)
         => new ChangeEntry { Type = ChangeOperationType.Update, Table = key.TableName, EntityKey = key, EditValues = values };
@@ -337,6 +340,7 @@ public static class Extensions
         {
             Extent = extent,
             Table = table,
+            IsUnkeyed = true,
             ColumnValues = extent.Columns?.ToDictionary(c => c, c => null as String) ?? Empties<String, String>.Dictionary,
             Related = extent.Children?.Select(c => MakeDummyEntities(c, table)).ToArray()
         };

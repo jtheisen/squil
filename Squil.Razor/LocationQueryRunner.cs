@@ -44,6 +44,8 @@ public class LocationQueryRequest
     public NameValueCollection RestParams { get; }
     public NameValueCollection SearchValues { get; }
 
+    public Boolean IsIdentitizingPending => OperationType == LocationQueryOperationType.Insert && Changes == null;
+
     public LocationQueryRequest(
         String[] segments,
         NameValueCollection queryParams,
@@ -361,7 +363,7 @@ public class LocationQueryRunner
 
             var extentFlavorType = GetExtentFlavor();
 
-            var limit = isInsertQuery ? 0 : request.ListLimit;
+            var limit = request.IsIdentitizingPending ? 0 : request.ListLimit;
 
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
@@ -441,12 +443,17 @@ public class LocationQueryRunner
                     {
                         if (change.IsKeyed)
                         {
-                            await query.Source.ExcecuteChange(connection, change);
+                            await query.Source.ExcecuteChange(connection, change, query.Table);
                         }
                         else
                         {
                             await query.Source.ExecuteIdentitize(connection, change, query.Table);
                         }
+
+                        var primaries = query.Extent.GetPrimariesSubExtent();
+
+                        primaries.Values = change.EntityKey.KeyColumnsAndValues.Select(kv => kv.v).ToArray();
+                        primaries.KeyValueCount = primaries.Values.Length;
                     }
                     catch (SqlException ex)
                     {
@@ -476,11 +483,25 @@ public class LocationQueryRunner
                 await transaction.CommitAsync();
             }
 
-            if (request.OperationType == LocationQueryOperationType.Insert && result.PrimaryEntities.List.Length == 0)
+            if (request.OperationType == LocationQueryOperationType.Insert)
             {
-                var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(query.Table);
+                if (request.Changes is null)
+                {
+                    // insert without a changes array means we're initializing with a dummy entity
 
-                result.PrimaryEntities.List = new[] { templateEntity };
+                    var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(query.Table);
+
+                    result.PrimaryEntities.List = new[] { templateEntity };
+                }
+                else
+                {
+                    // insert with a change array means we've loaded an inserted entity
+
+                    if (result.PrimaryEntities.List.Length == 0)
+                    {
+                        throw new Exception($"Unexpectedly no entity retrieved after insertion");
+                    }
+                }
             }
 
             // Error-free commits don't replay

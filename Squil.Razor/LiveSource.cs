@@ -124,9 +124,9 @@ public class LiveSource
         }
     }
 
-    public async Task ExcecuteChange(SqlConnection connection, ChangeEntry change)
+    public async Task ExcecuteChange(SqlConnection connection, ChangeEntry change, CMTable table)
     {
-        await QueryGenerator.ExecuteChange(connection, change);
+        await QueryGenerator.ExecuteChange(connection, table, change);
     }
 
     public async Task ExecuteIdentitize(SqlConnection connection, ChangeEntry change, CMTable table)
