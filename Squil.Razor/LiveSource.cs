@@ -126,14 +126,41 @@ public class LiveSource
 
     public async Task ExcecuteChange(SqlConnection connection, ChangeEntry change, CMTable table)
     {
-        await QueryGenerator.ExecuteChange(connection, table, change);
-    }
+        if (change.IsKeyed)
+        {
+            await QueryGenerator.ExecuteChange(connection, table, change);
 
-    public async Task ExecuteIdentitize(SqlConnection connection, ChangeEntry change, CMTable table)
-    {
-        var key = await QueryGenerator.IdentitizeAsync(connection, table, change.EditValues);
+            switch (change.Type)
+            {
+                case ChangeOperationType.Update:
+                case ChangeOperationType.Insert:
+                    {
+                        var oldKey = change.EntityKey;
 
-        change.EntityKey = new EntityKey(table.Name, key);
+                        var newKeyValues = table.PrimaryKey.Columns.Select(
+                            (c, i) => (c: c.c.Name, v: change.EditValues.TryGetValue(c.c.Name, out var cv) ? cv : oldKey.KeyColumnsAndValues[i].v)
+                        )
+                        .ToArray();
+
+                        var newKey = new EntityKey(table.Name, newKeyValues);
+
+                        if (change.EntityKey != newKey)
+                        {
+                            change.EntityKey = newKey;
+                        }
+
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+        else
+        {
+            var key = await QueryGenerator.IdentitizeAsync(connection, table, change.EditValues);
+
+            change.EntityKey = new EntityKey(table.Name, key);
+        }
     }
 
     public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)

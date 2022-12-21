@@ -14,6 +14,8 @@ public class EntityKey : IEquatable<EntityKey>
 
     public (String c, String v)[] KeyColumnsAndValues { get; }
 
+    public Dictionary<String, String> GetKeyColumnsAndValuesDictionary() => KeyColumnsAndValues.ToDictionary(p => p.c, p => p.v);
+
     public EntityKey(ObjectName tableName, (String c, String v)[] keyColumnsAndValues)
     {
         TableName = tableName;

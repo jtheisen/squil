@@ -69,7 +69,7 @@ public class QueryGenerator
         return row;
     }
 
-    public ChangeSql GetIdentitizeSql(CMTable table, Dictionary<String, String> values)
+    ChangeSql GetIdentitizeSql(CMTable table, Dictionary<String, String> values)
     {
         using var scope = GetCurrentLedger().TimedScope("create-change-sql");
 
@@ -137,7 +137,7 @@ from @output
                 return $"update {from} set {String.Join(", ", setters)} where {where}";
 
             case ChangeOperationType.Insert:
-                var keyValues = key.KeyColumnsAndValues.ToDictionary(p => p.c, p => p.v);
+                var keyValues = key.GetKeyColumnsAndValuesDictionary();
 
                 var haveIdentity = table.PrimaryKey.Columns.Any(c => c.c.IsIdentity);
 
