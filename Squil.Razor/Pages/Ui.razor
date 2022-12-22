@@ -502,6 +502,7 @@
 
         if (haveLocationChange)
         {
+            // This is too late to set the location query vm after an insert - the old vm still causes a new insert request
             vm = new LocationQueryVm(request, response);
 
             vm.InDebug = queryParams["debug"] != null;
