@@ -1,7 +1,9 @@
 using NLog;
+using Squil;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
@@ -103,6 +105,40 @@ public static class RazorHelpers
     }
 }
 
+public struct NullComparisonCapsule<T> : IEquatable<NullComparisonCapsule<T>>
+    where T : class
+{
+    private readonly T value;
+
+    NullComparisonCapsule(T value)
+    {
+        this.value = value;
+    }
+
+    Boolean EqualsInternal(NullComparisonCapsule<T> rhs)
+        => value is null && rhs.value is null || (value is not null && rhs.value is not null && EqualsInternal(rhs));
+
+    [DebuggerHidden] public static implicit operator NullComparisonCapsule<T>(T value) => new NullComparisonCapsule<T>(value);
+
+    [DebuggerHidden] public Boolean Equals(NullComparisonCapsule<T> other) => EqualsInternal(other);
+
+    [DebuggerHidden] public static Boolean operator ==(NullComparisonCapsule<T> lhs, NullComparisonCapsule<T> rhs) => lhs.EqualsInternal(rhs);
+    [DebuggerHidden] public static Boolean operator !=(NullComparisonCapsule<T> lhs, NullComparisonCapsule<T> rhs) => !lhs.EqualsInternal(rhs);
+
+    [DebuggerHidden] public static Boolean operator ==(NullComparisonCapsule<T> lhs, T rhs) => lhs.EqualsInternal(rhs);
+    [DebuggerHidden] public static Boolean operator !=(NullComparisonCapsule<T> lhs, T rhs) => !lhs.EqualsInternal(rhs);
+
+    [DebuggerHidden] public static Boolean operator ==(T lhs, NullComparisonCapsule<T> rhs) => rhs.EqualsInternal(lhs);
+    [DebuggerHidden] public static Boolean operator !=(T lhs, NullComparisonCapsule<T> rhs) => !rhs.EqualsInternal(lhs);
+
+    [DebuggerHidden]
+    public override bool Equals(object obj)
+        => obj is NullComparisonCapsule<T> && EqualsInternal((NullComparisonCapsule<T>)obj);
+
+    [DebuggerHidden]
+    public override int GetHashCode() => value?.GetHashCode() ?? 0;
+}
+
 public static partial class Extensions
 {
     static Logger log = LogManager.GetCurrentClassLogger();
@@ -119,6 +155,10 @@ public static partial class Extensions
             return stringWriter.GetStringBuilder().ToString();
         }
     }
+
+    public static NullComparisonCapsule<T> ToNullComparable<T>(this T value)
+        where T : class
+        => (NullComparisonCapsule<T>)value;
 
     public static IEnumerable<T> ToSingleton<T>(this T value)
     {

@@ -36,8 +36,8 @@ public class EntityKey : IEquatable<EntityKey>
 
     public Boolean Equals(EntityKey other) => hashable == other?.hashable;
 
-    public static Boolean operator ==(EntityKey left, EntityKey right) => left.Equals(right);
-    public static Boolean operator !=(EntityKey left, EntityKey right) => !left.Equals(right);
+    public static Boolean operator ==(EntityKey left, EntityKey right) => left.ToNullComparable().Equals(right);
+    public static Boolean operator !=(EntityKey left, EntityKey right) => !left.ToNullComparable().Equals(right);
 }
 
 public enum ChangeOperationType
@@ -296,11 +296,21 @@ public static class Extensions
 
     public static EntityKey GetEntityKey(this Entity entity)
     {
-        if (entity.IsUnkeyed) throw new Exception("Can't get key from unkeyed entity");
+        if (entity.IsUnkeyed) return null;
 
         var columnsAndValues = from c in entity.Table.PrimaryKey.Columns select (c.c.Name, entity.ColumnValues[c.c.Name]);
 
         return new EntityKey(entity.Table.Name, columnsAndValues.ToArray());
+    }
+
+    public static void SetEntityKey(this Entity entity, EntityKey key)
+    {
+        entity.IsUnkeyed = false;
+
+        foreach (var c in key.KeyColumnsAndValues)
+        {
+            entity.ColumnValues[c.c] = c.v;
+        }
     }
 
     public static Entity MakeEntity(this Extent extent, CMTable table, XElement element, Boolean isRoot = false)

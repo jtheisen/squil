@@ -126,40 +126,16 @@ public class LiveSource
 
     public async Task ExcecuteChange(SqlConnection connection, ChangeEntry change, CMTable table)
     {
-        if (change.IsKeyed)
-        {
-            await QueryGenerator.ExecuteChange(connection, table, change);
+        var potentialNewKeyValues = await QueryGenerator.ExecuteChange(connection, table, change);
 
-            switch (change.Type)
+        if (potentialNewKeyValues != null)
+        {
+            var newKey = new EntityKey(table.Name, potentialNewKeyValues);
+
+            if (change.EntityKey != newKey)
             {
-                case ChangeOperationType.Update:
-                case ChangeOperationType.Insert:
-                    {
-                        var oldKey = change.EntityKey;
-
-                        var newKeyValues = table.PrimaryKey.Columns.Select(
-                            (c, i) => (c: c.c.Name, v: change.EditValues.TryGetValue(c.c.Name, out var cv) ? cv : oldKey.KeyColumnsAndValues[i].v)
-                        )
-                        .ToArray();
-
-                        var newKey = new EntityKey(table.Name, newKeyValues);
-
-                        if (change.EntityKey != newKey)
-                        {
-                            change.EntityKey = newKey;
-                        }
-
-                        break;
-                    }
-                default:
-                    break;
+                change.EntityKey = newKey;
             }
-        }
-        else
-        {
-            var key = await QueryGenerator.IdentitizeAsync(connection, table, change.EditValues);
-
-            change.EntityKey = new EntityKey(table.Name, key);
         }
     }
 

@@ -363,7 +363,7 @@ public class LocationQueryRunner
 
             var extentFlavorType = GetExtentFlavor();
 
-            var limit = request.IsIdentitizingPending ? 0 : request.ListLimit;
+            Int32? limit = isSingletonQuery ? null : request.ListLimit;
 
             extent = extentFactory.CreateRootExtentForTable(
                 cmTable,
@@ -441,14 +441,7 @@ public class LocationQueryRunner
                 {
                     try
                     {
-                        if (change.IsKeyed)
-                        {
-                            await query.Source.ExcecuteChange(connection, change, query.Table);
-                        }
-                        else
-                        {
-                            await query.Source.ExecuteIdentitize(connection, change, query.Table);
-                        }
+                        await query.Source.ExcecuteChange(connection, change, query.Table);
 
                         var primaries = query.Extent.GetPrimariesSubExtent();
 
@@ -485,17 +478,24 @@ public class LocationQueryRunner
 
             if (request.OperationType == LocationQueryOperationType.Insert)
             {
-                if (request.Changes is null)
+                if (request.Changes is null || !query.IsChangeOk)
                 {
-                    // insert without a changes array means we're initializing with a dummy entity
+                    // insert without a changes array or with a failed insert means we're initializing with a dummy entity
 
                     var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(query.Table);
+
+                    // if we have a key from a previous succesful insert, we need to prime the entity with it so that
+                    // it gets matched to the change entry later
+                    if (request.Changes?.FirstOrDefault() is ChangeEntry ce && ce.IsKeyed)
+                    {
+                        templateEntity.SetEntityKey(ce.EntityKey);
+                    }
 
                     result.PrimaryEntities.List = new[] { templateEntity };
                 }
                 else
                 {
-                    // insert with a change array means we've loaded an inserted entity
+                    // insert with a change array and a successful change operation means we should have loaded an inserted entity
 
                     if (result.PrimaryEntities.List.Length == 0)
                     {
@@ -515,7 +515,9 @@ public class LocationQueryRunner
 
                     foreach (var e in result.PrimaryEntities.List)
                     {
-                        if (e.GetEntityKey() == key)
+                        var entityKey = e.GetEntityKey();
+
+                        if (entityKey == key)
                         {
                             e.SetEditValues(change);
                         }

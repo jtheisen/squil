@@ -6,7 +6,7 @@ using static Squil.StaticSqlAliases;
 
 namespace Squil;
 
-public record ChangeSql(String Sql) : TaskLedgering.IReportResult
+public record ChangeSql(String Sql, Boolean ReturnsKey) : TaskLedgering.IReportResult
 {
     public String ToReportString() => Sql;
 }
@@ -58,116 +58,109 @@ public class QueryGenerator
         return sql;
     }
 
-    public async Task<(String c, String v)[]> IdentitizeAsync(SqlConnection connection, CMTable table, Dictionary<String, String> values)
+    public async Task<(String c, String v)[]> ExecuteChange(SqlConnection connection, CMTable table, ChangeEntry change)
     {
-        var sql = GetIdentitizeSql(table, values);
+        var sql = GetChangeSql(table, change);
 
-        var rows = await connection.QueryRows(sql.Sql);
+        if (sql.ReturnsKey)
+        {
+            var rows = await connection.QueryRows(sql.Sql);
 
-        var row = rows.Single("Identitize request didn't yield a single row");
+            var row = rows.Single("Request unexpectedly didn't yield a single key row");
 
-        return row;
-    }
+            return row;
+        }
+        else
+        {
+            await connection.ExecuteAsync(sql.Sql);
 
-    ChangeSql GetIdentitizeSql(CMTable table, Dictionary<String, String> values)
-    {
-        using var scope = GetCurrentLedger().TimedScope("create-change-sql");
-
-        var columns = table.ColumnsInOrder;
-
-        var keyColumns = from c in table.PrimaryKey.Columns select (column: c.c.Name.EscapeNamePart(), type: c.c.SqlType);
-
-        var valueColumns =
-            from c in table.ColumnsInOrder
-            where !c.IsIdentity && !c.IsComputed
-            select (column: c.Name.EscapeNamePart(), value: values.TryGetValue(c.Name, out var cv) ? cv.ToSqlServerStringLiteralOrNull() : "default");
-
-        var tableName = table.Name.Escaped;
-
-        var sql = new ChangeSql(GetIdentitizeSql(tableName, keyColumns.ToArray(), valueColumns.ToArray()));
-
-        return scope.SetResult(sql);
-    }
-
-    String GetIdentitizeSql(String table, (String column, String type)[] keyColumns, (String column, String value)[] valueColumns)
-    {
-        var columnSql = valueColumns?.Apply(vc => $"({String.Join(", ", from c in vc select c.column)})") ?? "";
-        var valuesSql = valueColumns?.Apply(vc => $"values ({String.Join(", ", from c in vc select c.value)})") ?? "default values";
-
-        var sql = $@"
-declare @output table({String.Join(", ", from c in keyColumns select $"{c.column} {c.type}")});
-
-insert {table}
-{columnSql}
-output {String.Join(", ", from c in keyColumns select $"INSERTED.{c.column}")} into @output
-{valuesSql}
-
-select {String.Join(", ", from c in keyColumns select c.column)}
-from @output
-";
-
-        return sql;
+            return null;
+        }
     }
 
     ChangeSql GetChangeSql(CMTable table, ChangeEntry entry)
     {
         using var scope = GetCurrentLedger().TimedScope("create-change-sql");
 
-        var sql = GetChangeSqlString(table, entry);
+        var sql = GetChangeSqlInner(table, entry);
 
-        return scope.SetResult(new ChangeSql(sql));
+        return scope.SetResult(sql);
     }
 
-    String GetChangeSqlString(CMTable table, ChangeEntry entry)
+    ChangeSql GetChangeSqlInner(CMTable table, ChangeEntry entry)
     {
         var key = entry.EntityKey;
 
-        var from = key.TableName.Escaped;
+        var from = table.Name.Escaped;
 
-        var where = key.KeyColumnsAndValues?.Apply(kv
+        var where = key?.KeyColumnsAndValues?.Apply(kv
             => String.Join(" and ", from p in kv select $"{p.c.EscapeNamePart()} = {p.v.ToSqlServerStringLiteralOrNull()}"));
 
         var ev = entry.EditValues;
+
+        ChangeSql GetSqlStringWithOutput(Func<String, String> getOperationSql)
+        {
+            var keyColumns = from c in table.PrimaryKey.Columns select (column: c.c.Name.EscapeNamePart(), type: c.c.SqlType);
+
+            return new ChangeSql(@$"
+declare @output table({String.Join(", ", from c in keyColumns select $"{c.column} {c.type}")});
+
+{getOperationSql($"output {String.Join(", ", from c in keyColumns select $"INSERTED.{c.column}")} into @output").Trim()}
+
+select {String.Join(", ", from c in keyColumns select c.column)}
+from @output
+", true);
+        }
 
         switch (entry.Type)
         {
             case ChangeOperationType.Update:
                 var setters = from p in ev select $"{p.Key.EscapeNamePart()} = {p.Value.ToSqlServerStringLiteralOrNull()}";
 
-                return $"update {from} set {String.Join(", ", setters)} where {where}";
+                return GetSqlStringWithOutput(output => @$"
+update {from}
+set {String.Join(", ", setters)}
+{output}
+where {where}
+");
 
             case ChangeOperationType.Insert:
-                var keyValues = key.GetKeyColumnsAndValuesDictionary();
+                var keyValues = key?.GetKeyColumnsAndValuesDictionary();
 
-                var haveIdentity = table.PrimaryKey.Columns.Any(c => c.c.IsIdentity);
-
-                var columnsAndValues =
+                var columnsAndValues = (
                     from c in table.ColumnsInOrder
                     where !c.IsComputed
-                    let v = keyValues.GetValueOrDefault(c.Name)?.ToSqlServerStringLiteral()
-                        ?? (ev.TryGetValue(c.Name, out var cv) ? cv.ToSqlServerStringLiteralOrNull() : "default")
-                    select (column: c.Name.EscapeNamePart(), value: v);
+                    let v = ev.TryGetValue(c.Name, out var cv)
+                        ? cv.ToSqlServerStringLiteralOrNull()
+                        : keyValues?.GetValueOrDefault(c.Name)?.ToSqlServerStringLiteral() ?? "default"
+                    where !c.IsIdentity || v != "default"
+                    select (column: c.Name.EscapeNamePart(), value: v, identity: c.IsIdentity)
+                ).ToArray();
 
-                var columns = String.Join(", ", from p in columnsAndValues select $"{p.column}");
-                var values = String.Join(", ", from p in columnsAndValues select $"{p.value}");
+                var haveExplicitIdentityInsert = columnsAndValues.Any(p => p.identity);
 
-                var insertSql = $"insert {from} ({columns}) values ({values})";
+                var keyColumns = from c in table.PrimaryKey.Columns select (column: c.c.Name.EscapeNamePart(), type: c.c.SqlType);
 
-                if (haveIdentity)
+                var columnsSql = columnsAndValues.Length == 0 ? "" : $"({String.Join(", ", from p in columnsAndValues select $"{p.column}")})";
+                var valuesSql = columnsAndValues.Length == 0 ? "default values" : $"values ({String.Join(", ", from p in columnsAndValues select $"{p.value}")})";
+
+                String GetSetIdentitySql(String value)
                 {
-                    return $@"
-set identity_insert {from} on
-{insertSql}
-set identity_insert {from} off
-".Trim();
+                    return haveExplicitIdentityInsert ? $"set identity_insert {from} {value}" : "";
                 }
-                else
-                {
-                    return insertSql;
-                }
+
+                return GetSqlStringWithOutput(output => $@"
+{GetSetIdentitySql("on")}
+
+insert {from}{columnsSql}
+{output}
+{valuesSql}
+
+{GetSetIdentitySql("off")}
+");
 
             case ChangeOperationType.Delete:
-                return $"delete {from} where {where}";
+                return new ChangeSql($"delete {from} where {where}", false);
 
             default:
                 throw new Exception($"Unknown change type");
@@ -323,13 +316,6 @@ set identity_insert {from} off
 {ipspace}) [{extent.GetRelationAlias() /* further name part escaping not required, [ is already replaced */}]";
 
         return sql;
-    }
-
-    public async Task ExecuteChange(SqlConnection connection, CMTable table, ChangeEntry change)
-    {
-        var sql = GetChangeSql(table, change);
-
-        await connection.ExecuteAsync(sql.Sql);
     }
 
     public async Task<Entity> QueryAsync(SqlConnection connection, Extent extent)
