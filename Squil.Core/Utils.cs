@@ -116,7 +116,7 @@ public struct NullComparisonCapsule<T> : IEquatable<NullComparisonCapsule<T>>
     }
 
     Boolean EqualsInternal(NullComparisonCapsule<T> rhs)
-        => value is null && rhs.value is null || (value is not null && rhs.value is not null && EqualsInternal(rhs));
+        => value is null && rhs.value is null || (value is not null && rhs.value is not null && value.Equals(rhs.value));
 
     [DebuggerHidden] public static implicit operator NullComparisonCapsule<T>(T value) => new NullComparisonCapsule<T>(value);
 
@@ -137,6 +137,25 @@ public struct NullComparisonCapsule<T> : IEquatable<NullComparisonCapsule<T>>
 
     [DebuggerHidden]
     public override int GetHashCode() => value?.GetHashCode() ?? 0;
+}
+
+public class ScopeLogger : IDisposable
+{
+    static Logger log = LogManager.GetCurrentClassLogger();
+
+    private readonly String name;
+
+    public ScopeLogger(String name)
+    {
+        this.name = name;
+
+        log.Debug($"-> {name}");
+    }
+
+    public void Dispose()
+    {
+        log.Debug($"<- {name}");
+    }
 }
 
 public static partial class Extensions
