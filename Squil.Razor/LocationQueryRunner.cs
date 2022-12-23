@@ -177,7 +177,7 @@ public class LocationQueryResponse
     public Boolean IsRunning => Task is not null && !Task.IsCompleted;
     public Boolean IsCompleted => Task is not null && Task.IsCompleted;
 
-    public Boolean IsResultOk => Task?.IsCompletedSuccessfully ?? false;
+    public Boolean IsCompletedSuccessfully => Task?.IsCompletedSuccessfully ?? false;
 
     public Boolean IsCanceled => Exception is OperationCanceledException;
 
@@ -226,6 +226,7 @@ public class LocationQueryResult
     public Entity Entity { get; }
     public RelatedEntities PrimaryEntities { get; }
     public RelatedEntities PrincipalEntities { get; }
+    public Boolean HasCommitted { get; set; }
 
     public LocationQueryResult(Entity entity)
     {
@@ -509,6 +510,8 @@ public class LocationQueryRunner : IDisposable
             if (request.AccessMode == LocationQueryAccessMode.Commit && query.ChangeException == null)
             {
                 await transaction.CommitAsync();
+
+                result.HasCommitted = true;
             }
 
             if (request.OperationType == LocationQueryOperationType.Insert)

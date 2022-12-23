@@ -1,12 +1,17 @@
-﻿using Azure.Core;
-using Azure;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.EntityFrameworkCore.Query.Internal;
 using Squil.SchemaBuilding;
 using System.Collections.Specialized;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Reactive.Subjects;
 
 namespace Squil;
+
+public record QueryVmEvent;
+
+public record QueryVmNavigateBackEvent : QueryVmEvent;
+
+public record QueryVmNavigateToEvent(String Target) : QueryVmEvent;
+
+public record QueryVmStartQueryEvent : QueryVmEvent;
 
 public record UnsuitableIndexesVm(CsdUnsupportedReason Reason, SearchOptionVm[] Indexes)
 {
@@ -73,6 +78,10 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     public LocationQueryRunner Runner { get; }
     public AppSettings Settings { get; }
 
+    Subject<QueryVmEvent> eventSink = new Subject<QueryVmEvent>();
+
+    public IObservable<QueryVmEvent> Events => eventSink;
+
     public Int32 ListLimit { get; private set; }
 
     public LocationQueryRequest Request { get; private set; }
@@ -111,8 +120,6 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         ListLimit = settings.InitialLimit;
 
         UrlCreateor = new QueryUrlCreator(location.Source);
-
-        StartQuery();
     }
 
     LocationQueryAccessMode GetAccessMode()
@@ -129,11 +136,9 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         log.Debug("Seek values changed");
 
         this.searchValues = searchValues;
-
-        StartQuery();
     }
 
-    async void StartQuery(Int32 attempt = 0)
+    public async void StartQuery(Int32 attempt = 0)
     {
         log.Info($"Starting new query asynchronously");
 
@@ -210,7 +215,27 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             ShowSchemaChangedException = false;
 
-            NotifyChange();
+            if (response.IsCompletedSuccessfully && response.Result.HasCommitted)
+            {
+                if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Delete })
+                {
+                    eventSink.OnNext(new QueryVmNavigateBackEvent());
+                }
+                else if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert } insertEntry)
+                {
+                    var values = insertEntry.EntityKey.GetKeyColumnsAndValuesDictionary().ToMap();
+
+                    eventSink.OnNext(new QueryVmNavigateToEvent(UrlCreateor.RenderEntityUrl(response.Table, values)));
+                }
+                else
+                {
+                    NotifyChange();
+                }
+            }
+            else
+            {
+                NotifyChange();
+            }
         }
     }
 
@@ -458,7 +483,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     {
         if (AreInEdit) throw new Exception($"Edit already started");
 
-        if (!CurrentResponse.IsResultOk) throw new Exception($"No result");
+        if (!CurrentResponse.IsCompletedSuccessfully) throw new Exception($"No result");
 
         editType = state;
 
@@ -556,7 +581,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         return false;
     }
 
-    void StartQueryAfterEdit() => StartQuery();
+    void StartQueryAfterEdit() => eventSink.OnNext(new QueryVmStartQueryEvent());
 
     public void Dispose()
     {

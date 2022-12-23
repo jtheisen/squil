@@ -17,50 +17,50 @@
     var settings = Options.Value;
 }
 
-<PageTitle>@vm.Response?.RootName</PageTitle>
+<PageTitle>@Vm.Response?.RootName</PageTitle>
 
 <DefaultLayout>
     <BreadcrumbActionItems>
         <div class="">
-            @if (vm.CanDelete == true)
+            @if (Vm.CanDelete == true)
             {
-                <button @onclick="vm.StartDelete" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-trash" /></button>
+                <button @onclick="Vm.StartDelete" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-trash" /></button>
             }
-            @if (vm.CanInsert == true)
+            @if (Vm.CanInsert == true)
             {
-                <button @onclick="HandleInsertClick" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-plus" /></button>
+                <button @onclick="HandleInsertClick" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-plus" /></button>
             }
-            @if (vm.CanEdit == true)
+            @if (Vm.CanEdit == true)
             {
-                <button @onclick="vm.StartUpdate" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-pen" /></button>
+                <button @onclick="Vm.StartUpdate" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-pen" /></button>
             }
         </div>
     </BreadcrumbActionItems>
     <NavItems>
         <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
 
-        @if (vm.Result is not null)
+        @if (Vm.Result is not null)
         {
-            <BreadcrumbItem><a class="text-muted" href="@vm.Response.RootUrl.If(vm.Response.QueryType != QueryControllerQueryType.Root)">@vm.Response.RootName</a></BreadcrumbItem>
-            <CascadingValue Value="vm">
-                @if (vm.Result.PrincipalEntities != null)
+            <BreadcrumbItem><a class="text-muted" href="@Vm.Response.RootUrl.If(Vm.Response.QueryType != QueryControllerQueryType.Root)">@Vm.Response.RootName</a></BreadcrumbItem>
+            <CascadingValue Value="Vm">
+                @if (Vm.Result.PrincipalEntities != null)
                 {
-                    var entity = vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
+                    var entity = Vm.Result.PrincipalEntities.List.Single("Unexpectedly not having a unique principal");
 
                     <BreadcrumbItem>
                         <span class="entity-context text-muted">
-                            <EntityHeaderView Table="@vm.Response.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
+                            <EntityHeaderView Table="@Vm.Response.PrincipalRelation.OtherEnd.Table" Entity="@entity" />
                         </span>
                     </BreadcrumbItem>
                     <BreadcrumbItem>
-                        <span class="text-muted"><EntityRelationNameView RelationEnd="@vm.Response.PrincipalRelation" NoColumnInformation="@true" /></span>
+                        <span class="text-muted"><EntityRelationNameView RelationEnd="@Vm.Response.PrincipalRelation" NoColumnInformation="@true" /></span>
                     </BreadcrumbItem>
                 }
-                else if (vm.Result.PrimaryEntities is RelatedEntities pe)
+                else if (Vm.Result.PrimaryEntities is RelatedEntities pe)
                 {
                     var entity = pe.List.FirstOrDefault();
 
-                    switch (vm.Response.QueryType)
+                    switch (Vm.Response.QueryType)
                     {
                         case QueryControllerQueryType.Table:
                             <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></span>
@@ -68,7 +68,7 @@
                         case QueryControllerQueryType.Row:
 
                             <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@vm.UrlCreateor.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
+                                <a class="entity-context text-muted" href="@Vm.UrlCreateor.RenderTableUrl(Vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
@@ -79,17 +79,17 @@
                             break;
                         case QueryControllerQueryType.Column:
                             <BreadcrumbItem>
-                                <a class="entity-context text-muted" href="@vm.UrlCreateor.RenderTableUrl(vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
+                                <a class="entity-context text-muted" href="@Vm.UrlCreateor.RenderTableUrl(Vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
-                                <a class="text-muted entity-context" href="@vm.UrlCreateor.RenderEntityUrl(vm.Response.Table, entity)">
+                                <a class="text-muted entity-context" href="@Vm.UrlCreateor.RenderEntityUrl(Vm.Response.Table, entity)">
                                     <EntityHeaderView Table="@pe.RelationEnd.Table" Entity="@entity" ShowLink="@false" />
                                 </a>
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
-                                <span>@vm.Location.Column</span>
+                                <span>@Vm.Location.Column</span>
                             </BreadcrumbItem>
                             break;
                         case QueryControllerQueryType.TableSlice:
@@ -109,12 +109,12 @@
     <ActionItems>
         @if (settings.EnablePrimaryIdSqlCopy)
         {
-            <PrimaryIdSqlCopyButton Response="@vm.CurrentResponse" />            
+            <PrimaryIdSqlCopyButton Response="@Vm.CurrentResponse" />            
         }
         <div class="btn-group">
             @if (Settings.EnableDevMode)
             {
-                <a class="btn btn-outline-dark text-muted" href="/info/@vm.Location.Source">schema</a>
+                <a class="btn btn-outline-dark text-muted" href="/info/@Vm.Location.Source">schema</a>
                 <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">report</button>
             }
             <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
@@ -123,13 +123,13 @@
 
     <ChildContent>
 
-        <CascadingValue Value="vm">
+        <CascadingValue Value="Vm">
 
             <SidebarLayout>
                 <RightContent>
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    @if (vm.AreInEdit == true)
+                    @if (Vm.AreInEdit == true)
                     {
                         <h5 class="text-muted font-weight-bold border-bottom mb-4">Edit</h5>
 
@@ -138,13 +138,13 @@
                         </div>
 
                         <div class="d-flex gap-2 flex-wrap mb-4 sidebar-helptext">
-                            <button @onclick="vm.CancelEdit" class="btn btn-outline-dark flex-1 text-nowrap"><i class="fas fa-times me-2" />Cancel</button>
-                            <button @onclick="vm.Save" class="btn btn-primary flex-1 text-nowrap"><i class="fas fa-check me-2" />Save</button>
+                            <button @onclick="Vm.CancelEdit" class="btn btn-outline-dark flex-1 text-nowrap"><i class="fas fa-times me-2" />Cancel</button>
+                            <button @onclick="Vm.Save" class="btn btn-primary flex-1 text-nowrap"><i class="fas fa-check me-2" />Save</button>
                         </div>
                     }
                     else if (Settings.EnableDevMode)
                     {
-                        if (vm.CurrentResponse?.Ledger != null)
+                        if (Vm.CurrentResponse?.Ledger != null)
                         {
                             <div>
                                 <span>@queryCount / @renderCount</span>
@@ -152,7 +152,7 @@
                             <div class="common-lead-spacer">&nbsp;</div>
                             <div class="">
                                 <dl>
-                                    @foreach (var entry in vm.CurrentResponse.Ledger.GetEntries())
+                                    @foreach (var entry in Vm.CurrentResponse.Ledger.GetEntries())
                                     {
                                         <dt>@entry.name</dt>
                                         <dd>@entry.time</dd>
@@ -161,17 +161,17 @@
                             </div>
                         }
                     }
-                    else if (vm.HaveResponse)
+                    else if (Vm.HaveResponse)
                     {
                         <h5 class="text-muted font-weight-bold border-bottom mb-4">Guidance</h5>
                         <div class="sidebar-helptext small text-muted">
-                            <HelpText QueryType="@vm.CurrentResponse.QueryType" />
+                            <HelpText QueryType="@Vm.CurrentResponse.QueryType" />
                         </div>
                     }
                 </RightContent>
 
                 <LeftContent>
-                    @if (vm.SearchOptions is not null)
+                    @if (Vm.SearchOptions is not null)
                     {
                         <div class="common-lead-spacer">&nbsp;</div>
                         <SearchPanel SearchValues="SearchValues" />
@@ -182,16 +182,16 @@
 
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    @if (vm.CurrentSource?.State == LiveSourceState.Building)
+                    @if (Vm.CurrentSource?.State == LiveSourceState.Building)
                     {
                         // All other states should lead to a quick error display
                         <div class="alert alert-info">
                             Building model for database schema. <span class="spinner-border spinner-border-sm"></span>
                         </div>
                     }
-                    else if (vm.HaveResponse)
+                    else if (Vm.HaveResponse)
                     {
-                        switch (vm.Response.QueryType)
+                        switch (Vm.Response.QueryType)
                         {
                             case QueryControllerQueryType.Table:
                             case QueryControllerQueryType.TableSlice:
@@ -199,22 +199,22 @@
                                 break;
                         }
 
-                        <div class="@ClassNames("query-results", "querying".If(vm.IsQuerying && sd != null))">
+                        <div class="@ClassNames("query-results", "querying".If(Vm.IsQuerying && sd != null))">
 
                             @if (Settings.ShowHelpTexts)
                             {
                                 <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
                             }
 
-                            @if (vm.CurrentResponse.Exception is SqlException se)
+                            @if (Vm.CurrentResponse.Exception is SqlException se)
                             {
                                 <SqlErrorView AlertClass="alert alert-danger" Exception="@se" />
                             }
-                            else if (vm.CurrentResponse.Exception is OperationCanceledException)
+                            else if (Vm.CurrentResponse.Exception is OperationCanceledException)
                             {
                                 // canceled
                             }
-                            else if (vm.CurrentResponse.Exception is SchemaChangedException)
+                            else if (Vm.CurrentResponse.Exception is SchemaChangedException)
                             {
                                 if (showSchemaChangedException)
                                 {
@@ -225,7 +225,7 @@
                                     </div>                                    
                                 }
                             }
-                            else if (vm.CurrentResponse.Exception is Exception e)
+                            else if (Vm.CurrentResponse.Exception is Exception e)
                             {
                                 <div class="alert alert-danger">
                                     <div>
@@ -233,24 +233,24 @@
                                     </div>
                                 </div>
                             }
-                            else if (vm.CurrentResponse.ChangeException is SqlException cse)
+                            else if (Vm.CurrentResponse.ChangeException is SqlException cse)
                             {
                                 <SqlErrorView AlertClass="alert alert-warning" Exception="@cse" />
                             }
 
-                            @if (vm.Result != null)
+                            @if (Vm.Result != null)
                             {
-                                <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.CurrentResponse.IsOk))">
-                                    <EntityContentView Entity="@vm.Result.Entity" HideHeaders="@(vm.CurrentResponse.QueryType != QueryControllerQueryType.Root)" />
+                                <div class="@ClassNames("entity-context", "entity-invalid".If(!Vm.CurrentResponse.IsOk))">
+                                    <EntityContentView Entity="@Vm.Result.Entity" HideHeaders="@(Vm.CurrentResponse.QueryType != QueryControllerQueryType.Root)" />
                                 </div>
 
-                                @switch (vm.CanLoadMore())
+                                @switch (Vm.CanLoadMore())
                                 {
                                     case CanLoadMoreStatus.Can:
-                                        if (vm.Request.ListLimit < Settings.LoadMoreLimit)
+                                        if (Vm.Request.ListLimit < Settings.LoadMoreLimit)
                                         {
                                             <div class="my-4">
-                                                <em class="btn">...and more</em> <button class="btn btn-light" @onclick="vm.LoadMore">load <span>@Settings.LoadMoreLimit</span> at once</button>
+                                                <em class="btn">...and more</em> <button class="btn btn-light" @onclick="Vm.LoadMore">load <span>@Settings.LoadMoreLimit</span> at once</button>
                                             </div>
                                         }
                                         else
@@ -288,18 +288,18 @@
                                 </small>
                             </HeaderExtra>
                             <Body>
-                                @foreach (var change in vm.CurrentResponse?.Ledger?.GetEntries<ChangeSql>())
+                                @foreach (var change in Vm.CurrentResponse?.Ledger?.GetEntries<ChangeSql>())
                                 {
                                     <pre><CopyableContent>@change.Sql</CopyableContent></pre>
                                 }
-                                <pre><CopyableContent>@(vm.CurrentResponse?.Ledger?.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
+                                <pre><CopyableContent>@(Vm.CurrentResponse?.Ledger?.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
                                 </Body>
                             </Modal>
 
                         <Modal OnClose="ReportModalSubscription">
                             <Title>Query report</Title>
                             <Body>
-                                @foreach (var entry in vm.CurrentResponse.Ledger?.GetEntries())
+                                @foreach (var entry in Vm.CurrentResponse.Ledger?.GetEntries())
                                 {
                                     var result = entry.result.GetReportString();
 
@@ -315,7 +315,7 @@
                         </Modal>
                     }
 
-                    <div class="@ClassNames("query-delay-overlay", "querying".If(vm.IsQuerying && sd != null))">
+                    <div class="@ClassNames("query-delay-overlay", "querying".If(Vm.IsQuerying && sd != null))">
                         <div class="common-lead-spacer">&nbsp;</div>
                         <h2>Investigating slow query</h2>
 
@@ -384,7 +384,7 @@
     </ChildContent>
 </DefaultLayout>
 
-<RerenderHelper Observable="@vm" OnChange="@StateHasChanged" />
+<RerenderHelper Observable="@Vm" OnChange="@StateHasChanged" />
 
 <RerenderHelper Observable="@SearchValues.Backing" OnChange="@HandleSeekValuesChanged" />
 
@@ -414,7 +414,49 @@
     Boolean jsInitPending;
     Boolean isDisposed;
 
+    IDisposable vmEventSubscription;
+
     LocationQueryVm vm = null;
+
+    LocationQueryVm Vm
+    {
+        get => vm;
+        set
+        {
+            if (vm is not null)
+            {
+                vmEventSubscription.Dispose();
+                vm.Dispose();
+            }
+
+            vm = value;
+
+            if (vm is not null)
+            {
+                vmEventSubscription = vm.Events.Subscribe(ProcessVmEvent);
+            }
+        }
+    }
+
+    void ProcessVmEvent(QueryVmEvent e)
+    {
+        if (e is QueryVmStartQueryEvent)
+        {
+            Vm.StartQuery();
+        }
+        else if (e is QueryVmNavigateBackEvent)
+        {
+            Js.InvokeVoidAsync("history.back");
+        }
+        else if (e is QueryVmNavigateToEvent nte)
+        {
+            NavigationManager.NavigateTo(nte.Target, new NavigationOptions { ReplaceHistoryEntry = true});
+        }
+        else
+        {
+            throw new Exception($"Unknown event {e.GetType().Name}");
+        }
+    }
 
     void OpenSqlModal() => SqlModalSubscription = () => SqlModalSubscription = null;
 
@@ -450,30 +492,32 @@
             _ => true
         };
 
-        if (ShouldLogExceptionToBrowser(vm.CurrentResponse.Exception))
+        if (ShouldLogExceptionToBrowser(Vm.CurrentResponse.Exception))
         {
-            Js.InvokeVoidAsync("console.log", vm.CurrentResponse.Exception.ToString()).Ignore();
+            Js.InvokeVoidAsync("console.log", Vm.CurrentResponse.Exception.ToString()).Ignore();
         }
     }
 
     void HandleSeekValuesChanged()
     {
-        vm.SetSearchValues(SearchValues.ToNameValueCollection());
+        Vm.SetSearchValues(SearchValues.ToNameValueCollection());
+
+        Vm.StartQuery();
     }
 
     void HandleInsertClick()
     {
-        var table = vm.CurrentResponse.Table;
+        var table = Vm.CurrentResponse.Table;
 
         // Inserting a related entity has an index and will use the key values currently in the location
-        var index = vm.CurrentResponse.Index;
+        var index = Vm.CurrentResponse.Index;
 
         if (table.PrimaryKey == null) throw new Exception($"Cant insert into table without primary key");
 
-        var keys = vm.Location.KeyParams.AsMap();
+        var keys = Vm.Location.KeyParams.AsMap();
 
         // FIXME: we need to pass the keys of the current index for default initialization
-        var url = vm.UrlCreateor.RenderEntityUrl(table.PrimaryKey, keys, operationType: LocationQueryOperationType.Insert);
+        var url = Vm.UrlCreateor.RenderEntityUrl(table.PrimaryKey, keys, operationType: LocationQueryOperationType.Insert);
 
         NavigationManager.NavigateTo(url);
     }
@@ -519,17 +563,20 @@
 
         var location = new LocationQueryLocation(segments, queryParams);
 
-        vm?.Dispose();
-        vm = new LocationQueryVm(Settings, Runner, location);
+        Vm = new LocationQueryVm(Settings, Runner, location);
 
-        vm.InDebug = queryParams["debug"] != null;
+        Vm.SetSearchValues(SearchValues.ToNameValueCollection());
+
+        Vm.StartQuery();
+
+        Vm.InDebug = queryParams["debug"] != null;
     }
 
     void IDisposable.Dispose()
     {
         log.Info($"Disposing ui page");
 
-        vm?.Dispose();
+        Vm = null;
 
         isDisposed = true;
         Runner.Cancel();
