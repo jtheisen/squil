@@ -46,10 +46,10 @@
     @if (Option.IsCurrent)
     {
         <div class="validation-area">
-            @if (QueryVm.LastResponse.HaveValidationIssues)
+            @if (QueryVm.CurrentResponse.HaveValidationIssues)
             {
                 <div class="validation-display">
-                    @foreach (var c in QueryVm.LastResponse.ValidatedColumns.Where(c => !c.IsOk))
+                    @foreach (var c in QueryVm.CurrentResponse.ValidatedColumns.Where(c => !c.IsOk))
                     {
                         <div>
                             @c.Error
@@ -93,14 +93,14 @@
 
             var result = QueryVm.Response;
 
-            var keys = QueryVm.LastRequest.KeyParams.AsMap();
+            var keys = QueryVm.Location.KeyParams.AsMap();
 
             switch (Option.OptionType)
             {
                 case SearchOptionType.Seek:
-                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, Option.Index, keys, QueryVm.LastRequest.BackRelation, QuerySearchMode.Seek);
+                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, Option.Index, keys, QueryVm.Location.BackRelation, QuerySearchMode.Seek);
                 case SearchOptionType.Scan:
-                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, result.Index, keys, QueryVm.LastRequest.BackRelation, QuerySearchMode.Scan);
+                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, result.Index, keys, QueryVm.Location.BackRelation, QuerySearchMode.Scan);
                 default:
                     throw new Exception($"Unexpected option type {Option.OptionType}");
             }

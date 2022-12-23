@@ -22,7 +22,7 @@ public enum LocationQueryAccessMode
     Commit
 }
 
-public class LocationQueryRequest
+public class LocationQueryLocation
 {
     public String Source { get; }
     public String Schema { get; }
@@ -30,35 +30,20 @@ public class LocationQueryRequest
     public String Index { get; }
     public String Column { get; }
 
-    public ChangeEntry[] Changes { get; }
-    public LocationQueryAccessMode AccessMode { get; }
-    public LocationQueryOperationType? OperationType { get; }
+    public NameValueCollection KeyParams { get; }
+    public NameValueCollection RestParams { get; }
+
+    public Int32 KeyValuesCount { get; }
 
     public QuerySearchMode? SearchMode { get; set; }
 
-    public Int32 ListLimit { get; set; }
-
     public String BackRelation { get; set; }
 
-    public NameValueCollection KeyParams { get; }
-    public NameValueCollection RestParams { get; }
-    public NameValueCollection SearchValues { get; }
-
-    public Boolean IsIdentitizingPending => OperationType == LocationQueryOperationType.Insert && Changes == null;
-
-    public LocationQueryRequest(
+    public LocationQueryLocation(
         String[] segments,
-        NameValueCollection queryParams,
-        NameValueCollection searchValues,
-        ChangeEntry[] changes = null,
-        LocationQueryAccessMode accessMode = default,
-        LocationQueryOperationType? operationType = null
+        NameValueCollection queryParams
     )
     {
-        Changes = changes;
-        AccessMode = accessMode;
-        OperationType = operationType;
-
         String Get(Int32 i)
         {
             var segment = segments.GetOrDefault(i)?.TrimEnd('/');
@@ -97,7 +82,10 @@ public class LocationQueryRequest
 
         KeyParams = keyParams;
         RestParams = restParams;
-        SearchValues = searchValues;
+
+        var keyKeysArray = KeyParams.Cast<String>().ToArray();
+
+        KeyValuesCount = keyKeysArray.Length;
 
         BackRelation = queryParams["from"];
     }
@@ -122,6 +110,38 @@ public class LocationQueryRequest
         ).ToMap().ToNameValueCollection();
 
         return (keyParams, restParams);
+    }
+}
+
+public class LocationQueryRequest
+{
+    public LocationQueryLocation Location { get; set; }
+
+    public ChangeEntry[] Changes { get; }
+    public LocationQueryAccessMode AccessMode { get; }
+    public LocationQueryOperationType? OperationType { get; }
+
+    public Int32 ListLimit { get; set; }
+
+    public NameValueCollection SearchValues { get; }
+
+    public Boolean IsIdentitizingPending => OperationType == LocationQueryOperationType.Insert && Changes == null;
+
+    public LocationQueryRequest(
+        LocationQueryLocation location,
+        NameValueCollection searchValues,
+        ChangeEntry[] changes = null,
+        LocationQueryAccessMode accessMode = default,
+        LocationQueryOperationType? operationType = null
+    )
+    {
+        Location = location;
+
+        Changes = changes;
+        AccessMode = accessMode;
+        OperationType = operationType;
+
+        SearchValues = searchValues;
     }
 }
 
@@ -154,12 +174,19 @@ public class LocationQueryResponse
 
     public Boolean IsOk => !HaveValidationIssues && Exception == null;
 
+    public Boolean IsRunning => Task is not null && !Task.IsCompleted;
+    public Boolean IsCompleted => Task is not null && Task.IsCompleted;
+
     public Boolean IsResultOk => Task?.IsCompletedSuccessfully ?? false;
 
     public Boolean IsCanceled => Exception is OperationCanceledException;
 
+    public LocationQueryResult Result => Task?.IsCompletedSuccessfully == true ? Task.Result : null;
+
     public async Task Wait()
     {
+        if (Task is null) return;
+
         try
         {
             await Task;
@@ -222,13 +249,19 @@ public enum CanLoadMoreStatus
     Complete
 }
 
-public class LocationQueryRunner
+public class LocationQueryRunner : IDisposable
 {
     static Logger log = LogManager.GetCurrentClassLogger();
 
     ILiveSourceProvider connections;
 
     ConnectionHolder currentConnectionHolder;
+
+    LifetimeLogger<LocationQueryRunner> lifetimeLogger = new LifetimeLogger<LocationQueryRunner>();
+
+    Boolean isDisposed;
+
+    public Boolean IsDisposed => isDisposed;
 
     public ConnectionHolder CurrentConnectionHolder => currentConnectionHolder;
 
@@ -256,9 +289,11 @@ public class LocationQueryRunner
             Thread.Sleep(d);
         }
 
-        var schema = request.Schema;
-        var table = request.Table;
-        var index = request.Index;
+        var location = request.Location;
+
+        var schema = location.Schema;
+        var table = location.Table;
+        var index = location.Index;
 
         var isRoot = table == null;
 
@@ -302,13 +337,13 @@ public class LocationQueryRunner
 
             var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
 
-            var keyValueCount = cmIndex?.Columns?.TakeWhile(cv => !String.IsNullOrWhiteSpace(request.KeyParams[cv.c.Name])).Count();
+            var keyValueCount = cmIndex?.Columns?.TakeWhile(cv => !String.IsNullOrWhiteSpace(location.KeyParams[cv.c.Name])).Count();
 
             var isSingletonQuery = table == null || isInsertQuery || (cmIndex != null && cmIndex.IsUnique && keyValueCount == extentOrder?.Length);
 
             ValidationResult GetColumnValue(CMDirectedColumn column, Int32 no)
             {
-                var keyValue = request.KeyParams[column.Name];
+                var keyValue = location.KeyParams[column.Name];
                 var searchValue = isSingletonQuery ? null : request.SearchValues[column.Name];
 
                 var validationResult = column.c.Type.Validate(no, keyValue, searchValue ?? "", column.d, default);
@@ -331,7 +366,7 @@ public class LocationQueryRunner
             {
                 if (isSingletonQuery) return QuerySearchMode.Seek;
 
-                var searchMode = request.SearchMode ?? defaultSearchMode;
+                var searchMode = location.SearchMode ?? defaultSearchMode;
 
                 if (cmIndex == null && searchMode == QuerySearchMode.Seek) return null;
 
@@ -342,7 +377,7 @@ public class LocationQueryRunner
             {
                 if (isSingletonQuery)
                 {
-                    if (request.Column != null)
+                    if (location.Column != null)
                     {
                         return ExtentFlavorType.ColumnPageList;
                     }
@@ -369,14 +404,14 @@ public class LocationQueryRunner
                 cmTable,
                 extentFlavorType,
                 cmIndex, extentOrder, extentValues, keyValueCount, limit,
-                principalLocation, scanValue, request.Column
+                principalLocation, scanValue, location.Column
             );
 
             QueryControllerQueryType GetQueryType()
             {
                 if (isSingletonQuery)
                 {
-                    if (request.Column != null)
+                    if (location.Column != null)
                     {
                         return QueryControllerQueryType.Column;
                     }
@@ -556,11 +591,13 @@ public class LocationQueryRunner
 
     ExtentFactory.PrincipalLocation GetPrincipalLocation(CMTable cmTable, LocationQueryRequest request)
     {
-        if (request.BackRelation == null) return null;
+        var location = request.Location;
+
+        if (location.BackRelation == null) return null;
 
         var root = cmTable.Root.RootTable;
 
-        var principal = cmTable.Relations[request.BackRelation];
+        var principal = cmTable.Relations[location.BackRelation];
 
         var principalRelation = root.Relations[principal.Table.Name.Simple];
 
@@ -569,11 +606,18 @@ public class LocationQueryRunner
 
         Debug.Assert(foreignKey != null);
         Debug.Assert(domesticKey != null);
-
+        
         var fkColumns =
-            foreignKey.Columns.Select(c => request.KeyParams[c.c.Name]).TakeWhile(v => v != null).ToArray();
+            foreignKey.Columns.Select(c => location.KeyParams[c.c.Name]).TakeWhile(v => v != null).ToArray();
 
         return new ExtentFactory.PrincipalLocation(
             principal.OtherEnd, domesticKey.ColumnNames, fkColumns);
+    }
+
+    public void Dispose()
+    {
+        isDisposed = true;
+
+        lifetimeLogger.Dispose();
     }
 }

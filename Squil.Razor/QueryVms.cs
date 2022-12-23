@@ -2,6 +2,9 @@
 using Azure;
 using Microsoft.AspNetCore.Components;
 using Squil.SchemaBuilding;
+using System.Collections.Specialized;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Squil;
 
@@ -62,114 +65,245 @@ public class SearchOptionVm
     }
 }
 
-public class LocationQueryVm : ObservableObject<LocationQueryVm>
+public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 {
-    public LocationQueryRequest LastRequest { get; private set; }
-    
-    public LocationQueryResponse Response { get; }
-    public LocationQueryResponse LastResponse { get; private set; }
+    public LocationQueryLocation Location { get; }
+
+    public QueryUrlCreator UrlCreateor { get; }
+    public LocationQueryRunner Runner { get; }
+    public AppSettings Settings { get; }
+
+    public Int32 ListLimit { get; private set; }
+
+    public LocationQueryRequest Request { get; private set; }
+
+    public LocationQueryResponse Response => CurrentResponse;
+    public LocationQueryResponse CurrentResponse { get; private set; }
+
+    public Boolean HaveResponse => CurrentResponse is not null;
+
+    public Boolean IsQuerying => CurrentResponse?.IsRunning ?? false;
 
     public LocationQueryResult Result { get; private set; }
 
-    public Int32 ResultNumber { get; private set; }
+    public Boolean HaveSearchOptions { get; private set; }
 
-    public Int32 KeyValuesCount { get; }
+    public Int32 ResultNumber { get; private set; }
 
     public Boolean InDebug { get; set; }
 
-    public QueryUrlCreator UrlCreateor { get; }
+    public LiveSource CurrentSource { get; private set; }
 
-    public LocationQueryVm(LocationQueryRequest request, LocationQueryResponse response)
+    public Boolean ShowSchemaChangedException { get; private set; }
+
+    NameValueCollection searchValues = new NameValueCollection();
+
+    LifetimeLogger<LocationQueryVm> lifetimeLogger = new LifetimeLogger<LocationQueryVm>();
+
+    Boolean isDisposed;
+
+    public LocationQueryVm(AppSettings settings, LocationQueryRunner runner, LocationQueryLocation location)
     {
-        LastRequest = request;
-        Response = response;
+        Runner = runner;
+        Location = location;
+        Settings = settings;
 
-        UrlCreateor = new QueryUrlCreator(request.Source);
+        ListLimit = settings.InitialLimit;
 
-        if (response.ExtentFlavorType == ExtentFlavorType.BlockList)
+        UrlCreateor = new QueryUrlCreator(location.Source);
+
+        StartQuery();
+    }
+
+    LocationQueryAccessMode GetAccessMode()
+    {
+        if (Changes is null) return LocationQueryAccessMode.QueryOnly;
+
+        if (AreSaving) return LocationQueryAccessMode.Commit;
+
+        return LocationQueryAccessMode.Rollback;
+    }
+
+    public void SetSearchValues(NameValueCollection searchValues)
+    {
+        log.Debug("Seek values changed");
+
+        this.searchValues = searchValues;
+
+        StartQuery();
+    }
+
+    async void StartQuery(Int32 attempt = 0)
+    {
+        log.Info($"Starting new query asynchronously");
+
+        var accessMode = GetAccessMode();
+
+        LocationQueryOperationType? operationType = null;
+
+        if (Enum.TryParse<LocationQueryOperationType>(Location.RestParams["operation"], true, out var parsedOperationType))
         {
-            var table = response.Table;
+            operationType = parsedOperationType;
+        }
 
-            var keyKeysArray = request.KeyParams.Cast<String>().ToArray();
+        var request = new LocationQueryRequest(Location, searchValues, Changes, accessMode, operationType);
 
-            KeyValuesCount = keyKeysArray.Length;
+        request.ListLimit = ListLimit;
 
-            var indexesToConsider = new HashSet<CMIndexlike>(table.Indexes.Values);
+        var source = CurrentSource = Runner.GetLiveSource(Location.Source);
 
-            var exclusionGroups = new List<UnsuitableIndexesVm>();
+        var ensureModelTask = source.EnsureModelAsync();
 
-            void AddExclusionGroups(IEnumerable<UnsuitableIndexesVm> groups)
+        if (source.State != LiveSourceState.Ready)
+        {
+            NotifyChange();
+        }
+
+        await ensureModelTask;
+
+        if (isDisposed)
+        {
+            log.Info($"Vm disposed after model building completed, aborting");
+
+            return;
+        }
+
+        var response = Runner.StartQuery(source, Location.Source, request);
+
+        Update(request, response);
+
+        if (response.IsCompleted)
+        {
+            log.Debug($"Query completed synchronously");
+        }
+        else
+        {
+            log.Debug($"Query is running asynchronously");
+        }
+
+        NotifyChange();
+
+        await response.Wait();
+
+        var resultOrNull = response.Result;
+
+        if (response.Exception is SchemaChangedException)
+        {
+            if (attempt == 0)
             {
-                exclusionGroups.AddRange(from g in groups where g.Indexes.Any() select g);
+                log.Info($"Got SchemaChangedException at attempt #{attempt}, re-running query");
 
-                foreach (var index in from g in groups from i in g.Indexes select i.Index)
-                {
-                    indexesToConsider.Remove(index);
-                }
-            }
-
-            void AddExclusionGroup(UnsuitableIndexesVm group) => AddExclusionGroups(group.ToSingleton());
-
-            {
-                AddExclusionGroups(
-                    from i in indexesToConsider
-                    where !i.IsSupported
-                    group i by i.UnsupportedReason into g
-                    select new UnsuitableIndexesVm(g.Key, from i in g select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = g.Key })
-                );
-            }
-
-            {
-                var invalidPrefixReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
-
-                AddExclusionGroup(new UnsuitableIndexesVm(
-                    invalidPrefixReason,
-                    from i in indexesToConsider.StartsWith(keyKeysArray, not: true)
-                    select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = invalidPrefixReason }
-                ));
-            }
-
-            {
-                var duplicationReason = new CsdUnsupportedReason("Duplicate", "Although supported, the index's order is already covered by another one.", "");
-
-                AddExclusionGroup(new UnsuitableIndexesVm(
-                    duplicationReason,
-                    from i in table.Indexes.Values
-                    group i by i.SerializedColumnNames into g
-                    where g.Count() >= 2
-                    from i in g.Skip(1)
-                    select new SearchOptionVm(i, KeyValuesCount) { UnsupportedReason = duplicationReason }
-                ));
-            }
-
-            SearchOptions = (
-                from i in table.Indexes.Values
-                join itc in indexesToConsider on i equals itc into match
-                where match.Any()
-                select new SearchOptionVm(i, KeyValuesCount) { IsCurrent = request.Index == i.Name && response.SearchMode == QuerySearchMode.Seek }
-            ).ToArray();
-
-            if (Response.MayScan)
-            {
-                ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = response.SearchMode == QuerySearchMode.Scan };
+                StartQuery(attempt + 1);
             }
             else
             {
-                NoScanOptionReason = "The scanning search option is disabled for large tables.";
+                log.Info($"Got SchemaChangedException at attempt #{attempt}, giving up");
+
+                ShowSchemaChangedException = true;
+
+                NotifyChange();
             }
-
-            UnsuitableIndexes = exclusionGroups.ToArray();
-
-            CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
         }
+        else if (CurrentResponse == response)
+        {
+            UpdateResult(resultOrNull);
 
-        Update(request, response);
+            ShowSchemaChangedException = false;
+
+            NotifyChange();
+        }
     }
 
-    public void Update(LocationQueryRequest request, LocationQueryResponse response)
+    void InitSearchOptions()
     {
-        LastRequest = request;
-        LastResponse = response;
+        var keyKeysArray = Location.KeyParams.Cast<String>().ToArray();
+
+        var keyValuesCount = Location.KeyValuesCount;
+
+        var response = Response;
+
+        var table = Response.Table;
+
+        var indexesToConsider = new HashSet<CMIndexlike>(table.Indexes.Values);
+
+        var exclusionGroups = new List<UnsuitableIndexesVm>();
+
+        void AddExclusionGroups(IEnumerable<UnsuitableIndexesVm> groups)
+        {
+            exclusionGroups.AddRange(from g in groups where g.Indexes.Any() select g);
+
+            foreach (var index in from g in groups from i in g.Indexes select i.Index)
+            {
+                indexesToConsider.Remove(index);
+            }
+        }
+
+        void AddExclusionGroup(UnsuitableIndexesVm group) => AddExclusionGroups(group.ToSingleton());
+
+        {
+            AddExclusionGroups(
+                from i in indexesToConsider
+                where !i.IsSupported
+                group i by i.UnsupportedReason into g
+                select new UnsuitableIndexesVm(g.Key, from i in g select new SearchOptionVm(i, keyValuesCount) { UnsupportedReason = g.Key })
+            );
+        }
+
+        {
+            var invalidPrefixReason = new CsdUnsupportedReason("Prefix mismatch", "Although supported on the table, you can't use the index to search within the subset you're looking at.", "");
+
+            AddExclusionGroup(new UnsuitableIndexesVm(
+                invalidPrefixReason,
+                from i in indexesToConsider.StartsWith(keyKeysArray, not: true)
+                select new SearchOptionVm(i, keyValuesCount) { UnsupportedReason = invalidPrefixReason }
+            ));
+        }
+
+        {
+            var duplicationReason = new CsdUnsupportedReason("Duplicate", "Although supported, the index's order is already covered by another one.", "");
+
+            AddExclusionGroup(new UnsuitableIndexesVm(
+                duplicationReason,
+                from i in table.Indexes.Values
+                group i by i.SerializedColumnNames into g
+                where g.Count() >= 2
+                from i in g.Skip(1)
+                select new SearchOptionVm(i, keyValuesCount) { UnsupportedReason = duplicationReason }
+            ));
+        }
+
+        SearchOptions = (
+            from i in table.Indexes.Values
+            join itc in indexesToConsider on i equals itc into match
+            where match.Any()
+            select new SearchOptionVm(i, keyValuesCount) { IsCurrent = Location.Index == i.Name && response.SearchMode == QuerySearchMode.Seek }
+        ).ToArray();
+
+        if (Response.MayScan)
+        {
+            ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = response.SearchMode == QuerySearchMode.Scan };
+        }
+        else
+        {
+            NoScanOptionReason = "The scanning search option is disabled for large tables.";
+        }
+
+        UnsuitableIndexes = exclusionGroups.ToArray();
+
+        CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
+    }
+
+    void Update(LocationQueryRequest request, LocationQueryResponse response)
+    {
+        Request = request;
+        CurrentResponse = response;
+
+        if (Response.ExtentFlavorType == ExtentFlavorType.BlockList && !HaveSearchOptions)
+        {
+            InitSearchOptions();
+
+            HaveSearchOptions = true;
+        }
 
         if (CurrentIndex != null)
         {
@@ -179,8 +313,6 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         // FIXME: shouldn't this be in UpdateResult?
         if (response.IsOk)
         {
-            IsQueryRequired = false;
-
             if (request.OperationType == LocationQueryOperationType.Insert)
             {
                 editType = EditType.Insert;
@@ -200,7 +332,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         AreSaving = false;
     }
 
-    public void UpdateResult(LocationQueryResult result)
+    void UpdateResult(LocationQueryResult result)
     {
         if (result != null)
         {
@@ -214,11 +346,11 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
     {
         if (haveChanges) return CanLoadMoreStatus.Unavailable;
 
-        if (LastResponse.Task == null) return CanLoadMoreStatus.Unavailable;
+        if (CurrentResponse.Task is null) return CanLoadMoreStatus.Unavailable;
 
-        if (!LastResponse.Task.IsCompletedSuccessfully) return CanLoadMoreStatus.Unavailable;
+        if (!CurrentResponse.Task.IsCompletedSuccessfully) return CanLoadMoreStatus.Unavailable;
 
-        var r = LastResponse.Task.Result.PrimaryEntities;
+        var r = CurrentResponse.Task.Result.PrimaryEntities;
 
         if (r == null) return CanLoadMoreStatus.Unavailable;
 
@@ -229,20 +361,25 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         return CanLoadMoreStatus.Can;
     }
 
-    public SearchOptionVm CurrentIndex { get; }
+    public void LoadMore()
+    {
+        ListLimit = Settings.LoadMoreLimit;
+    }
+
+    public SearchOptionVm CurrentIndex { get; private set; }
 
     public SearchOptionVm NoIndex { get; } = staticNoIndex;
 
-    public SearchOptionVm ScanOption { get; }
+    public SearchOptionVm ScanOption { get; private set; }
 
-    public String NoScanOptionReason { get; }
+    public String NoScanOptionReason { get; private set; }
 
     static SearchOptionVm staticNoIndex = new SearchOptionVm(SearchOptionType.NoOption)
     {
         IsCurrent = true
     };
 
-    public SearchOptionVm[] SearchOptions { get; }
+    public SearchOptionVm[] SearchOptions { get; private set; }
 
     public UnsuitableIndexesVm[] UnsuitableIndexes { get; set; }
 
@@ -266,9 +403,11 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
     {
         get
         {
-            if (!LastResponse.IsOk) return false;
+            if (CurrentResponse is null) return false;
 
-            switch (LastResponse.QueryType)
+            if (!CurrentResponse.IsOk) return false;
+
+            switch (CurrentResponse.QueryType)
             {
                 case QueryControllerQueryType.Row:
                 case QueryControllerQueryType.Column:
@@ -279,15 +418,17 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         }
     }
 
-    public Boolean CanDelete => LastResponse.IsOk && LastResponse.QueryType == QueryControllerQueryType.Row;
+    public Boolean CanDelete => CurrentResponse is not null && CurrentResponse.IsOk && CurrentResponse.QueryType == QueryControllerQueryType.Row;
 
     public Boolean CanInsert
     {
         get
         {
-            if (!LastResponse.IsOk) return false;
+            if (CurrentResponse is null) return false;
 
-            switch (LastResponse.QueryType)
+            if (!CurrentResponse.IsOk) return false;
+
+            switch (CurrentResponse.QueryType)
             {
                 case QueryControllerQueryType.Table:
                 case QueryControllerQueryType.TableSlice:
@@ -297,8 +438,6 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
             }
         }
     }
-
-    public Boolean IsQueryRequired { get; private set; }
 
     public Boolean AreSaving { get; private set; }
 
@@ -319,7 +458,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
     {
         if (AreInEdit) throw new Exception($"Edit already started");
 
-        if (!LastResponse.IsResultOk) throw new Exception($"No result");
+        if (!CurrentResponse.IsResultOk) throw new Exception($"No result");
 
         editType = state;
 
@@ -338,7 +477,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
         SetChange(ChangeEntry.Delete(key));
 
-        NotifyQueryRequired();
+        StartQueryAfterEdit();
     }
 
     public void CancelEdit()
@@ -347,14 +486,14 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
         changes = null;
 
-        NotifyQueryRequired();
+        StartQueryAfterEdit();
     }
 
     public void Save()
     {
         AreSaving = true;
 
-        NotifyQueryRequired();
+        StartQueryAfterEdit();
     }
 
     void SetChange(ChangeEntry change)
@@ -393,13 +532,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
 
         haveChanges = true;
 
-        NotifyQueryRequired();
+        StartQueryAfterEdit();
     }
 
     public Boolean ShouldRedirectAfterInsert(out String url)
     {
-        var request = LastRequest;
-        var response = LastResponse;
+        var request = Request;
+        var response = CurrentResponse;
 
         url = null;
 
@@ -417,11 +556,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>
         return false;
     }
 
-    void NotifyQueryRequired()
-    {
-        IsQueryRequired = true;
+    void StartQueryAfterEdit() => StartQuery();
 
-        NotifyChange();
+    public void Dispose()
+    {
+        isDisposed = true;
+
+        lifetimeLogger.Dispose();
     }
 
     #endregion

@@ -51,7 +51,7 @@
             {
                 if (!option.Index.IsSupported) continue;
 
-                <SearchLine Option="@option" HiddenPrefixLength="@QueryVm.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+                <SearchLine Option="@option" HiddenPrefixLength="@QueryVm.Location.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
             }
         }
         else if (QueryVm.ScanOption?.IsCurrent ?? false == false)

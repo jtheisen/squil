@@ -3,7 +3,7 @@
 
     var url = Url.If(!areQueryEditing);
 
-    var showEditValues = !QueryVm.LastResponse.IsChangeOk;
+    var showEditValues = !QueryVm.CurrentResponse.IsChangeOk;
 }
 
 <div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>

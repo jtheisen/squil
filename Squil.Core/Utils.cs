@@ -158,6 +158,38 @@ public class ScopeLogger : IDisposable
     }
 }
 
+public class InstanceCounter<T>
+{
+    static Int32 counter;
+
+    Int32 instanceId = ++counter;
+
+    public override String ToString() => $"#{instanceId}";
+}
+
+public class LifetimeLogger<T> : IDisposable
+{
+    static Logger log = LogManager.GetCurrentClassLogger();
+
+    private readonly String name;
+
+    InstanceCounter<T> instanceId = new InstanceCounter<T>();
+
+    public InstanceCounter<T> InstanceId => instanceId;
+
+    public LifetimeLogger()
+    {
+        name = typeof(T).Name;
+
+        log.Info($"+ {name} {instanceId}");
+    }
+
+    public void Dispose()
+    {
+        log.Info($"- {name} {instanceId}");
+    }
+}
+
 public static partial class Extensions
 {
     static Logger log = LogManager.GetCurrentClassLogger();

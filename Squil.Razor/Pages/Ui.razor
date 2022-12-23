@@ -12,27 +12,25 @@
 
     renderCount++;
 
-    log.Debug($"Render {instanceId} #{renderCount}, query state: {lastQueryTask?.Status}");
-
     var sd = Runner.CurrentConnectionHolder.StallDetective;
 
     var settings = Options.Value;
 }
 
-<PageTitle>@vm?.Response.RootName</PageTitle>
+<PageTitle>@vm.Response?.RootName</PageTitle>
 
 <DefaultLayout>
     <BreadcrumbActionItems>
         <div class="">
-            @if (vm?.CanDelete == true)
+            @if (vm.CanDelete == true)
             {
                 <button @onclick="vm.StartDelete" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-trash" /></button>
             }
-            @if (vm?.CanInsert == true)
+            @if (vm.CanInsert == true)
             {
                 <button @onclick="HandleInsertClick" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-plus" /></button>
             }
-            @if (vm?.CanEdit == true)
+            @if (vm.CanEdit == true)
             {
                 <button @onclick="vm.StartUpdate" disabled="@vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-pen" /></button>
             }
@@ -41,7 +39,7 @@
     <NavItems>
         <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
 
-        @if (vm?.Result != null)
+        @if (vm.Result is not null)
         {
             <BreadcrumbItem><a class="text-muted" href="@vm.Response.RootUrl.If(vm.Response.QueryType != QueryControllerQueryType.Root)">@vm.Response.RootName</a></BreadcrumbItem>
             <CascadingValue Value="vm">
@@ -91,7 +89,7 @@
                             </BreadcrumbItem>
 
                             <BreadcrumbItem>
-                                <span>@vm.LastRequest.Column</span>
+                                <span>@vm.Location.Column</span>
                             </BreadcrumbItem>
                             break;
                         case QueryControllerQueryType.TableSlice:
@@ -111,12 +109,12 @@
     <ActionItems>
         @if (settings.EnablePrimaryIdSqlCopy)
         {
-            <PrimaryIdSqlCopyButton Response="@vm?.LastResponse" />            
+            <PrimaryIdSqlCopyButton Response="@vm.CurrentResponse" />            
         }
         <div class="btn-group">
             @if (Settings.EnableDevMode)
             {
-                <a class="btn btn-outline-dark text-muted" href="/info/@vm?.LastRequest.Source">schema</a>
+                <a class="btn btn-outline-dark text-muted" href="/info/@vm.Location.Source">schema</a>
                 <button class="btn btn-outline-dark text-muted" @onclick="OpenReportModal">report</button>
             }
             <button class="btn btn-outline-dark text-muted" @onclick="OpenSqlModal"><strong>SQL</strong></button>
@@ -131,7 +129,7 @@
                 <RightContent>
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    @if (vm?.AreInEdit == true)
+                    @if (vm.AreInEdit == true)
                     {
                         <h5 class="text-muted font-weight-bold border-bottom mb-4">Edit</h5>
 
@@ -146,7 +144,7 @@
                     }
                     else if (Settings.EnableDevMode)
                     {
-                        if (vm?.LastResponse?.Ledger != null)
+                        if (vm.CurrentResponse?.Ledger != null)
                         {
                             <div>
                                 <span>@queryCount / @renderCount</span>
@@ -154,7 +152,7 @@
                             <div class="common-lead-spacer">&nbsp;</div>
                             <div class="">
                                 <dl>
-                                    @foreach (var entry in vm.LastResponse.Ledger.GetEntries())
+                                    @foreach (var entry in vm.CurrentResponse.Ledger.GetEntries())
                                     {
                                         <dt>@entry.name</dt>
                                         <dd>@entry.time</dd>
@@ -163,17 +161,17 @@
                             </div>
                         }
                     }
-                    else if (vm != null)
+                    else if (vm.HaveResponse)
                     {
                         <h5 class="text-muted font-weight-bold border-bottom mb-4">Guidance</h5>
                         <div class="sidebar-helptext small text-muted">
-                            <HelpText QueryType="@vm.LastResponse.QueryType" />
+                            <HelpText QueryType="@vm.CurrentResponse.QueryType" />
                         </div>
                     }
                 </RightContent>
 
                 <LeftContent>
-                    @if (vm?.SearchOptions != null)
+                    @if (vm.SearchOptions is not null)
                     {
                         <div class="common-lead-spacer">&nbsp;</div>
                         <SearchPanel SearchValues="SearchValues" />
@@ -184,18 +182,16 @@
 
                     <div class="common-lead-spacer">&nbsp;</div>
 
-                    @if (currentSource?.State == LiveSourceState.Building)
+                    @if (vm.CurrentSource?.State == LiveSourceState.Building)
                     {
                         // All other states should lead to a quick error display
                         <div class="alert alert-info">
                             Building model for database schema. <span class="spinner-border spinner-border-sm"></span>
                         </div>
                     }
-                    else if (vm != null)
+                    else if (vm.HaveResponse)
                     {
-                        <RerenderHelper Observable="@vm" OnChange="@HandleVmChanged" />
-
-                        switch (vm.LastResponse.QueryType)
+                        switch (vm.Response.QueryType)
                         {
                             case QueryControllerQueryType.Table:
                             case QueryControllerQueryType.TableSlice:
@@ -203,22 +199,22 @@
                                 break;
                         }
 
-                        <div class="@ClassNames("query-results", "querying".If(IsQuerying && sd != null))">
+                        <div class="@ClassNames("query-results", "querying".If(vm.IsQuerying && sd != null))">
 
                             @if (Settings.ShowHelpTexts)
                             {
                                 <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
                             }
 
-                            @if (vm.LastResponse.Exception is SqlException se)
+                            @if (vm.CurrentResponse.Exception is SqlException se)
                             {
                                 <SqlErrorView AlertClass="alert alert-danger" Exception="@se" />
                             }
-                            else if (vm.LastResponse.Exception is OperationCanceledException)
+                            else if (vm.CurrentResponse.Exception is OperationCanceledException)
                             {
                                 // canceled
                             }
-                            else if (vm.LastResponse.Exception is SchemaChangedException)
+                            else if (vm.CurrentResponse.Exception is SchemaChangedException)
                             {
                                 if (showSchemaChangedException)
                                 {
@@ -229,7 +225,7 @@
                                     </div>                                    
                                 }
                             }
-                            else if (vm.LastResponse.Exception is Exception e)
+                            else if (vm.CurrentResponse.Exception is Exception e)
                             {
                                 <div class="alert alert-danger">
                                     <div>
@@ -237,24 +233,24 @@
                                     </div>
                                 </div>
                             }
-                            else if (vm.LastResponse.ChangeException is SqlException cse)
+                            else if (vm.CurrentResponse.ChangeException is SqlException cse)
                             {
                                 <SqlErrorView AlertClass="alert alert-warning" Exception="@cse" />
                             }
 
                             @if (vm.Result != null)
                             {
-                                <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.LastResponse.IsOk))">
-                                    <EntityContentView Entity="@vm.Result.Entity" HideHeaders="@(vm.LastResponse.QueryType != QueryControllerQueryType.Root)" />
+                                <div class="@ClassNames("entity-context", "entity-invalid".If(!vm.CurrentResponse.IsOk))">
+                                    <EntityContentView Entity="@vm.Result.Entity" HideHeaders="@(vm.CurrentResponse.QueryType != QueryControllerQueryType.Root)" />
                                 </div>
 
                                 @switch (vm.CanLoadMore())
                                 {
                                     case CanLoadMoreStatus.Can:
-                                        if (vm.LastRequest.ListLimit < Settings.LoadMoreLimit)
+                                        if (vm.Request.ListLimit < Settings.LoadMoreLimit)
                                         {
                                             <div class="my-4">
-                                                <em class="btn">...and more</em> <button class="btn btn-light" @onclick="HandleLoadMoreClick">load <span>@Settings.LoadMoreLimit</span> at once</button>
+                                                <em class="btn">...and more</em> <button class="btn btn-light" @onclick="vm.LoadMore">load <span>@Settings.LoadMoreLimit</span> at once</button>
                                             </div>
                                         }
                                         else
@@ -292,18 +288,18 @@
                                 </small>
                             </HeaderExtra>
                             <Body>
-                                @foreach (var change in vm.LastResponse?.Ledger?.GetEntries<ChangeSql>())
+                                @foreach (var change in vm.CurrentResponse?.Ledger?.GetEntries<ChangeSql>())
                                 {
                                     <pre><CopyableContent>@change.Sql</CopyableContent></pre>
                                 }
-                                <pre><CopyableContent>@(vm.LastResponse?.Ledger?.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
+                                <pre><CopyableContent>@(vm.CurrentResponse?.Ledger?.GetLastEntry<QuerySql>()?.Sql)</CopyableContent></pre>
                                 </Body>
                             </Modal>
 
                         <Modal OnClose="ReportModalSubscription">
                             <Title>Query report</Title>
                             <Body>
-                                @foreach (var entry in vm.LastResponse.Ledger?.GetEntries())
+                                @foreach (var entry in vm.CurrentResponse.Ledger?.GetEntries())
                                 {
                                     var result = entry.result.GetReportString();
 
@@ -319,7 +315,7 @@
                         </Modal>
                     }
 
-                    <div class="@ClassNames("query-delay-overlay", "querying".If(IsQuerying && sd != null))">
+                    <div class="@ClassNames("query-delay-overlay", "querying".If(vm.IsQuerying && sd != null))">
                         <div class="common-lead-spacer">&nbsp;</div>
                         <h2>Investigating slow query</h2>
 
@@ -388,6 +384,8 @@
     </ChildContent>
 </DefaultLayout>
 
+<RerenderHelper Observable="@vm" OnChange="@StateHasChanged" />
+
 <RerenderHelper Observable="@SearchValues.Backing" OnChange="@HandleSeekValuesChanged" />
 
 @code {
@@ -403,15 +401,7 @@
     [CascadingParameter]
     public CurrentLocation Location { get; set; }
 
-    LiveSource currentSource;
-
     CurrentLocation previousLocation;
-
-    Boolean IsQuerying => lastQueryTask?.IsCompleted != true;
-
-    Int32 listLimit;
-
-    Boolean haveLocationChange = false;
 
     AppSettings Settings => Options.Value;
 
@@ -421,14 +411,10 @@
 
     IMap<String, String> SearchValues => Cs.SearchValuesByLocation[Location.Location];
 
-    Task<LocationQueryResult> lastQueryTask;
-
     Boolean jsInitPending;
     Boolean isDisposed;
 
     LocationQueryVm vm = null;
-
-    String currentUri;
 
     void OpenSqlModal() => SqlModalSubscription = () => SqlModalSubscription = null;
 
@@ -449,122 +435,12 @@
         return uri.Segments.Length < 2 || uri.Segments[0] != "/" || uri.Segments[1] != "ui/";
     }
 
-    LocationQueryAccessMode GetAccessMode()
+    void HandleCompletedRequest()
     {
-        if (vm?.Changes == null) return LocationQueryAccessMode.QueryOnly;
+        // FIXME: exception logging and js inits
 
-        if (vm.AreSaving) return LocationQueryAccessMode.Commit;
+        if (isDisposed) return;
 
-        return LocationQueryAccessMode.Rollback;
-    }
-
-    async void StartQuery(Boolean synchronously = false, Int32 attempt = 0)
-    {
-        log.Info($"Starting new query {(synchronously ? "synchronously" : "asynchronously")}");
-
-        if (CheckLocationUri(out var uri))
-        {
-            log.Info("Query page left, won't run a query");
-
-            return;
-        }
-
-        var queryParams = HttpUtility.ParseQueryString(uri.Query);
-
-        var segments = uri.Segments.Skip(1).ToArray();
-
-        var accessMode = GetAccessMode();
-
-        LocationQueryOperationType? operationType = null;
-
-        if (Enum.TryParse<LocationQueryOperationType>(queryParams["operation"], true, out var parsedOperationType))
-        {
-            operationType = parsedOperationType;
-        }
-
-        var request = new LocationQueryRequest(segments, queryParams, SearchValues.ToNameValueCollection(), vm?.Changes, accessMode, operationType)
-        {
-            ListLimit = listLimit
-        };
-
-        var source = currentSource = Runner.GetLiveSource(request.Source);
-
-        var ensureModelTask = source.EnsureModelAsync();
-
-        if (source.State != LiveSourceState.Ready)
-        {
-            StateHasChanged();
-        }
-
-        await ensureModelTask;
-
-        var response = Runner.StartQuery(source, request.Source, request);
-
-        if (haveLocationChange)
-        {
-            // This is too late to set the location query vm after an insert - the old vm still causes a new insert request
-            vm = new LocationQueryVm(request, response);
-
-            vm.InDebug = queryParams["debug"] != null;
-
-            haveLocationChange = false;
-        }
-        else
-        {
-            vm.Update(request, response);
-        }
-
-        var queryTask = lastQueryTask = AwaitResponse(response, synchronously);
-
-        if (lastQueryTask.IsCompleted)
-        {
-            log.Debug($"Query completed synchronously");
-        }
-        else
-        {
-            log.Debug($"Query is running asynchronously");
-        }
-
-        StateHasChanged();
-
-        var resultOrNull = await lastQueryTask;
-
-        if (response.Exception is SchemaChangedException)
-        {
-            if (attempt == 0)
-            {
-                log.Info($"Got SchemaChangedException at attempt #{attempt}, re-running query");
-
-                StartQuery(synchronously, attempt + 1);
-            }
-            else
-            {
-                log.Info($"Got SchemaChangedException at attempt #{attempt}, giving up");
-
-                showSchemaChangedException = true;
-
-                StateHasChanged();
-            }
-        }
-        else if (lastQueryTask == queryTask)
-        {
-            vm.UpdateResult(resultOrNull);
-
-            showSchemaChangedException = false;
-
-            if (vm.ShouldRedirectAfterInsert(out var newLocationUrl))
-            {
-                NavigationManager.NavigateTo(newLocationUrl);
-            }
-            else
-            {
-                StateHasChanged();
-            }
-        }
-    }
-
-    async Task<LocationQueryResult> AwaitResponse(LocationQueryResponse response, Boolean synchronously)
-    {
         static Boolean ShouldLogExceptionToBrowser(Exception ex) => ex switch
         {
             null => false,
@@ -574,68 +450,32 @@
             _ => true
         };
 
-        if (response.Task == null) return null;
-
-        if (false)
+        if (ShouldLogExceptionToBrowser(vm.CurrentResponse.Exception))
         {
-            response.Task.Wait();
+            Js.InvokeVoidAsync("console.log", vm.CurrentResponse.Exception.ToString()).Ignore();
         }
-        else
-        {
-            await response.Wait();
-        }
-
-        if (ShouldLogExceptionToBrowser(response.Exception))
-        {
-            Js.InvokeVoidAsync("console.log", response.Exception.ToString()).Ignore();
-        }
-
-        ++queryCount;
-
-        if (!response.Task.IsCompletedSuccessfully) return null;
-
-        jsInitPending = true;
-
-        return response.Task.Result;
     }
 
     void HandleSeekValuesChanged()
     {
-        log.Debug("Seek values changed");
-
-        StartQuery();
-    }
-
-    void HandleLoadMoreClick()
-    {
-        listLimit = Settings.LoadMoreLimit + 1;
-
-        StartQuery();
+        vm.SetSearchValues(SearchValues.ToNameValueCollection());
     }
 
     void HandleInsertClick()
     {
-        var table = vm.LastResponse.Table;
+        var table = vm.CurrentResponse.Table;
 
         // Inserting a related entity has an index and will use the key values currently in the location
-        var index = vm.LastResponse.Index;
+        var index = vm.CurrentResponse.Index;
 
         if (table.PrimaryKey == null) throw new Exception($"Cant insert into table without primary key");
 
-        var keys = vm.LastRequest.KeyParams.AsMap();
+        var keys = vm.Location.KeyParams.AsMap();
 
         // FIXME: we need to pass the keys of the current index for default initialization
         var url = vm.UrlCreateor.RenderEntityUrl(table.PrimaryKey, keys, operationType: LocationQueryOperationType.Insert);
 
         NavigationManager.NavigateTo(url);
-    }
-
-    void HandleVmChanged()
-    {
-        if (vm.IsQueryRequired)
-        {
-            StartQuery();
-        }
     }
 
     protected override void OnParametersSet()
@@ -646,7 +486,7 @@
 
             previousLocation = Location;
 
-            RunQueryAfterLocationChange(false);
+            SetNewVmOnLocationChange();
         }
 
         base.OnParametersSet();
@@ -664,17 +504,32 @@
         }
     }
 
-    void RunQueryAfterLocationChange(Boolean synchronously)
+    void SetNewVmOnLocationChange()
     {
-        listLimit = Settings.InitialLimit;
-        haveLocationChange = true;
+        if (CheckLocationUri(out var uri))
+        {
+            log.Info("Query page left, won't run a query");
 
-        StartQuery(synchronously);
+            return;
+        }
+
+        var segments = uri.Segments.Skip(1).ToArray();
+
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
+
+        var location = new LocationQueryLocation(segments, queryParams);
+
+        vm?.Dispose();
+        vm = new LocationQueryVm(Settings, Runner, location);
+
+        vm.InDebug = queryParams["debug"] != null;
     }
 
     void IDisposable.Dispose()
     {
         log.Info($"Disposing ui page");
+
+        vm?.Dispose();
 
         isDisposed = true;
         Runner.Cancel();

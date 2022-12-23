@@ -506,7 +506,14 @@ public class GuidColumnType : ColumnType
 
         if (text.Length <= 6)
         {
-            return Ok("00000000-0000-0000-0000-" + text.PadRight(12, '0'));
+            if (text.IndexOf('-') >= 0)
+            {
+                return Issue($"text is not a valid {Name}");
+            }
+            else
+            {
+                return Ok("00000000-0000-0000-0000-" + text.PadRight(12, '0'));
+            }
         }
 
         if (text.Length > 36)

@@ -277,6 +277,8 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IAsyncDispos
 
     SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
+    LifetimeLogger<ConnectionHolder> lifetimeLogger = new LifetimeLogger<ConnectionHolder>();
+
     public SqlConnection Connection
     {
         get => connection;
@@ -295,7 +297,7 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IAsyncDispos
 
     public async Task<T> RunAsync<T>(Func<SqlConnection, Task<T>> action)
     {
-        if (isDisposed) throw new ObjectDisposedException("Connection holder is dispose and won't run another query");
+        if (isDisposed) throw new ObjectDisposedException($"Connection holder {lifetimeLogger.InstanceId} is disposed and won't run another query");
 
         var logIds = LogIds;
 
@@ -390,11 +392,9 @@ public class ConnectionHolder : ObservableObject<ConnectionHolder>, IAsyncDispos
 
     public async ValueTask DisposeAsync()
     {
-        var stackTrace = new StackTrace();
-
         lock (this)
         {
-            log.Info($"Disposing connection holder at\n" + stackTrace);
+            log.Info($"Disposing connection holder {lifetimeLogger.InstanceId}");
 
             tcs.Cancel();
 
