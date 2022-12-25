@@ -3,7 +3,7 @@
     "Squil": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "ui/playground",
+      "launchUrl": "ui/squil-test",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

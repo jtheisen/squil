@@ -322,8 +322,14 @@ $bg-light-2: #e7e5e4;
         }
 
         &[data-css-type=guid] .entity-column-content {
-            font-size: .7em;
+            font-size: .45em;
             margin-top: .3em;
+
+            @media (min-width: 1200px) {
+                & {
+                    font-size: .65em;
+                }
+            }
         }
 
         .entity-column-content {

@@ -103,7 +103,7 @@ public class QueryGenerator
             var keyColumns = from c in table.PrimaryKey.Columns select (column: c.c.Name.EscapeNamePart(), type: c.c.SqlType);
 
             return new ChangeSql(@$"
-declare @output table({String.Join(", ", from c in keyColumns select $"{c.column} {c.type}")});
+declare @output table({String.Join(", ", from c in keyColumns select $"{c.column} varchar(max)")});
 
 {getOperationSql($"output {String.Join(", ", from c in keyColumns select $"INSERTED.{c.column}")} into @output").Trim()}
 

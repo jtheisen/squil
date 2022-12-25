@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Query.Internal;
+﻿using Azure.Core;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Squil.SchemaBuilding;
 using System.Collections.Specialized;
 using System.Reactive.Subjects;
@@ -92,6 +93,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     public Boolean HaveResponse => CurrentResponse is not null;
 
     public Boolean IsQuerying => CurrentResponse?.IsRunning ?? false;
+
+    public LocationQueryResult CommittedResult { get; private set; }
 
     public LocationQueryResult Result { get; private set; }
 
@@ -211,11 +214,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         }
         else if (CurrentResponse == response)
         {
-            UpdateResult(resultOrNull);
+            var hadCommit = response.IsCompletedSuccessfully && response.Result.HasCommitted;
+
+            UpdateResult(resultOrNull, hadCommit);
 
             ShowSchemaChangedException = false;
 
-            if (response.IsCompletedSuccessfully && response.Result.HasCommitted)
+            if (hadCommit)
             {
                 if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Delete })
                 {
@@ -357,11 +362,16 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         AreSaving = false;
     }
 
-    void UpdateResult(LocationQueryResult result)
+    void UpdateResult(LocationQueryResult result, Boolean hasCommit)
     {
-        if (result != null)
+        if (result is not null)
         {
             Result = result;
+
+            if (CommittedResult is null || hasCommit)
+            {
+                CommittedResult = result;
+            }
         }
 
         ++ResultNumber;
@@ -507,11 +517,18 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     public void CancelEdit()
     {
-        editType = EditType.NotEditing;
+        if (changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert })
+        {
+            eventSink.OnNext(new QueryVmNavigateBackEvent());
+        }
+        else
+        {
+            editType = EditType.NotEditing;
 
-        changes = null;
+            changes = null;
 
-        StartQueryAfterEdit();
+            StartQueryAfterEdit();
+        }
     }
 
     public void Save()
