@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Query.Internal;
 using Squil.SchemaBuilding;
 using System.Collections.Specialized;
 using System.Reactive.Subjects;
+using static Squil.GlobalBlockingReport;
 
 namespace Squil;
 
@@ -226,7 +227,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
                 {
                     eventSink.OnNext(new QueryVmNavigateBackEvent());
                 }
-                else if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert } insertEntry)
+                else if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert or ChangeOperationType.Update } insertEntry)
                 {
                     var values = insertEntry.EntityKey.GetKeyColumnsAndValuesDictionary().ToMap();
 
@@ -485,9 +486,9 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     public Boolean AreInUpdateOrInsert => editType == EditType.Update || editType == EditType.Insert;
 
-    public void StartUpdate() => StartEdit(EditType.Update);
+    public void StartUpdate() => StartEdit(EditType.Update, InitChange);
     public void StartDelete() => StartEdit(EditType.Delete, InitDelete);
-    public void StartInsert() => StartEdit(EditType.Insert);
+    public void StartInsert() => StartEdit(EditType.Insert, InitChange);
 
     public void StartEdit(EditType state, Action init = null)
     {
@@ -515,6 +516,17 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         StartQueryAfterEdit();
     }
 
+    void InitChange()
+    {
+        var entity = Result.PrimaryEntities.List.FirstOrDefault();
+
+        if (entity == null) throw new Exception($"Result has no primary entity");
+
+        var change = GetChangeEntry(entity, editType == EditType.Insert);
+
+        SetChange(change);
+    }
+
     public void CancelEdit()
     {
         if (changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert })
@@ -529,6 +541,11 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             StartQueryAfterEdit();
         }
+    }
+
+    public void RunDry()
+    {
+        StartQueryAfterEdit();
     }
 
     public void Save()
@@ -566,15 +583,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     {
         if (entity.EditState == EntityEditState.Original) return;
 
-        var change = GetChangeEntry(entity, editType == EditType.Insert);
+        var change = changes.Single("Unexpectedly no singular change entry");
 
-        SetChange(change);
-
-        entity.EditState = EntityEditState.Closed;
+        change.EditValues = entity.EditValues;
 
         haveChanges = true;
 
-        StartQueryAfterEdit();
+        NotifyChange();
     }
 
     public Boolean ShouldRedirectAfterInsert(out String url)
@@ -598,7 +613,10 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         return false;
     }
 
-    void StartQueryAfterEdit() => eventSink.OnNext(new QueryVmStartQueryEvent());
+    void StartQueryAfterEdit()
+    {
+        eventSink.OnNext(new QueryVmStartQueryEvent());
+    }
 
     public void Dispose()
     {

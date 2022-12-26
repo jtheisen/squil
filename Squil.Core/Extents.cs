@@ -59,6 +59,11 @@ public class ChangeEntry
 
     public Boolean IsKeyed => EntityKey is not null;
 
+    public ChangeEntry Clone()
+    {
+        return new ChangeEntry { Type = Type, Table = Table, EntityKey = EntityKey, EditValues = new Dictionary<String, String>(EditValues) };
+    }
+
     public static ChangeEntry Update(EntityKey key, Dictionary<String, String> values)
         => new ChangeEntry { Type = ChangeOperationType.Update, Table = key.TableName, EntityKey = key, EditValues = values };
 

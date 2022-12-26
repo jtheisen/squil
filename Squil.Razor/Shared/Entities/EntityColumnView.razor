@@ -4,6 +4,8 @@
     var url = Url.If(!areQueryEditing);
 
     var showEditValues = !QueryVm.CurrentResponse.IsChangeOk;
+
+    log.Info($"{instanceCounter} rendering");
 }
 
 <div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
@@ -84,6 +86,8 @@
 
 @code {
     static Logger log = LogManager.GetCurrentClassLogger();
+
+    InstanceCounter<EntityColumnView> instanceCounter = new InstanceCounter<EntityColumnView>();
 
     [Parameter]
     public Entity Entity { get; set; }

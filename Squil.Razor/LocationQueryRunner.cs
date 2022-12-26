@@ -137,7 +137,7 @@ public class LocationQueryRequest
     {
         Location = location;
 
-        Changes = changes;
+        Changes = changes?.Select(c => c.Clone()).ToArray();
         AccessMode = accessMode;
         OperationType = operationType;
 
