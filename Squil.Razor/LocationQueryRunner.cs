@@ -520,7 +520,7 @@ public class LocationQueryRunner : IDisposable
                 {
                     // insert without a changes array or with a failed insert means we're initializing with a dummy entity
 
-                    var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(query.Table);
+                    var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(DateTime.Now, query.Table);
 
                     // if we have a key from a previous succesful insert, we need to prime the entity with it so that
                     // it gets matched to the change entry later

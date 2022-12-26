@@ -326,7 +326,7 @@ insert {from}{columnsSql}
 
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 
-        var entity = extent.MakeEntity(rootTable, resultXml, true);
+        var entity = extent.MakeEntity(DateTime.Now, rootTable, resultXml, true);
 
         return entity;
     }

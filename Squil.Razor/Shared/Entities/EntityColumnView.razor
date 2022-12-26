@@ -4,8 +4,6 @@
     var url = Url.If(!areQueryEditing);
 
     var showEditValues = !QueryVm.CurrentResponse.IsChangeOk || Entity.EditState == EntityEditState.Modified;
-
-    log.Info($"{instanceCounter} rendering");
 }
 
 <div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
@@ -24,9 +22,11 @@
     </label>
     <div class="entity-column-wrapper">
         <div class="entity-column-content" @onclick="HandleClick">
-            <div @key="QueryVm.ResultNumber">
+            <div @key="Entity.Version.ToString()">
                 @{
                     var value = Entity.GetDisplayValue(Column.Name, IsEditing || showEditValues);
+
+                    log.Info($"#{QueryVm.ResultNumber} values is {value}");
 
                     var pending = false;
 
@@ -71,7 +71,7 @@
                     }
                     else
                     {
-                        <EditableSpan Value="@value" AutoFocus="@IsEditing" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
+                        <EditableSpan @key="@CanEdit" Name="@Column.Name" Value="@value" AutoFocus="@IsEditing" Focused="@HandledFocused" ValueChanged="@HandleValueChanged" IsEditable="@CanEdit" />
                     }
                 }
             </div>
@@ -86,8 +86,6 @@
 
 @code {
     static Logger log = LogManager.GetCurrentClassLogger();
-
-    InstanceCounter<EntityColumnView> instanceCounter = new InstanceCounter<EntityColumnView>();
 
     [Parameter]
     public Entity Entity { get; set; }

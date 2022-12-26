@@ -1,0 +1,23 @@
+﻿@implements IDisposable
+
+@code {
+    static Logger log = LogManager.GetCurrentClassLogger();
+
+    [Parameter]
+    public String Name { get; set; }
+
+    protected override void OnInitialized()
+    {
+        log.Info($"[{Name}] initialized");
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        log.Info($"[{Name}] rendered");
+    }
+
+    public void Dispose()
+    {
+        log.Info($"[{Name}] disposed");
+    }
+}

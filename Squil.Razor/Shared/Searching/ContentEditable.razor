@@ -2,7 +2,12 @@
 
 <span @ref="element" class="@Class" contenteditable="@IsActive" @oninput="HandleChange">&nbsp;</span>
 
+<RenderLogger Name="@Name" />
+
 @code {
+    [Parameter]
+    public String Name { get; set; }
+
     [Parameter]
     public String Class { get; set; }
 
