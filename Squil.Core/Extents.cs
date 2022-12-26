@@ -80,6 +80,7 @@ public class ChangeEntry
 public enum EntityEditState
 {
     Original,
+    Validated,
     Modified,
     Closed
 }

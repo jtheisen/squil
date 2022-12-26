@@ -558,6 +558,8 @@ public class LocationQueryRunner : IDisposable
                         if (entityKey == key)
                         {
                             e.SetEditValues(change);
+
+                            e.EditState = query.ChangeException is null ? EntityEditState.Validated : EntityEditState.Modified;
                         }
                     }
                 }

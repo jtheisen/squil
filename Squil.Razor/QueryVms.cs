@@ -579,6 +579,14 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         }
     }
 
+    public void NoteEditTouch(Entity entity)
+    {
+        if (entity.EditState == EntityEditState.Validated)
+        {
+            entity.EditState = EntityEditState.Modified;
+        }
+    }
+
     public void AddChange(Entity entity)
     {
         if (entity.EditState == EntityEditState.Original) return;
