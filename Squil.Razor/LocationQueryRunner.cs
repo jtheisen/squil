@@ -522,6 +522,8 @@ public class LocationQueryRunner : IDisposable
 
                     var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(DateTime.Now, query.Table);
 
+                    templateEntity.InitKeyValuesAsEdited();
+
                     // if we have a key from a previous succesful insert, we need to prime the entity with it so that
                     // it gets matched to the change entry later
                     if (request.Changes?.FirstOrDefault() is ChangeEntry ce && ce.IsKeyed)

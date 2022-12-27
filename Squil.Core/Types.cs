@@ -1,8 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Numerics;
 using System.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Squil;
 
@@ -50,6 +48,10 @@ public abstract class ColumnType
     public virtual String CssType => null;
 
     public virtual Boolean IsSupported => true;
+
+    public virtual Boolean UseSpecialValueForKeysOnInsert => false;
+
+    public virtual String GetSpecialValueOrNull => null;
 
     public ValidationResult Validate(Int32 no, String keyValue, String searchValue, IndexDirection direction, ColumnTypePrecisions precisions)
     {
@@ -118,6 +120,8 @@ public class UnknownColumnType : ColumnType
 
 public class CharacterColumnType : ColumnType
 {
+    public override String GetSpecialValueOrNull => "";
+
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
         return Ok(text);
@@ -154,6 +158,20 @@ public class DateOrTimeColumnType : ColumnType
     public Boolean WithTime { get; set; }
 
     public Boolean WithOffset { get; set; }
+
+    public override Boolean UseSpecialValueForKeysOnInsert => true;
+
+    public override String GetSpecialValueOrNull
+    {
+        get
+        {
+            var now = DateTimeOffset.Now;
+
+            var format = GetDotNetPattern();
+
+            return String.Format(format, now);
+        }
+    }
 
     public override void Init()
     {
@@ -248,6 +266,28 @@ public class DateOrTimeColumnType : ColumnType
         var ticks = Math.Clamp(datetime.Ticks - offset.Ticks, minTicks, maxTicks);
 
         return new DateTimeOffset(ticks + offset.Ticks, offset);
+    }
+
+    String GetDotNetPattern()
+    {
+        var builder = new List<String>();
+
+        if (WithDate)
+        {
+            builder.Add("yyyy-MM-dd");
+        }
+
+        if (WithTime)
+        {
+            builder.Add("HH:mm:ss");
+        }
+
+        if (WithOffset)
+        {
+            builder.Add("K");
+        }
+
+        return String.Join(' ', builder);
     }
 
     ValidationResult Validate(String text)
@@ -389,6 +429,8 @@ public class IntegerColumnType : ColumnType
 
     public Boolean IsSigned { get; set; } = true;
 
+    public override String GetSpecialValueOrNull => "0";
+
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
         if (String.IsNullOrWhiteSpace(text))
@@ -462,6 +504,8 @@ public class IntegerColumnType : ColumnType
 
 public class DecimalColumnType : ColumnType
 {
+    public override String GetSpecialValueOrNull => "0";
+
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
         if (Decimal.TryParse(text, out var number))
@@ -475,6 +519,8 @@ public class DecimalColumnType : ColumnType
 
 public class FloatColumnType : ColumnType
 {
+    public override String GetSpecialValueOrNull => "0";
+
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
         if (Double.TryParse(text, out var number))
@@ -491,6 +537,10 @@ public class GuidColumnType : ColumnType
     public override String CssType => "guid";
 
     static readonly Char[] ValidChars = "-0123456789abcdefABCDEF".ToArray();
+
+    public override Boolean UseSpecialValueForKeysOnInsert => true;
+
+    public override String GetSpecialValueOrNull => Guid.NewGuid().ToString();
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {

@@ -321,6 +321,21 @@ public static class Extensions
         }
     }
 
+    public static void InitKeyValuesAsEdited(this Entity entity)
+    {
+        foreach (var c in entity.Table.PrimaryKey.Columns)
+        {
+            var type = c.c.Type;
+
+            var sv = type.GetSpecialValueOrNull;
+
+            if (type.UseSpecialValueForKeysOnInsert && sv is not null)
+            {
+                entity.SetEditValue(c.Name, sv);
+            }
+        }
+    }
+
     public static Entity MakeEntity(this Extent extent, DateTime version, CMTable table, XElement element, Boolean isRoot = false)
     {
         var data = element.Attributes().ToDictionary(a => a.Name.LocalName.UnescapeSqlServerXmlName(), a => a.Value);
