@@ -61,7 +61,7 @@ public class ChangeEntry
 
     public ChangeEntry Clone()
     {
-        return new ChangeEntry { Type = Type, Table = Table, EntityKey = EntityKey, EditValues = new Dictionary<String, String>(EditValues) };
+        return new ChangeEntry { Type = Type, Table = Table, EntityKey = EntityKey, EditValues = EditValues?.Apply(ev => new Dictionary<String, String>(ev)) };
     }
 
     public static ChangeEntry Update(EntityKey key, Dictionary<String, String> values)

@@ -20,6 +20,12 @@
 
 .entity-context {
   --entity-bg-prev: white;
+  /*    .entity-relation.is-empty > ol[data-flavor=page]:before,
+      .entity-relation.is-empty > ol[data-flavor=column-page]:before {
+          font-style: italic;
+          content: "no results";
+      }
+  */
 }
 .entity-context.entity-invalid {
   opacity: 0.5;
@@ -179,11 +185,6 @@
 .entity-context ol[data-flavor=block] > li > fieldset > .entity-relation.is-empty > ol:before {
   font-style: italic;
   content: "none";
-}
-.entity-context .entity-relation.is-empty > ol[data-flavor=page]:before,
-.entity-context .entity-relation.is-empty > ol[data-flavor=column-page]:before {
-  font-style: italic;
-  content: "no results";
 }
 .entity-context label {
   display: block;

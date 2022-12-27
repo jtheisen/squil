@@ -456,6 +456,10 @@
         {
             NavigationManager.NavigateTo(nte.Target, new NavigationOptions { ReplaceHistoryEntry = true});
         }
+        else if (e is QueryVmExceptionEvent ee)
+        {
+            HandleException(ee.Exception);
+        }
         else
         {
             throw new Exception($"Unknown event {e.GetType().Name}");
@@ -481,12 +485,8 @@
         return uri.Segments.Length < 2 || uri.Segments[0] != "/" || uri.Segments[1] != "ui/";
     }
 
-    void HandleCompletedRequest()
+    void HandleException(Exception ex)
     {
-        // FIXME: exception logging and js inits
-
-        if (isDisposed) return;
-
         static Boolean ShouldLogExceptionToBrowser(Exception ex) => ex switch
         {
             null => false,
@@ -544,6 +544,8 @@
     {
         if (jsInitPending)
         {
+            // currently unused
+
             jsInitPending = false;
 
             log.Debug($"init boostrap content after render");

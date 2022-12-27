@@ -266,12 +266,12 @@ $bg-light-2: #e7e5e4;
         }
     }
 
-    .entity-relation.is-empty > ol[data-flavor=page]:before,
+/*    .entity-relation.is-empty > ol[data-flavor=page]:before,
     .entity-relation.is-empty > ol[data-flavor=column-page]:before {
         font-style: italic;
         content: "no results";
     }
-
+*/
     label {
         display: block; /* labels are inline by default */
         margin-bottom: 0;

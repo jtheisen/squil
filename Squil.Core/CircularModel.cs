@@ -539,6 +539,8 @@ public class CMColumn
 
     public Boolean IsComputed { get; set; }
 
+    public Boolean IsIntrinsicallyUneditable => IsIdentity || IsComputed || IsAssemblyType;
+
     public Boolean IsIgnoredByDefault { get; set; }
 
     public Boolean IsNullable { get; set; }

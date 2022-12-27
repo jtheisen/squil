@@ -108,7 +108,7 @@
     [CascadingParameter]
     public LocationQueryVm QueryVm { get; set; }
 
-    Boolean CanEdit => QueryVm.AreInUpdateOrInsert && Entity.EditState != EntityEditState.Closed && Column.Type.IsSupported;
+    Boolean CanEdit => QueryVm.AreInUpdateOrInsert && !Column.IsIntrinsicallyUneditable && Entity.EditState != EntityEditState.Closed && Column.Type.IsSupported;
 
     Boolean isEditing;
 

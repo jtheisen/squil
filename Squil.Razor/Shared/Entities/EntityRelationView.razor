@@ -28,7 +28,7 @@
     @if (!HideHeader)
     {
         <label>
-            <a href="@QueryVm.UrlCreateor.RenderEntitiesUrl(parentEntity, entities)" data-toggle="tooltip" data-html="true">
+            <a href="@QueryVm.UrlCreateor.RenderEntitiesUrl(parentEntity, entities)">
                 <EntityRelationNameView RelationEnd="@entities.RelationEnd" />
             </a>
         </label>
@@ -51,7 +51,15 @@
             else
             {
                 <li class="list-marker list-marker-empty">
-                    This table or related slice is empty.
+                    @if (QueryVm.AreInDelete)
+                    {
+                        <h4>The row will be removed</h4>
+                        <p>Are you sure? This operation can't be undone.</p>
+                    }
+                    else
+                    {
+                        <text>This table or related slice is empty.</text>
+                    }                    
                 </li>
             }
         }

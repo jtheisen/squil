@@ -15,6 +15,8 @@ public record QueryVmNavigateToEvent(String Target) : QueryVmEvent;
 
 public record QueryVmStartQueryEvent : QueryVmEvent;
 
+public record QueryVmExceptionEvent(Exception Exception) : QueryVmEvent;
+
 public record UnsuitableIndexesVm(CsdUnsupportedReason Reason, SearchOptionVm[] Indexes)
 {
     public UnsuitableIndexesVm(CsdUnsupportedReason reason, IEnumerable<SearchOptionVm> indexes)
