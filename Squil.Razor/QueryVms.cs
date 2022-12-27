@@ -1,4 +1,5 @@
-﻿using Azure.Core;
+﻿using Azure;
+using Azure.Core;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Squil.SchemaBuilding;
 using System.Collections.Specialized;
@@ -219,7 +220,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         {
             var hadCommit = response.IsCompletedSuccessfully && response.Result.HasCommitted;
 
-            UpdateResult(resultOrNull, hadCommit);
+            UpdateResult(request, response, resultOrNull, hadCommit);
 
             ShowSchemaChangedException = false;
 
@@ -342,10 +343,19 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         {
             CurrentIndex.SetValidatedValues(response.ValidatedColumns);
         }
+    }
 
-        // FIXME: shouldn't this be in UpdateResult?
-        if (response.IsOk)
+    void UpdateResult(LocationQueryRequest request, LocationQueryResponse response, LocationQueryResult result, Boolean hasCommit)
+    {
+        if (result is not null)
         {
+            Result = result;
+
+            if (CommittedResult is null || hasCommit)
+            {
+                CommittedResult = result;
+            }
+
             if (request.OperationType == LocationQueryOperationType.Insert)
             {
                 editType = EditType.Insert;
@@ -360,21 +370,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
             {
                 editType = EditType.NotEditing;
             }
-        }
 
-        AreSaving = false;
-    }
-
-    void UpdateResult(LocationQueryResult result, Boolean hasCommit)
-    {
-        if (result is not null)
-        {
-            Result = result;
-
-            if (CommittedResult is null || hasCommit)
-            {
-                CommittedResult = result;
-            }
+            AreSaving = false;
         }
 
         ++ResultNumber;
