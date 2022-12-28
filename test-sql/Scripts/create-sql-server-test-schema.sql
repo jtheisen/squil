@@ -16,30 +16,29 @@ go
 use [squil-test]
 go
 
-create schema duplicates
-
 create table PrincipalWithDuplicates (
-	id int not null primary key,
+	id int not null constraint PK_PrincipalWithDuplicates primary key,
 	name varchar(40) not null constraint AK_Name unique
 )
 
 create table Dependent (
-	id int not null primary key,
+	id int not null constraint PK_Dependent primary key,
 	name varchar(40) not null references PrincipalWithDuplicates (name)
+
+	index IX_Name (name)
 )
 go
 
-alter index AK_Name on duplicates.PrincipalWithDuplicates disable
-alter table duplicates.PrincipalWithDuplicates nocheck constraint all
-alter table duplicates.Dependent nocheck constraint all
+alter table PrincipalWithDuplicates nocheck constraint all
+alter table Dependent nocheck constraint all
 
-insert into duplicates.PrincipalWithDuplicates values (1, 'foo'), (2, 'foo'), (3, 'bar')
-insert into duplicates.Dependent values (1, 'foo'), (2, 'bar')
+insert into PrincipalWithDuplicates values (1, 'foo'), (2, 'bar'), (3, 'baz')
+insert into Dependent values (1, 'foo'), (2, 'bar')
 
 -- Tables with different primary keys
 
 create table KeyedOnIdentity(
-	id int not null identity primary key,
+	id int not null identity constraint PK_KeyedOnIdentity primary key,
 	name varchar(10) not null constraint AK_KeyedOnIdentity unique,
 	upperCaseName as upper(name),
 	payload varchar(40) null
@@ -49,7 +48,7 @@ insert into KeyedOnIdentity(name)
 values ('one'), ('two'), ('three')
 
 create table KeyedOnName(
-	name varchar(10) not null primary key,
+	name varchar(10) not null constraint PK_KeyedOnName primary key,
 	upperCaseName as upper(name),
 	payload varchar(40) null
 )

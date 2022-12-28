@@ -199,6 +199,11 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
         var resultOrNull = response.Result;
 
+        if (response.Exception is not null)
+        {
+            eventSink.OnNext(new QueryVmExceptionEvent(response.Exception));
+        }
+
         if (response.Exception is SchemaChangedException)
         {
             if (attempt == 0)
@@ -362,7 +367,9 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
                 if (changes == null)
                 {
-                    SetChange(ChangeEntry.Insert(response.Table.Name, new Dictionary<String, String>()));
+                    var values = request.Location.KeyParams.AsMap().ToDictionary(p => p.Key, p => p.Value);
+
+                    SetChange(ChangeEntry.Insert(response.Table.Name, values));
                 }
             }
 

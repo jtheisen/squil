@@ -21,6 +21,11 @@ public class QueryUrlCreator
 
     public String RenderEntityUrl(CMIndexlike key, IMapping<String, String> values, String focusColumn = null, LocationQueryOperationType? operationType = null)
     {
+        return RenderEntityUrl(key, key, values, focusColumn, operationType);
+    }
+
+    public String RenderEntityUrl(CMIndexlike key, CMIndexlike keyForValues, IMapping<String, String> values, String focusColumn = null, LocationQueryOperationType? operationType = null)
+    {
         var (schema, table) = key.Table.Name;
 
         var path = new[] { "tables", schema, table, key.Name, focusColumn };
@@ -29,7 +34,7 @@ public class QueryUrlCreator
         // of a foreign key we're using in the location of an insert operation.
 
         var query =
-            from c in key.Columns
+            from c in (keyForValues ?? key).Columns
             let v = values.GetValue(c.c.Name)
             where v != null
             select ("$", c.c.Name, v);

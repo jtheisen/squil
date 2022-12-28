@@ -2,8 +2,6 @@
 
 <span @ref="element" class="@Class" contenteditable="@IsEditable" @onclick:stopPropagation @onfocus="Focused" @onblur="HandleChange">@Value</span>
 
-<RenderLogger @key="@Guid.NewGuid().ToString()" Name="@Name" />
-
 @code {
     static Logger log = LogManager.GetCurrentClassLogger();
 
