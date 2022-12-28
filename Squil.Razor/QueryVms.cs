@@ -363,13 +363,16 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             if (request.OperationType == LocationQueryOperationType.Insert)
             {
-                editType = EditType.Insert;
-
-                if (changes == null)
+                if (editType == EditType.NotEditing)
                 {
-                    var values = request.Location.KeyParams.AsMap().ToDictionary(p => p.Key, p => p.Value);
+                    var insertEntity = result.PrimaryEntities.List.Single($"Result unexpectedly missing singular entity on insert");
 
-                    SetChange(ChangeEntry.Insert(response.Table.Name, values));
+                    foreach (String kc in request.Location.KeyParams)
+                    {
+                        insertEntity.SetEditValue(kc, request.Location.KeyParams[kc]);
+                    }
+
+                    StartInsert();
                 }
             }
 
@@ -524,9 +527,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     void InitChange()
     {
-        var entity = Result.PrimaryEntities.List.FirstOrDefault();
-
-        if (entity == null) throw new Exception($"Result has no primary entity");
+        var entity = Result.PrimaryEntities.List.Single($"Result has no singular primary entity");
 
         var change = GetChangeEntry(entity, editType == EditType.Insert);
 

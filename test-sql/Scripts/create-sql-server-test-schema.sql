@@ -16,26 +16,31 @@ go
 use [squil-test]
 go
 
-create table PrincipalWithDuplicates (
-	id int not null constraint PK_PrincipalWithDuplicates primary key,
-	name varchar(40) not null constraint AK_Name unique
+create table RelatedPrincipal (
+	id int not null identity constraint PK_Principal primary key,
+	[name] varchar(10) not null constraint AK_Principal_Name unique
 )
 
-create table Dependent (
-	id int not null constraint PK_Dependent primary key,
-	name varchar(40) not null references PrincipalWithDuplicates (name)
+create table RelatedDependent (
+	id int not null identity constraint PK_Dependent primary key,
+	principalId int not null references RelatedPrincipal (id),
+	[name] varchar(10) not null constraint AK_Dependent_Name unique,
 
-	index IX_Name (name)
+	index IX_PrincipalId (principalId, [name])
 )
 go
 
-alter table PrincipalWithDuplicates nocheck constraint all
-alter table Dependent nocheck constraint all
+alter table RelatedPrincipal nocheck constraint all
+alter table RelatedDependent nocheck constraint all
 
-insert into PrincipalWithDuplicates values (1, 'foo'), (2, 'bar'), (3, 'baz')
-insert into Dependent values (1, 'foo'), (2, 'bar')
+insert into RelatedPrincipal([name]) values ('one'), ('two'), ('three')
+insert into RelatedDependent(principalId, [name]) values (1, 'foo'), (2, 'bar'), (3, 'baz')
 
 -- Tables with different primary keys
+
+create table NoEditableFields(
+	id int not null identity constraint PK_NoEditableFields primary key,
+)
 
 create table KeyedOnIdentity(
 	id int not null identity constraint PK_KeyedOnIdentity primary key,
