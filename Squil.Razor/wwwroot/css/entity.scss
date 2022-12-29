@@ -265,8 +265,7 @@ $bg-light-2: #e7e5e4;
             content: "none";
         }
     }
-
-/*    .entity-relation.is-empty > ol[data-flavor=page]:before,
+    /*    .entity-relation.is-empty > ol[data-flavor=page]:before,
     .entity-relation.is-empty > ol[data-flavor=column-page]:before {
         font-style: italic;
         content: "no results";
@@ -352,14 +351,17 @@ $bg-light-2: #e7e5e4;
                 }
             }
 
-            button.entity-column-set-null-button {
+            button.entity-column-dns-button {
+                font-size: .75em;
+                font-weight: bold;
+                text-align: center;
+                width: 1.5em;
                 position: relative;
                 color: gray;
                 border: 1px solid #ccc;
                 outline: 1px solid #ccc;
                 padding: 0 4px;
                 display: flex;
-                flex-direction: column;
                 justify-content: center;
 
                 &:focus-visible {
@@ -407,6 +409,11 @@ $bg-light-2: #e7e5e4;
                 }
             }
         }
+    }
+
+    .default-value:before {
+        font-style: italic;
+        content: "";
     }
 
     .null-value:before {

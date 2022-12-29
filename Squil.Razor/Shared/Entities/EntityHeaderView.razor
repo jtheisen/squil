@@ -1,7 +1,7 @@
 ﻿@{
     var table = Table;
 
-    var name = table?.PrimaryNameColumn?.Apply(nc => Entity?.ColumnValues[nc.Name]);
+    var name = table?.PrimaryNameColumn?.Apply(nc => Entity?.ColumnValues.GetValueOrDefault(nc.Name));
 }
 
 @if (Entity != null)

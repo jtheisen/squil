@@ -107,10 +107,12 @@ public class Entity : IMapping<String, String>
 
     public RelatedEntities[] Related { get; set; }
 
-    String IMapping<String, String>.GetValue(String key) => ColumnValues[key];
+    String IMapping<String, String>.GetValue(String key) => ColumnValues.GetValueOrDefault(key);
 
-    public String GetDisplayValue(String columnName, Boolean preferEditValue)
+    public String GetDisplayValue(String columnName, Boolean preferEditValue, out Boolean exists)
     {
+        exists = true;
+
         if (EditValues != null && preferEditValue)
         {
             if (EditValues.ContainsKey(columnName))
@@ -119,7 +121,9 @@ public class Entity : IMapping<String, String>
             }
         }
 
-        return ColumnValues[columnName];
+        exists = ColumnValues.TryGetValue(columnName, out var value);
+
+        return value;
     }
 
     public void SetEditValues(ChangeEntry changes)
@@ -390,7 +394,7 @@ public static class Extensions
             Extent = extent,
             Table = table,
             IsUnkeyed = true,
-            ColumnValues = extent.Columns?.ToDictionary(c => c, c => null as String) ?? Empties<String, String>.Dictionary,
+            ColumnValues = Empties<String, String>.Dictionary,
             Related = extent.Children?.Select(c => MakeDummyEntities(c, version, table)).ToArray()
         };
     }

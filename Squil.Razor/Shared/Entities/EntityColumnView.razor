@@ -4,6 +4,10 @@
     var url = Url.If(!areQueryEditing);
 
     var showEditValues = !QueryVm.CurrentResponse.IsChangeOk || Entity.EditState == EntityEditState.Modified;
+
+    var nextDnsOperation = NextDnsOperation;
+
+    var nextDnsOperationLabel = nextDnsOperation.ToString()[0];
 }
 
 <div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
@@ -24,13 +28,17 @@
         <div class="entity-column-content" @onclick="HandleClick">
             <div @key="@($"{Entity.Version}-{rerenderHackCounter}")">
                 @{
-                    var value = Entity.GetDisplayValue(Column.Name, IsEditing || showEditValues);
+                    var value = Entity.GetDisplayValue(Column.Name, IsEditing || showEditValues, out var exists);
 
                     var pending = false;
 
                     if (!IsEditing)
                     {
-                        if (value == null)
+                        if (!exists)
+                        {
+                            <span class="default-value" />
+                        }
+                        else if (value == null)
                         {
                             <span class="null-value" />
                         }
@@ -77,7 +85,7 @@
 
         @if (CanEdit && !IsFocusColumn)
         {
-            <button @onclick="HandleDnsButtonClick" disabled="@(NextDnsOperation == DnsOperationType.None)" class="entity-column-set-null-button"><i class="fa-xs fas fa-times" /></button>
+            <button @onclick="HandleDnsButtonClick" disabled="@(NextDnsOperation == DnsOperationType.None)" class="entity-column-dns-button">@nextDnsOperationLabel</button>
         }
     </div>
 </div>
