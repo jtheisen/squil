@@ -51,7 +51,7 @@ public abstract class ColumnType
 
     public virtual Boolean UseSpecialValueForKeysOnInsert => false;
 
-    public virtual String GetSpecialValueOrNull => null;
+    public virtual String SpecialValueOrNull => null;
 
     public ValidationResult Validate(Int32 no, String keyValue, String searchValue, IndexDirection direction, ColumnTypePrecisions precisions)
     {
@@ -120,7 +120,7 @@ public class UnknownColumnType : ColumnType
 
 public class CharacterColumnType : ColumnType
 {
-    public override String GetSpecialValueOrNull => "";
+    public override String SpecialValueOrNull => "";
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
@@ -161,7 +161,7 @@ public class DateOrTimeColumnType : ColumnType
 
     public override Boolean UseSpecialValueForKeysOnInsert => true;
 
-    public override String GetSpecialValueOrNull
+    public override String SpecialValueOrNull
     {
         get
         {
@@ -429,7 +429,7 @@ public class IntegerColumnType : ColumnType
 
     public Boolean IsSigned { get; set; } = true;
 
-    public override String GetSpecialValueOrNull => "0";
+    public override String SpecialValueOrNull => "0";
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
@@ -504,7 +504,7 @@ public class IntegerColumnType : ColumnType
 
 public class DecimalColumnType : ColumnType
 {
-    public override String GetSpecialValueOrNull => "0";
+    public override String SpecialValueOrNull => "0";
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
@@ -519,7 +519,7 @@ public class DecimalColumnType : ColumnType
 
 public class FloatColumnType : ColumnType
 {
-    public override String GetSpecialValueOrNull => "0";
+    public override String SpecialValueOrNull => "0";
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {
@@ -540,7 +540,7 @@ public class GuidColumnType : ColumnType
 
     public override Boolean UseSpecialValueForKeysOnInsert => true;
 
-    public override String GetSpecialValueOrNull => Guid.NewGuid().ToString();
+    public override String SpecialValueOrNull => Guid.NewGuid().ToString();
 
     protected override ValidationResult Validate(String text, ColumnTypePrecisions precisions)
     {

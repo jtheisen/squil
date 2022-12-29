@@ -35,6 +35,14 @@ public enum SearchOptionType
     Scan
 }
 
+public enum DnsOperationType
+{
+    None,
+    Default,
+    Null,
+    Special
+}
+
 public record ValidationValueVm(Boolean isInvalid = false);
 
 public class SearchOptionVm
@@ -633,12 +641,84 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         eventSink.OnNext(new QueryVmStartQueryEvent());
     }
 
+    public DnsOperationType GetDnsOperationType(Entity entity, String name)
+    {
+        var column = entity.Table.Columns[name];
+
+        var special = column.Type.SpecialValueOrNull;
+
+        entity.ColumnValues.TryGetValue(name, out var originalValue);
+
+        String editValue = null;
+
+        var isEdited = entity.EditValues?.TryGetValue(name, out editValue) ?? false;
+
+        if (isEdited)
+        {
+            if (editValue is null && special is not null)
+            {
+                return DnsOperationType.Special;
+            }
+            else
+            {
+                return DnsOperationType.Default;
+            }
+        }
+        else
+        {
+            if (originalValue is null && special is not null)
+            {
+                return DnsOperationType.Special;
+            }
+            else if (column.IsNullable)
+            {
+                return DnsOperationType.Null;
+            }
+            else if (originalValue != special && special is not null)
+            {
+                return DnsOperationType.Special;
+            }
+            else
+            {
+                return DnsOperationType.None;
+            }
+        }
+    }
+
+    public void ApplyDnsOperation(Entity entity, String name, DnsOperationType type)
+    {
+        switch (type)
+        {
+            case DnsOperationType.Default:
+                entity.ClearEditValue(name);
+                
+                break;
+
+            case DnsOperationType.Null:
+                entity.SetEditValue(name, null);
+                
+                break;
+
+            case DnsOperationType.Special:
+                var column = entity.Table.Columns[name];
+
+                var special = column.Type.SpecialValueOrNull;
+
+                entity.SetEditValue(name, special);
+
+                break;
+
+            default:
+                throw new Exception($"Invalid dns operation type {type}");
+        }
+    }
+
+    #endregion
+
     public void Dispose()
     {
         isDisposed = true;
 
         lifetimeLogger.Dispose();
     }
-
-    #endregion
 }

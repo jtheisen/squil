@@ -145,6 +145,18 @@ public class Entity : IMapping<String, String>
 
         EditValues[columnName] = value;
     }
+
+    public void ClearEditValue(String columnName)
+    {
+        if (EditState == EntityEditState.Closed) throw new Exception("Can't edit closed entity");
+
+        if (EditValues == null)
+        {
+            EditValues = new Dictionary<String, String>();
+        }
+
+        EditValues.Remove(columnName);
+    }
 }
 
 [DebuggerDisplay("{RelationName}")]
@@ -327,7 +339,7 @@ public static class Extensions
         {
             var type = c.c.Type;
 
-            var sv = type.GetSpecialValueOrNull;
+            var sv = type.SpecialValueOrNull;
 
             if (type.UseSpecialValueForKeysOnInsert && sv is not null)
             {

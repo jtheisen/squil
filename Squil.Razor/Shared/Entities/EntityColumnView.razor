@@ -22,11 +22,9 @@
     </label>
     <div class="entity-column-wrapper">
         <div class="entity-column-content" @onclick="HandleClick">
-            <div @key="Entity.Version.ToString()">
+            <div @key="@($"{Entity.Version}-{rerenderHackCounter}")">
                 @{
                     var value = Entity.GetDisplayValue(Column.Name, IsEditing || showEditValues);
-
-                    log.Info($"#{QueryVm.ResultNumber} values is {value}");
 
                     var pending = false;
 
@@ -77,9 +75,9 @@
             </div>
         </div>
 
-        @if (CanEdit && Column.IsNullable && !IsFocusColumn)
+        @if (CanEdit && !IsFocusColumn)
         {
-            <button @onclick="HandleSetNullButtonClick" disabled="@(value == null)" class="entity-column-set-null-button"><i class="fa-xs fas fa-times" /></button>
+            <button @onclick="HandleDnsButtonClick" disabled="@(NextDnsOperation == DnsOperationType.None)" class="entity-column-set-null-button"><i class="fa-xs fas fa-times" /></button>
         }
     </div>
 </div>
@@ -108,17 +106,21 @@
     [CascadingParameter]
     public LocationQueryVm QueryVm { get; set; }
 
+    Int32 rerenderHackCounter;
+
     Boolean CanEdit => QueryVm.AreInUpdateOrInsert && !Column.IsIntrinsicallyUneditable && Entity.EditState != EntityEditState.Closed && Column.Type.IsSupported;
 
     Boolean isEditing;
 
     Boolean IsEditing => QueryVm.AreInUpdateOrInsert && (isEditing || IsFocusColumn);
 
-    void HandleSetNullButtonClick()
-    {
-        Entity.SetEditValue(Column.Name, null);
+    DnsOperationType NextDnsOperation => QueryVm.GetDnsOperationType(Entity, Column.Name);
 
-        QueryVm.AddChange(Entity);
+    void HandleDnsButtonClick()
+    {
+        QueryVm.ApplyDnsOperation(Entity, Column.Name, NextDnsOperation);
+
+        ++rerenderHackCounter;
     }
 
     void HandleValueChanged(String value)
