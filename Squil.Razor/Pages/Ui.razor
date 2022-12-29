@@ -520,7 +520,6 @@
 
         var keys = Vm.Location.KeyParams.AsMap();
 
-        // FIXME: we need to pass the keys of the current index for default initialization
         var url = Vm.UrlCreateor.RenderEntityUrl(table.PrimaryKey, index, keys, operationType: LocationQueryOperationType.Insert);
 
         NavigationManager.NavigateTo(url);

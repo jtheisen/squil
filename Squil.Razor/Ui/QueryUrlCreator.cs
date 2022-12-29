@@ -12,6 +12,25 @@ public class QueryUrlCreator
     public static UrlRenderer MakeUrlRenderer(String source)
         => new UrlRenderer("ui/" + source);
 
+    public String RenderUrl(LocationQueryLocation l)
+    {
+        var query = new List<(String prefix, String key, String value)>();
+
+        foreach (String kp in l.KeyParams)
+        {
+            query.Add(("$", kp, l.KeyParams[kp]));
+        }
+
+        foreach (String rp in l.RestParams)
+        {
+            query.Add(("", rp, l.KeyParams[rp]));
+        }
+
+        var url = UrlRenderer.RenderUrl(new[] { "tables", l.Schema, l.Table, l.Index, l.Column }, query);
+
+        return url;
+    }
+
     public String RenderEntityUrl(CMTable table, IMapping<String, String> values, String focusColumn = null, LocationQueryOperationType? insertMode = null)
     {
         if (table == null) return null;

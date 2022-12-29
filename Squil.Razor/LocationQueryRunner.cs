@@ -24,20 +24,26 @@ public enum LocationQueryAccessMode
 
 public class LocationQueryLocation
 {
-    public String Source { get; }
-    public String Schema { get; }
-    public String Table { get; }
-    public String Index { get; }
-    public String Column { get; }
+    public String Source { get; init; }
+    public String Schema { get; init; }
+    public String Table { get; init; }
+    public String Index { get; init; }
+    public String Column { get; init; }
 
-    public NameValueCollection KeyParams { get; }
-    public NameValueCollection RestParams { get; }
+    public NameValueCollection KeyParams { get; init; }
+    public NameValueCollection RestParams { get; init; }
 
-    public Int32 KeyValuesCount { get; }
+    public Int32 KeyValuesCount { get; init; }
 
-    public QuerySearchMode? SearchMode { get; set; }
+    public QuerySearchMode? SearchMode { get; init; }
 
-    public String BackRelation { get; set; }
+    public String BackRelation { get; init; }
+
+    public LocationQueryLocation()
+    {
+        KeyParams = new NameValueCollection();
+        RestParams = new NameValueCollection();
+    }
 
     public LocationQueryLocation(
         String[] segments,
