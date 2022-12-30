@@ -5,7 +5,7 @@
 @inject IOptions<AppSettings> Options
 @inject IJSRuntime Js
 @inject CircuitState Cs
-@implements IDisposable
+@implements IAsyncDisposable
 
 @{
     var isFirstRender = renderCount == 0;
@@ -577,7 +577,7 @@
         Vm.InDebug = queryParams["debug"] != null;
     }
 
-    void IDisposable.Dispose()
+    ValueTask IAsyncDisposable.DisposeAsync()
     {
         log.Info($"Disposing ui page");
 
@@ -585,6 +585,8 @@
 
         isDisposed = true;
         Runner.Cancel();
+
+        return ValueTask.CompletedTask;
     }
 
     new void StateHasChanged()

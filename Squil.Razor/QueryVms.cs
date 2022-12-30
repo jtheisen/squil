@@ -256,6 +256,14 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
             }
             else
             {
+                if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert } insertEntry &&
+                    Changes.FirstOrDefault() is { Type: ChangeOperationType.Insert } ownInsertEntry &&
+                    !ownInsertEntry.IsKeyed && insertEntry.IsKeyed
+                    )
+                {
+                    ownInsertEntry.EntityKey = insertEntry.EntityKey;
+                }
+
                 NotifyChange();
             }
         }
@@ -582,15 +590,15 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     {
         if (entity.IsUnkeyed)
         {
-            return ChangeEntry.Insert(entity.Table.Name, entity.EditValues);
+            return ChangeEntry.Insert(entity.Table.Name, entity.EditValues ?? new Dictionary<String, String>());
         }
         else if (asInsert)
         {
-            return ChangeEntry.Insert(entity.GetEntityKey(), entity.EditValues);
+            return ChangeEntry.Insert(entity.GetEntityKey(), entity.EditValues ?? new Dictionary<String, String>());
         }
         else
         {
-            return ChangeEntry.Update(entity.GetEntityKey(), entity.EditValues);
+            return ChangeEntry.Update(entity.GetEntityKey(), entity.EditValues ?? new Dictionary<String, String>());
         }
     }
 
@@ -711,6 +719,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
             default:
                 throw new Exception($"Invalid dns operation type {type}");
         }
+
+        AddChange(entity);
     }
 
     #endregion

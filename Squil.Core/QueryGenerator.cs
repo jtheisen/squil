@@ -130,7 +130,7 @@ where {where}
                 var columnsAndValues = (
                     from c in table.ColumnsInOrder
                     where !c.IsComputed
-                    let v = ev.TryGetValue(c.Name, out var cv)
+                    let v = ev?.TryGetValue(c.Name, out var cv) ?? false
                         ? cv.ToSqlServerStringLiteralOrNull()
                         : keyValues?.GetValueOrDefault(c.Name)?.ToSqlServerStringLiteral() ?? "default"
                     where !c.IsIdentity || v != "default"
