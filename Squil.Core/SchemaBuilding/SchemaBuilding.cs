@@ -88,14 +88,18 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
 select value from sys.extended_properties ep where class = 1 and name = 'MS_Description' and ep.major_id = {a}.[object_id] and ep.minor_id = {a}.column_id
 ";
 
+    static String GetTablePermissionsSql(String a) => $@"
+select p.entity_name, p.subentity_name, p.permission_name from sys.fn_my_permissions(quotename(object_schema_name({a}.[object_id])) + N'.' + quotename(object_name({a}.[object_id])), 'object') p where subentity_name = '' and permission_name in ('select', 'update', 'insert', 'delete', 'alter') for xml auto, type
+";
+
     static Extent schemaQueryExtent = new Extent
     {
         RelationName = "",
         SqlSelectables = new[]
-            {
-                // doesn't yet work
-                new SqlSelectable(GetCatalogCommentSql, "comment"),
-            },
+        {
+            // doesn't yet work
+            new SqlSelectable(GetCatalogCommentSql, "comment"),
+        },
         Children = new[]
         {
             new Extent
@@ -115,6 +119,7 @@ select value from sys.extended_properties ep where class = 1 and name = 'MS_Desc
                             SqlSelectables = new[]
                             {
                                 new SqlSelectable(GetTableCommentSql, "comment"),
+                                new SqlSelectable(GetTablePermissionsSql, "permissions")
                             },
                             Children = new[]
                             {

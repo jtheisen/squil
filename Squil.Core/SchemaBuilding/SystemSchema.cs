@@ -89,6 +89,9 @@ public class SysTable : SysObject
 
     [XmlArray("foreign_keys")]
     public SysForeignKey[] ForeignKeys { get; set; } = Empties<SysForeignKey>.Array;
+
+    [XmlArray("permissions")]
+    public SysPermission[] Permissions { get; set; } = Empties<SysPermission>.Array;
 }
 
 [XmlType("c")]
@@ -297,8 +300,6 @@ public class SysForeignKey : SysObject
     }
 }
 
-
-
 [XmlType("fk_c")]
 [XmlTable("foreign_key_columns")]
 [DebuggerDisplay("{Name}")]
@@ -321,6 +322,21 @@ public class SysForeignKeyColumn
 
     [XmlAttribute("referenced_column_id")]
     Int32 ReferencedColumnId { get; set; }
+}
+
+[XmlType("p")]
+[XmlTable("permissions")]
+[DebuggerDisplay("{EntityName}:{SubEntityName}/{PermissionName}")]
+public class SysPermission
+{
+    [XmlAttribute("entity_name")]
+    public String EntityName { get; set; }
+
+    [XmlAttribute("subentity_name")]
+    public String SubEntityName { get; set; }
+
+    [XmlAttribute("permission_name")]
+    public String PermissionName { get; set; }
 }
 
 public static class SystemSchema

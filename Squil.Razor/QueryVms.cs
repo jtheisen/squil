@@ -468,6 +468,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             if (!CurrentResponse.IsOk) return false;
 
+            if (!CurrentResponse.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Update)) return false;
+
             switch (CurrentResponse.QueryType)
             {
                 case QueryControllerQueryType.Row:
@@ -479,7 +481,12 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         }
     }
 
-    public Boolean CanDelete => CurrentResponse is not null && CurrentResponse.IsOk && CurrentResponse.QueryType == QueryControllerQueryType.Row;
+    public Boolean CanDelete =>
+        CurrentResponse is not null &&
+        CurrentResponse.IsOk &&
+        CurrentResponse.QueryType == QueryControllerQueryType.Row &&
+        CurrentResponse.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Delete)
+        ;
 
     public Boolean CanInsert
     {
@@ -488,6 +495,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
             if (CurrentResponse is null) return false;
 
             if (!CurrentResponse.IsOk) return false;
+
+            if (!CurrentResponse.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Insert)) return false;
 
             switch (CurrentResponse.QueryType)
             {

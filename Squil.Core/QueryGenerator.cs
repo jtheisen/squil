@@ -127,13 +127,15 @@ where {where}
             case ChangeOperationType.Insert:
                 var keyValues = key?.GetKeyColumnsAndValuesDictionary();
 
+                var canChangeIdentity = table.AccesssPermissions.HasFlag(SchemaBuilding.CsdAccesssPermissions.Alter);
+
                 var columnsAndValues = (
                     from c in table.ColumnsInOrder
                     where !c.IsComputed
                     let v = ev?.TryGetValue(c.Name, out var cv) ?? false
                         ? cv.ToSqlServerStringLiteralOrNull()
                         : keyValues?.GetValueOrDefault(c.Name)?.ToSqlServerStringLiteral() ?? "default"
-                    where !c.IsIdentity || v != "default"
+                    where !c.IsIdentity || (v != "default" && canChangeIdentity)
                     select (column: c.Name.EscapeNamePart(), value: v, identity: c.IsIdentity)
                 ).ToArray();
 

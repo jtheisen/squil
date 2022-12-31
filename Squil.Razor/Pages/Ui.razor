@@ -292,7 +292,7 @@
                                 </small>
                             </HeaderExtra>
                             <Body>
-                                @foreach (var change in Vm.CurrentResponse?.Ledger?.GetEntries<ChangeSql>())
+                                @foreach (var change in Vm.CurrentResponse?.Ledger?.GetEntries<ChangeSql>() ?? Empties<ChangeSql>.Array)
                                 {
                                     <pre><CopyableContent>@change.Sql</CopyableContent></pre>
                                 }

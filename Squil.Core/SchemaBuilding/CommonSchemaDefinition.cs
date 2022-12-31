@@ -42,6 +42,8 @@ public class CsdTable : CsdBase
     public CsdKeyish[] Keyishs { get; set; } = Empties<CsdKeyish>.Array;
 
     public Int32? UsedKb { get; set; }
+
+    public CsdAccesssPermissions AccessPermissions { get; set; }
 }
 
 public class CsdColumn : CsdBase
@@ -112,9 +114,19 @@ public class CsdForeignKey : CsdKeyish
     public ObjectName ReferencedIndexlike { get; set; }
 }
 
+[Flags]
+public enum CsdAccesssPermissions
+{
+    Select = 1,
+    Update = 2,
+    Insert = 4,
+    Delete = 8,
+    Alter = 16
+}
+
 public static class CsdExtensions
 {
-    public static CsdKeyishType GetCsdType(this SysIndex index)
+    static CsdKeyishType GetCsdType(this SysIndex index)
     {
         if (index.IsPrimary)
         {
@@ -130,6 +142,25 @@ public static class CsdExtensions
         }
     }
 
+    static CsdAccesssPermissions GetAccessPermissions(this SysTable table)
+    {
+        var tokens = table.Permissions.Where(p => p.SubEntityName == "").Select(p => p.PermissionName).ToArray();
+
+        CsdAccesssPermissions result = default;
+
+        foreach (var e in Enum.GetValues<CsdAccesssPermissions>())
+        {
+            var es = e.ToString();
+
+            if (tokens.Any(t => t.Equals(es, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                result |= e;
+            }
+        }
+
+        return result;
+    }
+    
     public static CsdRoot CreateCsd(this SysRoot root)
     {
         var csdTables = new List<CsdTable>();
@@ -242,6 +273,8 @@ public static class CsdExtensions
                     });
                 }
 
+                var accessPermissions = GetAccessPermissions(table);
+
                 csdTables.Add(new CsdTable
                 {
                     Name = tableName,
@@ -250,7 +283,8 @@ public static class CsdExtensions
                     Type = CsdTableType.Table,
                     UsedKb = tableSizeKb,
                     Comment = table.Comment,
-                    IsHeap = isHeap
+                    IsHeap = isHeap,
+                    AccessPermissions = accessPermissions
                 });
             }
         }

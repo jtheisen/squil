@@ -54,7 +54,8 @@ public class CMRoot
             Root = this,
             Name = t.Name,
             Comment = t.Comment,
-            UsedKb = t.UsedKb
+            UsedKb = t.UsedKb,
+            AccesssPermissions = t.AccessPermissions
         }
         ).ToAssocList(t => t.Name);
 
@@ -370,6 +371,8 @@ public class CMTable : IWithUsedKb
     public String Comment { get; set; }
 
     public CsdTable Csd { get; set; }
+
+    public CsdAccesssPermissions AccesssPermissions { get; set; }
 
     public Dictionary<String, CMRelationEnd> Relations { get; } = new Dictionary<String, CMRelationEnd>();
 
