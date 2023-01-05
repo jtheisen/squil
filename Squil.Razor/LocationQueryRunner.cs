@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Humanizer;
+using Microsoft.Data.SqlClient;
 using System.Collections.Specialized;
 using System.Data;
 using TaskLedgering;
@@ -22,6 +23,7 @@ public enum LocationQueryAccessMode
     Commit
 }
 
+[DebuggerDisplay("{ToString()}")]
 public class LocationQueryLocation
 {
     public String Source { get; init; }
@@ -117,10 +119,33 @@ public class LocationQueryLocation
 
         return (keyParams, restParams);
     }
+
+    public override String ToString()
+    {
+        var writer = new StringWriter();
+
+        var tn = 6;
+
+        writer.Write($"{Source.Truncate(tn)}/{Schema.Truncate(tn)}/{Table.Truncate(tn)}");
+
+        if (Index is not null) writer.Write($"/{Index.Truncate(tn)}");
+        if (Column is not null) writer.Write($"/{Column.Truncate(tn)}");
+
+        writer.Write(RestParams.ToTruncatedString('{', '}'));
+
+        return writer.ToString();
+    }
 }
 
+[DebuggerDisplay("{ToString()}")]
 public class LocationQueryRequest
 {
+    static Int32 staticRequestCount = 0;
+
+    Int32 requestNo = ++staticRequestCount;
+
+    public Int32 RequestNo => requestNo;
+
     public LocationQueryLocation Location { get; set; }
 
     public ChangeEntry[] Changes { get; }
@@ -149,11 +174,26 @@ public class LocationQueryRequest
 
         SearchValues = searchValues;
     }
+
+    public override String ToString()
+    {
+        var writer = new StringWriter();
+
+        var cs = Changes?.Length > 0 ? "*" : "";
+        var ams = AccessMode.ToString().ToLower().FirstOrDefault();
+        var os = OperationType?.Apply(ot => ot.ToString().FirstOrDefault()) ?? '?';
+
+        var ss = SearchValues.ToTruncatedString();
+
+        return $"request #{requestNo} {ams}{cs}{os}{ss} at {Location}";
+    }
 }
 
 [DebuggerDisplay("{ToString()}")]
 public class LocationQueryResponse
 {
+    public Int32 RequestNo { get; set; }
+
     public QueryControllerQueryType QueryType { get; set; }
     public QuerySearchMode? SearchMode { get; set; }
     public ExtentFlavorType ExtentFlavorType { get; set; }
@@ -204,19 +244,24 @@ public class LocationQueryResponse
 
     public override String ToString()
     {
-        if (IsCanceled) return "canceled";
+        return $"response #{RequestNo} {ToStringInner()}";
+    }
 
-        if (Exception != null) return $"exception: {Exception.Message}";
+    String ToStringInner()
+    {
+        if (IsCanceled) return "is canceled";
 
-        if (HaveValidationIssues) return $"validation issues";
+        if (Exception != null) return $"has exception: {Exception.Message}";
 
-        if (Task == null) return "not started";
+        if (HaveValidationIssues) return $"has validation issues";
 
-        if (!Task.IsCompleted) return $"status {Task.Status}";
+        if (Task == null) return "is not started";
 
-        if (IsChangeOk) return "ok";
+        if (!Task.IsCompleted) return $"has status {Task.Status}";
 
-        return $"change exception: {ChangeException.Message}";
+        if (IsChangeOk) return "is ok";
+
+        return $"has change exception: {ChangeException.Message}";
     }
 
     public String GetPrimaryIdPredicateSql(String alias)
@@ -291,6 +336,8 @@ public class LocationQueryRunner : IDisposable
 
     public LocationQueryResponse StartQuery(LiveSource source, String connectionName, LocationQueryRequest request)
     {
+        log.Info($"New {request}");
+
         if (connections.AppSettings.DebugQueryDelayMillis is Int32 d)
         {
             Thread.Sleep(d);
@@ -308,6 +355,7 @@ public class LocationQueryRunner : IDisposable
 
         var query = new LocationQueryResponse
         {
+            RequestNo = request.RequestNo,
             RootName = connectionName,
             RootUrl = $"/ui/{connectionName}",
             Source = source
@@ -460,7 +508,7 @@ public class LocationQueryRunner : IDisposable
 
         query.Task.ContinueWith((task, result) =>
         {
-            log.Info($"Ran {request.AccessMode.ToString().ToLower()} query: {query}");
+            log.Info($"Ran {query}");
         },
         null);
 

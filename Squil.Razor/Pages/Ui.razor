@@ -593,6 +593,13 @@
     {
         if (isDisposed) return;
 
-        base.StateHasChanged();
+        try
+        {
+            base.StateHasChanged();
+        }
+        catch (ObjectDisposedException)
+        {
+            log.Error($"Object disposed exception on Ui.StateHasChanged");
+        }
     }
 }

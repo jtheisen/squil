@@ -1,3 +1,4 @@
+using Humanizer;
 using NLog;
 using Squil;
 using System.Collections.Specialized;
@@ -169,7 +170,7 @@ public class InstanceCounter<T>
 
 public class LifetimeLogger<T> : IDisposable
 {
-    static Logger log = LogManager.GetCurrentClassLogger();
+    static Logger log = LogManager.GetLogger("LifetimeLogger");
 
     private readonly String name;
 
@@ -181,12 +182,12 @@ public class LifetimeLogger<T> : IDisposable
     {
         name = typeof(T).Name;
 
-        log.Info($"+ {name} {instanceId}");
+        log.Debug($"+ {name} {instanceId}");
     }
 
     public void Dispose()
     {
-        log.Info($"- {name} {instanceId}");
+        log.Debug($"- {name} {instanceId}");
     }
 }
 
@@ -452,6 +453,15 @@ public static partial class Extensions
         change(query);
         builder.Query = query.ToString();
         return builder.Uri;
+    }
+
+    public static String ToTruncatedString(this NameValueCollection ps, Char open = '[', Char close = ']', Int32 tn = 5)
+    {
+        if (ps is null) return "";
+
+        var s = String.Join(',', from k in ps.OfType<String>() select $"{k.Truncate(tn)}={ps[k].Truncate(tn)}");
+
+        return s.Length == 0 ? null : $"{open}{s}{close}";
     }
 
     public static void Time(Action func, out TimeSpan elapsed)
