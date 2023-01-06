@@ -151,7 +151,9 @@ public class LiveSource
         }
         catch (SqlException ex)
         {
-            if (CheckModelInvalid())
+            var ct = StaticServiceStack.Get<CancellationToken>();
+
+            if (!ct.IsCancellationRequested && CheckModelInvalid())
             {
                 InvalidateModel();
 

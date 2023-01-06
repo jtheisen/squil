@@ -523,121 +523,103 @@ public class LocationQueryRunner : IDisposable
 
         StaticServiceStack.Install<IDbTransaction>(transaction);
 
-        try
+        if (request.Changes is ChangeEntry[] changes)
         {
-            if (request.Changes is ChangeEntry[] changes)
+            foreach (var change in changes)
             {
-                foreach (var change in changes)
+                try
                 {
-                    try
-                    {
-                        await query.Source.ExcecuteChange(connection, change, query.Table);
+                    await query.Source.ExcecuteChange(connection, change, query.Table);
 
-                        var primaries = query.Extent.GetPrimariesSubExtent();
+                    var primaries = query.Extent.GetPrimariesSubExtent();
 
-                        primaries.Values = change.EntityKey.KeyColumnsAndValues.Select(kv => kv.v).ToArray();
-                        primaries.KeyValueCount = primaries.Values.Length;
-                    }
-                    catch (SqlException ex)
-                    {
-                        query.ChangeException = ex;
+                    primaries.Values = change.EntityKey.KeyColumnsAndValues.Select(kv => kv.v).ToArray();
+                    primaries.KeyValueCount = primaries.Values.Length;
+                }
+                catch (SqlException ex)
+                {
+                    query.ChangeException = ex;
 
-                        break;
-                    }
+                    break;
                 }
             }
-
-            var entity = await query.Source.QueryAsync(connection, query.Extent);
-
-            var result = new LocationQueryResult(entity);
-
-            if (query.QueryType != QueryControllerQueryType.Root)
-            {
-                if (result.PrimaryEntities == null) throw new Exception($"Unexpectedly no primary entities");
-            }
-
-            if (query.PrincipalRelation != null)
-            {
-                if (result.PrincipalEntities == null) throw new Exception($"Unexpectedly no principal entities");
-            }
-
-            if (request.AccessMode == LocationQueryAccessMode.Commit && query.ChangeException == null)
-            {
-                await transaction.CommitAsync();
-
-                result.HasCommitted = true;
-            }
-
-            if (request.OperationType == LocationQueryOperationType.Insert)
-            {
-                if (request.Changes is null || !query.IsChangeOk)
-                {
-                    // insert without a changes array or with a failed insert means we're initializing with a dummy entity
-
-                    var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(DateTime.Now, query.Table);
-
-                    templateEntity.InitKeyValuesAsEdited();
-
-                    // if we have a key from a previous succesful insert, we need to prime the entity with it so that
-                    // it gets matched to the change entry later
-                    if (request.Changes?.FirstOrDefault() is ChangeEntry ce && ce.IsKeyed)
-                    {
-                        templateEntity.SetEntityKey(ce.EntityKey);
-                    }
-
-                    result.PrimaryEntities.List = new[] { templateEntity };
-                }
-                else
-                {
-                    // insert with a change array and a successful change operation means we should have loaded an inserted entity
-
-                    if (result.PrimaryEntities.List.Length == 0)
-                    {
-                        throw new Exception($"Unexpectedly no entity retrieved after insertion");
-                    }
-                }
-            }
-
-            // Error-free commits don't replay
-            var replayRequired = query.ChangeException != null || request.AccessMode == LocationQueryAccessMode.Rollback;
-
-            if (replayRequired)
-            {
-                foreach (var change in request.Changes)
-                {
-                    var key = change.EntityKey;
-
-                    foreach (var e in result.PrimaryEntities.List)
-                    {
-                        var entityKey = e.GetEntityKey();
-
-                        if (entityKey == key)
-                        {
-                            e.SetEditValues(change);
-
-                            e.EditState = query.ChangeException is null ? EntityEditState.Validated : EntityEditState.Modified;
-                        }
-                    }
-                }
-            }
-
-            return result;
         }
-        catch (Exception ex)
+
+        var entity = await query.Source.QueryAsync(connection, query.Extent);
+
+        var result = new LocationQueryResult(entity);
+
+        if (query.QueryType != QueryControllerQueryType.Root)
         {
-            if (ex is OperationCanceledException)
+            if (result.PrimaryEntities == null) throw new Exception($"Unexpectedly no primary entities");
+        }
+
+        if (query.PrincipalRelation != null)
+        {
+            if (result.PrincipalEntities == null) throw new Exception($"Unexpectedly no principal entities");
+        }
+
+        if (request.AccessMode == LocationQueryAccessMode.Commit && query.ChangeException == null)
+        {
+            await transaction.CommitAsync();
+
+            result.HasCommitted = true;
+        }
+
+        if (request.OperationType == LocationQueryOperationType.Insert)
+        {
+            if (request.Changes is null || !query.IsChangeOk)
             {
-                log.Info($"Query canceled");
+                // insert without a changes array or with a failed insert means we're initializing with a dummy entity
+
+                var templateEntity = query.Extent.GetPrimariesSubExtent().MakeDummyEntity(DateTime.Now, query.Table);
+
+                templateEntity.InitKeyValuesAsEdited();
+
+                // if we have a key from a previous succesful insert, we need to prime the entity with it so that
+                // it gets matched to the change entry later
+                if (request.Changes?.FirstOrDefault() is ChangeEntry ce && ce.IsKeyed)
+                {
+                    templateEntity.SetEntityKey(ce.EntityKey);
+                }
+
+                result.PrimaryEntities.List = new[] { templateEntity };
             }
             else
             {
-                log.Error(ex, "Query terminated with exception");
+                // insert with a change array and a successful change operation means we should have loaded an inserted entity
+
+                if (result.PrimaryEntities.List.Length == 0)
+                {
+                    throw new Exception($"Unexpectedly no entity retrieved after insertion");
+                }
             }
-
-            query.Exception = ex;
-
-            throw;
         }
+
+        // Error-free commits don't replay
+        var replayRequired = query.ChangeException != null || request.AccessMode == LocationQueryAccessMode.Rollback;
+
+        if (replayRequired)
+        {
+            foreach (var change in request.Changes)
+            {
+                var key = change.EntityKey;
+
+                foreach (var e in result.PrimaryEntities.List)
+                {
+                    var entityKey = e.GetEntityKey();
+
+                    if (entityKey == key)
+                    {
+                        e.SetEditValues(change);
+
+                        e.EditState = query.ChangeException is null ? EntityEditState.Validated : EntityEditState.Modified;
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
     async Task<LocationQueryResult> RunQuery(LocationQueryRequest request, LocationQueryResponse query)
@@ -646,9 +628,17 @@ public class LocationQueryRunner : IDisposable
 
         query.Ledger = ledger;
 
-        return await currentConnectionHolder.RunAsync(c => RunQueryInternal(c, request, query));
-    }
+        try
+        {
+            return await currentConnectionHolder.RunAsync(c => RunQueryInternal(c, request, query));
+        }
+        catch (Exception ex)
+        {
+            query.Exception = ex;
 
+            throw;
+        }
+    }
 
     ExtentFactory.PrincipalLocation GetPrincipalLocation(CMTable cmTable, LocationQueryRequest request)
     {
