@@ -245,7 +245,7 @@
                             @if (Vm.Result != null)
                             {
                                 <div class="@ClassNames("entity-context", "entity-invalid".If(!Vm.CurrentResponse.IsOk))">
-                                    <EntityContentView Entity="@Vm.Result.Entity" HideHeaders="@(Vm.CurrentResponse.QueryType != QueryControllerQueryType.Root)" />
+                                    <EntityContentView @key="Vm.Result.RequestNo" Entity="@Vm.Result.Entity" HideHeaders="@(Vm.CurrentResponse.QueryType != QueryControllerQueryType.Root)" />
                                 </div>
 
                                 @switch (Vm.CanLoadMore())

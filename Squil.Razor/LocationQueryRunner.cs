@@ -274,13 +274,16 @@ public class LocationQueryResponse
 
 public class LocationQueryResult
 {
+    public Int32 RequestNo { get; }
+
     public Entity Entity { get; }
     public RelatedEntities PrimaryEntities { get; }
     public RelatedEntities PrincipalEntities { get; }
     public Boolean HasCommitted { get; set; }
 
-    public LocationQueryResult(Entity entity)
+    public LocationQueryResult(Int32 requestNo, Entity entity)
     {
+        RequestNo = requestNo;
         Entity = entity;
         PrimaryEntities = entity.Related.GetRelatedEntitiesOrNull(PrimariesRelationAlias);
         PrincipalEntities = entity.Related.GetRelatedEntitiesOrNull(PrincipalRelationAlias);
@@ -547,7 +550,7 @@ public class LocationQueryRunner : IDisposable
 
         var entity = await query.Source.QueryAsync(connection, query.Extent);
 
-        var result = new LocationQueryResult(entity);
+        var result = new LocationQueryResult(query.RequestNo, entity);
 
         if (query.QueryType != QueryControllerQueryType.Root)
         {

@@ -368,9 +368,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     void UpdateResult(LocationQueryRequest request, LocationQueryResponse response, LocationQueryResult result, Boolean hasCommit)
     {
+        log.Info($"UpdateResult for #{response.RequestNo}");
+
         if (result is not null)
         {
             Result = result;
+
+            log.Info($"UpdateResult setting for #{response.RequestNo}");
 
             if (CommittedResult is null || hasCommit)
             {
