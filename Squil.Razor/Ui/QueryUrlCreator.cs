@@ -84,6 +84,8 @@ public class QueryUrlCreator
         if (columnsOnTarget != null && columnsOnSource != null)
         {
             var columnValues = columnsOnSource.Columns
+                // If columnValueSource doesn't contain a value for the column at all (not even null),
+                // it is a embryo during an insert operation. This function should not be called in this case.
                 .Select(c => columnValueSource[c.c.Name])
                 .TakeWhile(c => c != null);
 

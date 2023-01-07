@@ -169,7 +169,7 @@ public class DateOrTimeColumnType : ColumnType
 
             var format = GetDotNetPattern();
 
-            return String.Format(format, now);
+            return now.ToString(format);
         }
     }
 

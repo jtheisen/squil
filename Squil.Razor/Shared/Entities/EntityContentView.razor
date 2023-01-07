@@ -26,7 +26,13 @@
             }
             else if (field is EntityRelationFieldUi r)
             {
-                <EntityRelationView Ui="@r" HideHeader="@HideHeaders" />
+                if (!Entity.IsUnkeyed)
+                {
+                    // During inserts at the embryo stage, we display only the columns as without a key
+                    // we can't render the links to related entities yet
+
+                    <EntityRelationView Ui="@r" HideHeader="@HideHeaders" />                    
+                }
             }
             else
             {
