@@ -233,16 +233,21 @@
   }
 }
 .entity-context .entity-column .entity-column-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.25em;
   flex: 1 1 0;
+}
+.entity-context .entity-column .entity-column-content .entity-column-content-wrapper {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .entity-context .entity-column[data-is-focus-column] .entity-column-content {
   white-space: pre-wrap;
 }
 .entity-context .entity-column.entity-column-editable:not(.entity-column-focus-column) .entity-column-content {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   margin-left: -4px;
   padding-left: 4px;
   outline: 1px solid #ccc;

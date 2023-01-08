@@ -332,8 +332,13 @@ $bg-light-2: #e7e5e4;
         }
 
         .entity-column-content {
+            @include text-ellipsis;
             line-height: 1.25em;
             flex: 1 1 0;
+
+            .entity-column-content-wrapper {
+                @include text-ellipsis;
+            }
         }
 
         &[data-is-focus-column] .entity-column-content {
@@ -344,7 +349,6 @@ $bg-light-2: #e7e5e4;
 
             &:not(.entity-column-focus-column) {
                 .entity-column-content {
-                    @include text-ellipsis;
                     margin-left: -4px;
                     padding-left: 4px;
                     outline: 1px solid #ccc;

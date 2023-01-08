@@ -26,7 +26,7 @@
     </label>
     <div class="entity-column-wrapper">
         <div class="entity-column-content" @onclick="HandleClick">
-            <div @key="@($"{Entity.Version}-{rerenderHackCounter}")">
+            <div class="entity-column-content-wrapper" @key="@($"{Entity.Version}-{rerenderHackCounter}")">
                 @{
                     var value = Entity.GetDisplayValue(Column.Name, IsEditing || showEditValues, out var exists);
 
