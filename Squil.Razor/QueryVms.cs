@@ -429,6 +429,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     public void LoadMore()
     {
         ListLimit = Settings.LoadMoreLimit;
+
+        eventSink.OnNext(new QueryVmStartQueryEvent());
     }
 
     public SearchOptionVm CurrentIndex { get; private set; }
