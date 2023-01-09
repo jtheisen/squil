@@ -53,13 +53,13 @@ public class SqlServerConnectionProvider
         return new SqlConnection(GetConnectionString(config, ignoreCatalog: ignoreCatalog));
     }
 
-    public LiveSource GetLiveSource(String connectionString)
+    public LiveSource GetLiveSource(String connectionString, Boolean debugFailOnModelCreation = false)
     {
         var builder = new SqlConnectionStringBuilder(CompatibilityPrefix + connectionString + PersistSecurityInfoSuffix);
 
         SetConnectionOverrides(builder);
 
-        return new LiveSource(builder.ConnectionString);
+        return new LiveSource(builder.ConnectionString, debugFailOnModelCreation);
     }
 
     public async Task<SqlConnection> GetOpenedConnection(SqlServerHostConfiguration config, Boolean ignoreCatalog = false)

@@ -9,6 +9,8 @@ public class ProminentSourceConfiguration
     public String ConnectionString { get; set; }
     public String Description { get; set; }
     public String DescriptionSnippetType { get; set; }
+
+    public Boolean DebugFailOnModelCreation { get; set; }
 }
 
 public class LiveSqlServerHost : ObservableObject<LiveSqlServerHost>
@@ -88,7 +90,7 @@ public class LiveSqlServerHost : ObservableObject<LiveSqlServerHost>
 
             var connectionString = provider.GetConnectionString(configuration, catalogOverride: catalog);
 
-            liveSources[catalog] = liveSource = new LiveSource(connectionString);
+            liveSources[catalog] = liveSource = new LiveSource(connectionString, debugFailOnModelCreation: Configuration.DebugFailOnModelCreation);
         }
 
         return liveSource;
@@ -130,7 +132,9 @@ public class LightLiveConfiguration : ILiveSourceProvider
         {
             foreach (var configuration in prominentSourceConfigurations)
             {
-                prominentSources.Append(configuration.Name, (configuration, sqlServerConnectionProvider.GetLiveSource(configuration.ConnectionString)));
+                var source = sqlServerConnectionProvider.GetLiveSource(configuration.ConnectionString, configuration.DebugFailOnModelCreation);
+
+                prominentSources.Append(configuration.Name, (configuration, source));
             }
         }
     }

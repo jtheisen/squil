@@ -38,6 +38,7 @@ public class LiveSource
     static Logger log = LogManager.GetCurrentClassLogger();
 
     readonly string connectionString;
+    readonly Boolean debugFailOnModelCreation;
 
     volatile Model currentModel;
 
@@ -71,9 +72,10 @@ public class LiveSource
 
     public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
 
-    public LiveSource(String connectionString)
+    public LiveSource(String connectionString, Boolean debugFailOnModelCreation = false)
     {
         this.connectionString = connectionString;
+        this.debugFailOnModelCreation = debugFailOnModelCreation;
     }
 
     public async Task EnsureModelAsync()
@@ -215,6 +217,11 @@ public class LiveSource
         try
         {
             using var connection = GetConnection();
+
+            if (debugFailOnModelCreation)
+            {
+                connection.Execute("<invalid query>");
+            }
 
             var cmRoot = connection.GetCircularModel();
 

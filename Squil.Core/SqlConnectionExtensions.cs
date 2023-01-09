@@ -171,6 +171,15 @@ public static class SqlConnectionExtensions
         return scope.SetResult(rootRow);
     }
 
+    public static void Execute(this SqlConnection connection, String sql)
+    {
+        using var scope = GetCurrentLedger().TimedScope("executing");
+
+        var command = connection.CreateSqlCommandFromSql(sql);
+
+        command.ExecuteNonQuery();
+    }
+
     public static async Task ExecuteAsync(this SqlConnection connection, String sql)
     {
         using var scope = GetCurrentLedger().TimedScope("executing");

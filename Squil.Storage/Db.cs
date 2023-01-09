@@ -29,6 +29,8 @@ public class SqlServerHostConfiguration
 
     public DateTimeOffset ModifiedAt { get; set; }
 
+    public Boolean DebugFailOnModelCreation => false;
+
     public SqlServerHostConfiguration Clone() => (SqlServerHostConfiguration)MemberwiseClone();
 }
 

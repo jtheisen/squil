@@ -14,8 +14,6 @@ public class AppSettings
 
     public Int32 LoadMoreLimit { get; set; } = 100;
 
-    public Int32? DebugQueryDelayMillis { get; set; }
-
     public Boolean ShowNavigationChrome { get; set; }
 
     // Something is off about how SQL Server reports the sizes, they seem too large.
@@ -30,4 +28,7 @@ public class AppSettings
     public String SquilDbProviderName { get; set; }
     public String SquilDbSqlServerConnectionString { get; set; }
     public String SquilDbSqliteConnectionString { get; set; }
+
+
+    public Int32? DebugQueryDelayMillis { get; set; }
 }
