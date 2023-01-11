@@ -2,10 +2,29 @@
 
 <h6>About editing</h6>
 <p>
-    Even before saving, edits are sent to the database for validation and nontrivial feedback
-    but are rolled back immediately. Clicking save will then do the same and commit to the changes.
+    Even before saving, edits can be sent to the database for validation and nontrivial feedback
+    but are rolled back immediately. For deletes this is done once right away. For inserts and updates
+    you can click validate. In all cases, clicking save will then do the same and commit to the changes.
 </p>
+
+@if (ChangeOperationType != ChangeOperationType.Delete)
+{
+<p>
+    Next to the edit fields there are the <em>XNS</em> buttons that toggle between three states:
+    <ul>
+        <li><strong>X</strong> removes any entered value so that updates will not change the column and inserts will let the database decide a default (or complain)</li>
+        <li><strong>N</strong> sets the field to <em>null</em> (only present for null columns)</li>
+        <li>
+            <strong>S</strong> sets the column, depending on its type, to one of the special values
+            <em>zero</em>, the <em>empty string</em>, the <em>current date or time</em> or a <em>random unique identifier</em>
+        </li>
+    </ul>
+</p>    
+}
 
 @code {
     AppSettings Settings => Options.Value;
+
+    [Parameter]
+    public ChangeOperationType ChangeOperationType { get; set; }
 }

@@ -383,7 +383,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             if (request.OperationType == LocationQueryOperationType.Insert)
             {
-                if (editType == EditType.NotEditing)
+                if (editType is null)
                 {
                     var insertEntity = result.PrimaryEntities.List.Single($"Result unexpectedly missing singular entity on insert");
 
@@ -398,7 +398,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             if (response.IsChangeOk && AreSaving)
             {
-                editType = EditType.NotEditing;
+                editType = null;
             }
 
             AreSaving = false;
@@ -452,19 +452,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     #region Editing
 
-    public enum EditType
-    {
-        NotEditing,
-        Update,
-        Insert,
-        Delete
-    }
-
-    EditType editType;
+    ChangeOperationType? editType;
 
     Boolean haveChanges = false;
 
     List<ChangeEntry> changes;
+
+    public ChangeOperationType? EditType => editType;
 
     public Boolean CanEdit
     {
@@ -519,18 +513,18 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     public ChangeEntry[] Changes => changes?.ToArray();
 
-    public Boolean AreInEdit => editType != EditType.NotEditing;
-    public Boolean AreInUpdate => editType == EditType.Update;
-    public Boolean AreInDelete => editType == EditType.Delete;
-    public Boolean AreInInsert => editType == EditType.Insert;
+    public Boolean AreInEdit => editType is not null;
+    public Boolean AreInUpdate => editType == ChangeOperationType.Update;
+    public Boolean AreInDelete => editType == ChangeOperationType.Delete;
+    public Boolean AreInInsert => editType == ChangeOperationType.Insert;
 
-    public Boolean AreInUpdateOrInsert => editType == EditType.Update || editType == EditType.Insert;
+    public Boolean AreInUpdateOrInsert => editType == ChangeOperationType.Update || editType == ChangeOperationType.Insert;
 
-    public void StartUpdate() => StartEdit(EditType.Update, InitChange);
-    public void StartDelete() => StartEdit(EditType.Delete, InitDelete);
-    public void StartInsert() => StartEdit(EditType.Insert, InitChange);
+    public void StartUpdate() => StartEdit(ChangeOperationType.Update, InitChange);
+    public void StartDelete() => StartEdit(ChangeOperationType.Delete, InitDelete);
+    public void StartInsert() => StartEdit(ChangeOperationType.Insert, InitChange);
 
-    public void StartEdit(EditType state, Action init = null)
+    public void StartEdit(ChangeOperationType state, Action init = null)
     {
         if (AreInEdit) throw new Exception($"Edit already started");
 
@@ -560,7 +554,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     {
         var entity = Result.PrimaryEntities.List.Single($"Result has no singular primary entity");
 
-        var change = GetChangeEntry(entity, editType == EditType.Insert);
+        var change = GetChangeEntry(entity, editType == ChangeOperationType.Insert);
 
         SetChange(change);
     }
@@ -573,7 +567,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         }
         else
         {
-            editType = EditType.NotEditing;
+            editType = null;
 
             changes = null;
 
