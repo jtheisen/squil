@@ -1,5 +1,6 @@
 using Humanizer;
 using Newtonsoft.Json;
+using System.Threading;
 using System.Xml.Linq;
 using static Squil.StaticSqlAliases;
 
@@ -130,9 +131,12 @@ public class Entity : IMapping<String, String>
     {
         if (changes.EntityKey != this.GetEntityKey()) throw new Exception($"Key mismatch");
 
-        foreach (var change in changes.EditValues)
+        if (changes.EditValues is not null)
         {
-            SetEditValue(change.Key, change.Value);
+            foreach (var change in changes.EditValues)
+            {
+                SetEditValue(change.Key, change.Value);
+            }
         }
     }
 
