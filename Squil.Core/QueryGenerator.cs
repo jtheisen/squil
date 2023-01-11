@@ -60,6 +60,8 @@ public class QueryGenerator
 
     public async Task<(String c, String v)[]> ExecuteChange(SqlConnection connection, CMTable table, ChangeEntry change)
     {
+        if (change.Type == ChangeOperationType.Update && change.EditValues.Count == 0) return null;
+
         var sql = GetChangeSql(table, change);
 
         if (sql.ReturnsKey)
@@ -115,6 +117,8 @@ from @output
         switch (entry.Type)
         {
             case ChangeOperationType.Update:
+                if (ev.Count == 0) throw new Exception("Can't update with no values");
+
                 var setters = from p in ev select $"{p.Key.EscapeNamePart()} = {p.Value.ToSqlServerStringLiteralOrNull()}";
 
                 return GetSqlStringWithOutput(output => @$"
