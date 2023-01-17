@@ -1,6 +1,6 @@
 ﻿@page "/ui/{*Path}"
 @using Microsoft.Data.SqlClient
-@inject LocationQueryRunner Runner
+@inject UiQueryRunner Runner
 @inject NavigationManager NavigationManager
 @inject IOptions<AppSettings> Options
 @inject IJSRuntime Js
@@ -39,9 +39,9 @@
     <NavItems>
         <BreadcrumbItem><a class="text-muted" href="/">Databases</a></BreadcrumbItem>
 
-        @if (Vm.CommittedResult is LocationQueryResult bcr)
+        @if (Vm.CommittedResult is UiQueryResult bcr)
         {
-            <BreadcrumbItem><a class="text-muted" href="@Vm.Response.RootUrl.If(Vm.Response.QueryType != QueryControllerQueryType.Root)">@Vm.Response.RootName</a></BreadcrumbItem>
+            <BreadcrumbItem><a class="text-muted" href="@Vm.Response.RootUrl.If(Vm.Response.QueryType != UiQueryType.Root)">@Vm.Response.RootName</a></BreadcrumbItem>
             <CascadingValue Value="Vm">
                 @if (bcr.PrincipalEntities != null)
                 {
@@ -62,10 +62,10 @@
 
                     switch (Vm.Response.QueryType)
                     {
-                        case QueryControllerQueryType.Table:
+                        case UiQueryType.Table:
                             <span class="entity-context text-muted"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></span>
                             break;
-                        case QueryControllerQueryType.Row:
+                        case UiQueryType.Row:
 
                             <BreadcrumbItem>
                                 <a class="entity-context text-muted" href="@Vm.UrlCreateor.RenderTableUrl(Vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
@@ -77,7 +77,7 @@
                                 </span>
                             </BreadcrumbItem>
                             break;
-                        case QueryControllerQueryType.Column:
+                        case UiQueryType.Column:
                             <BreadcrumbItem>
                                 <a class="entity-context text-muted" href="@Vm.UrlCreateor.RenderTableUrl(Vm.Response.Table)"><EntityRelationNameView RelationEnd="@pe.RelationEnd" NoColumnInformation="@true" /></a>
                             </BreadcrumbItem>
@@ -92,11 +92,11 @@
                                 <span>@Vm.Location.Column</span>
                             </BreadcrumbItem>
                             break;
-                        case QueryControllerQueryType.TableSlice:
+                        case UiQueryType.TableSlice:
                             @* Should have been handled above by having a principal entity *@
                             <i>some slice</i>
                             break;
-                        case QueryControllerQueryType.Root:
+                        case UiQueryType.Root:
                         default:
                             break;
                     }
@@ -197,8 +197,8 @@
                     {
                         switch (Vm.Response.QueryType)
                         {
-                            case QueryControllerQueryType.Table:
-                            case QueryControllerQueryType.TableSlice:
+                            case UiQueryType.Table:
+                            case UiQueryType.TableSlice:
                                 <div class="search-panel-spacer">&nbsp;</div>
                                 break;
                         }
@@ -245,12 +245,12 @@
                             @if (Vm.Result != null)
                             {
                                 <div class="@ClassNames("entity-context", "entity-invalid".If(!Vm.CurrentResponse.IsOk))">
-                                    <EntityContentView @key="Vm.Result.RequestNo" Entity="@Vm.Result.Entity" HideHeaders="@(Vm.CurrentResponse.QueryType != QueryControllerQueryType.Root)" />
+                                    <EntityContentView @key="Vm.Result.RequestNo" Entity="@Vm.Result.Entity" HideHeaders="@(Vm.CurrentResponse.QueryType != UiQueryType.Root)" />
                                 </div>
 
                                 @switch (Vm.CanLoadMore())
                                 {
-                                    case CanLoadMoreStatus.Can:
+                                    case UiQueryCanLoadMoreStatus.Can:
                                         if (Vm.Request.ListLimit < Settings.LoadMoreLimit)
                                         {
                                             <div class="my-4">
@@ -264,8 +264,8 @@
                                             </div>
                                         }
                                         break;
-                                    case CanLoadMoreStatus.Complete:
-                                    case CanLoadMoreStatus.Unavailable:
+                                    case UiQueryCanLoadMoreStatus.Complete:
+                                    case UiQueryCanLoadMoreStatus.Unavailable:
                                     default:
                                         break;
                                 }
@@ -420,9 +420,9 @@
 
     IDisposable vmEventSubscription;
 
-    LocationQueryVm vm = null;
+    LocationUiQueryVm vm = null;
 
-    LocationQueryVm Vm
+    LocationUiQueryVm Vm
     {
         get => vm;
         set
@@ -442,21 +442,21 @@
         }
     }
 
-    void ProcessVmEvent(QueryVmEvent e)
+    void ProcessVmEvent(UiQueryVmEvent e)
     {
-        if (e is QueryVmStartQueryEvent)
+        if (e is UiQueryVmStartQueryEvent)
         {
             Vm.StartQuery();
         }
-        else if (e is QueryVmNavigateBackEvent)
+        else if (e is UiQueryVmNavigateBackEvent)
         {
             Js.InvokeVoidAsync("history.back");
         }
-        else if (e is QueryVmNavigateToEvent nte)
+        else if (e is UiQueryVmNavigateToEvent nte)
         {
             NavigationManager.NavigateTo(nte.Target, new NavigationOptions { ReplaceHistoryEntry = true});
         }
-        else if (e is QueryVmExceptionEvent ee)
+        else if (e is UiQueryVmExceptionEvent ee)
         {
             HandleException(ee.Exception);
         }
@@ -566,9 +566,9 @@
 
         var queryParams = HttpUtility.ParseQueryString(uri.Query);
 
-        var location = new LocationQueryLocation(segments, queryParams);
+        var location = new UiQueryLocation(segments, queryParams);
 
-        Vm = new LocationQueryVm(Settings, Runner, location);
+        Vm = new LocationUiQueryVm(Settings, Runner, location);
 
         Vm.SetSearchValues(SearchValues.ToNameValueCollection());
 

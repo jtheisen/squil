@@ -2,7 +2,7 @@
 
 @switch (QueryType)
 {
-    case QueryControllerQueryType.Root:
+    case UiQueryType.Root:
         <h6>The root</h6>
         <p>
             At the root of the database, you see a list of tables with
@@ -32,7 +32,7 @@
             (This is only possible when the respective table has a primary key.)
         </p>
         break;
-    case QueryControllerQueryType.Row:
+    case UiQueryType.Row:
         <h6>A row detail</h6>
         <p>
             Detail views are divided into sections. All the information in the
@@ -50,7 +50,7 @@
             on the database name in the header.
         </p>
         break;
-    case QueryControllerQueryType.Table:
+    case UiQueryType.Table:
         <h6>A table list</h6>
         <p>
             Lists show table rows with slightly less information than detail views,
@@ -60,7 +60,7 @@
             This list shows the beginning of an <em>entire table</em>.
         </p>
         break;
-    case QueryControllerQueryType.TableSlice:
+    case UiQueryType.TableSlice:
         <h6>A related list</h6>
         <p>
             Lists show table rows with slightly less information than detail views,
@@ -75,7 +75,7 @@
             at only a part of a table and which other table row this subset relates to.
         </p>
         break;
-    case QueryControllerQueryType.Column:
+    case UiQueryType.Column:
         <h6>An individual column</h6>
         <p>
             Larger individual text columns get their own page to allow for proper reading.
@@ -85,8 +85,8 @@
 
 @switch (QueryType)
 {
-    case QueryControllerQueryType.Table:
-    case QueryControllerQueryType.TableSlice:
+    case UiQueryType.Table:
+    case UiQueryType.TableSlice:
         <h6>Search</h6>
         <p>
             Searching on lists works via indexes when the table is large.
@@ -118,7 +118,7 @@
 
 @code {
     [Parameter]
-    public QueryControllerQueryType QueryType { get; set; }
+    public UiQueryType QueryType { get; set; }
 
     AppSettings Settings => Options.Value;
 }

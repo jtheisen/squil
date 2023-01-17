@@ -1,22 +1,18 @@
-﻿using Azure;
-using Azure.Core;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using Squil.SchemaBuilding;
+﻿using Squil.SchemaBuilding;
 using System.Collections.Specialized;
 using System.Reactive.Subjects;
-using static Squil.GlobalBlockingReport;
 
 namespace Squil;
 
-public record QueryVmEvent;
+public record UiQueryVmEvent;
 
-public record QueryVmNavigateBackEvent : QueryVmEvent;
+public record UiQueryVmNavigateBackEvent : UiQueryVmEvent;
 
-public record QueryVmNavigateToEvent(String Target) : QueryVmEvent;
+public record UiQueryVmNavigateToEvent(String Target) : UiQueryVmEvent;
 
-public record QueryVmStartQueryEvent : QueryVmEvent;
+public record UiQueryVmStartQueryEvent : UiQueryVmEvent;
 
-public record QueryVmExceptionEvent(Exception Exception) : QueryVmEvent;
+public record UiQueryVmExceptionEvent(Exception Exception) : UiQueryVmEvent;
 
 public record UnsuitableIndexesVm(CsdUnsupportedReason Reason, SearchOptionVm[] Indexes)
 {
@@ -83,32 +79,32 @@ public class SearchOptionVm
     }
 }
 
-public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
+public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposable
 {
-    public LocationQueryLocation Location { get; }
+    public UiQueryLocation Location { get; }
 
     public QueryUrlCreator UrlCreateor { get; }
-    public LocationQueryRunner Runner { get; }
+    public UiQueryRunner Runner { get; }
     public AppSettings Settings { get; }
 
-    Subject<QueryVmEvent> eventSink = new Subject<QueryVmEvent>();
+    Subject<UiQueryVmEvent> eventSink = new Subject<UiQueryVmEvent>();
 
-    public IObservable<QueryVmEvent> Events => eventSink;
+    public IObservable<UiQueryVmEvent> Events => eventSink;
 
     public Int32 ListLimit { get; private set; }
 
-    public LocationQueryRequest Request { get; private set; }
+    public UiQueryRequest Request { get; private set; }
 
-    public LocationQueryResponse Response => CurrentResponse;
-    public LocationQueryResponse CurrentResponse { get; private set; }
+    public UiQueryState Response => CurrentResponse;
+    public UiQueryState CurrentResponse { get; private set; }
 
     public Boolean HaveResponse => CurrentResponse is not null;
 
     public Boolean IsQuerying => CurrentResponse?.IsRunning ?? false;
 
-    public LocationQueryResult CommittedResult { get; private set; }
+    public UiQueryResult CommittedResult { get; private set; }
 
-    public LocationQueryResult Result { get; private set; }
+    public UiQueryResult Result { get; private set; }
 
     public Boolean HaveSearchOptions { get; private set; }
 
@@ -122,11 +118,11 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     NameValueCollection searchValues = new NameValueCollection();
 
-    LifetimeLogger<LocationQueryVm> lifetimeLogger = new LifetimeLogger<LocationQueryVm>();
+    LifetimeLogger<LocationUiQueryVm> lifetimeLogger = new LifetimeLogger<LocationUiQueryVm>();
 
     Boolean isDisposed;
 
-    public LocationQueryVm(AppSettings settings, LocationQueryRunner runner, LocationQueryLocation location)
+    public LocationUiQueryVm(AppSettings settings, UiQueryRunner runner, UiQueryLocation location)
     {
         Runner = runner;
         Location = location;
@@ -137,13 +133,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         UrlCreateor = new QueryUrlCreator(location.Source);
     }
 
-    LocationQueryAccessMode GetAccessMode()
+    UiQueryAccessMode GetAccessMode()
     {
-        if (Changes is null) return LocationQueryAccessMode.QueryOnly;
+        if (Changes is null) return UiQueryAccessMode.QueryOnly;
 
-        if (AreSaving) return LocationQueryAccessMode.Commit;
+        if (AreSaving) return UiQueryAccessMode.Commit;
 
-        return LocationQueryAccessMode.Rollback;
+        return UiQueryAccessMode.Rollback;
     }
 
     public void SetSearchValues(NameValueCollection searchValues)
@@ -166,7 +162,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
             operationType = parsedOperationType;
         }
 
-        var request = new LocationQueryRequest(Location, searchValues, Changes, accessMode, operationType);
+        var request = new UiQueryRequest(Location, searchValues, Changes, accessMode, operationType);
 
         request.ListLimit = ListLimit;
 
@@ -209,7 +205,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
         if (response.Exception is not null)
         {
-            eventSink.OnNext(new QueryVmExceptionEvent(response.Exception));
+            eventSink.OnNext(new UiQueryVmExceptionEvent(response.Exception));
         }
 
         if (response.Exception is SchemaChangedException)
@@ -241,13 +237,13 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
             {
                 if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Delete })
                 {
-                    eventSink.OnNext(new QueryVmNavigateBackEvent());
+                    eventSink.OnNext(new UiQueryVmNavigateBackEvent());
                 }
                 else if (request.Changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert or ChangeOperationType.Update } insertEntry)
                 {
                     var values = insertEntry.EntityKey.GetKeyColumnsAndValuesDictionary().ToMap();
 
-                    eventSink.OnNext(new QueryVmNavigateToEvent(UrlCreateor.RenderEntityUrl(response.Table, values)));
+                    eventSink.OnNext(new UiQueryVmNavigateToEvent(UrlCreateor.RenderEntityUrl(response.Table, values)));
                 }
                 else
                 {
@@ -348,7 +344,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
     }
 
-    void Update(LocationQueryRequest request, LocationQueryResponse response)
+    void Update(UiQueryRequest request, UiQueryState response)
     {
         Request = request;
         CurrentResponse = response;
@@ -366,7 +362,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         }
     }
 
-    void UpdateResult(LocationQueryRequest request, LocationQueryResponse response, LocationQueryResult result, Boolean hasCommit)
+    void UpdateResult(UiQueryRequest request, UiQueryState response, UiQueryResult result, Boolean hasCommit)
     {
         log.Info($"UpdateResult for #{response.RequestNo}");
 
@@ -407,30 +403,30 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
         ++ResultNumber;
     }
 
-    public CanLoadMoreStatus CanLoadMore()
+    public UiQueryCanLoadMoreStatus CanLoadMore()
     {
-        if (haveChanges) return CanLoadMoreStatus.Unavailable;
+        if (haveChanges) return UiQueryCanLoadMoreStatus.Unavailable;
 
-        if (CurrentResponse.Task is null) return CanLoadMoreStatus.Unavailable;
+        if (CurrentResponse.Task is null) return UiQueryCanLoadMoreStatus.Unavailable;
 
-        if (!CurrentResponse.Task.IsCompletedSuccessfully) return CanLoadMoreStatus.Unavailable;
+        if (!CurrentResponse.Task.IsCompletedSuccessfully) return UiQueryCanLoadMoreStatus.Unavailable;
 
         var r = CurrentResponse.Task.Result.PrimaryEntities;
 
-        if (r == null) return CanLoadMoreStatus.Unavailable;
+        if (r == null) return UiQueryCanLoadMoreStatus.Unavailable;
 
-        if (r.Extent.Flavor.type != ExtentFlavorType.Block) return CanLoadMoreStatus.Unavailable;
+        if (r.Extent.Flavor.type != ExtentFlavorType.Block) return UiQueryCanLoadMoreStatus.Unavailable;
 
-        if (r.Extent.Limit > r.List.Length) return CanLoadMoreStatus.Complete;
+        if (r.Extent.Limit > r.List.Length) return UiQueryCanLoadMoreStatus.Complete;
 
-        return CanLoadMoreStatus.Can;
+        return UiQueryCanLoadMoreStatus.Can;
     }
 
     public void LoadMore()
     {
         ListLimit = Settings.LoadMoreLimit;
 
-        eventSink.OnNext(new QueryVmStartQueryEvent());
+        eventSink.OnNext(new UiQueryVmStartQueryEvent());
     }
 
     public SearchOptionVm CurrentIndex { get; private set; }
@@ -472,8 +468,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             switch (CurrentResponse.QueryType)
             {
-                case QueryControllerQueryType.Row:
-                case QueryControllerQueryType.Column:
+                case UiQueryType.Row:
+                case UiQueryType.Column:
                     return true;
                 default:
                     return false;
@@ -484,7 +480,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     public Boolean CanDelete =>
         CurrentResponse is not null &&
         CurrentResponse.IsOk &&
-        CurrentResponse.QueryType == QueryControllerQueryType.Row &&
+        CurrentResponse.QueryType == UiQueryType.Row &&
         CurrentResponse.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Delete)
         ;
 
@@ -500,8 +496,8 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
             switch (CurrentResponse.QueryType)
             {
-                case QueryControllerQueryType.Table:
-                case QueryControllerQueryType.TableSlice:
+                case UiQueryType.Table:
+                case UiQueryType.TableSlice:
                     return true;
                 default:
                     return false;
@@ -563,7 +559,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
     {
         if (changes?.FirstOrDefault() is { Type: ChangeOperationType.Insert })
         {
-            eventSink.OnNext(new QueryVmNavigateBackEvent());
+            eventSink.OnNext(new UiQueryVmNavigateBackEvent());
         }
         else
         {
@@ -639,7 +635,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
         url = null;
 
-        if (request.OperationType == LocationQueryOperationType.Insert && response.IsChangeOk && request.AccessMode == LocationQueryAccessMode.Commit)
+        if (request.OperationType == LocationQueryOperationType.Insert && response.IsChangeOk && request.AccessMode == UiQueryAccessMode.Commit)
         {
             var table = response.Table;
             var change = Changes.Single();
@@ -655,7 +651,7 @@ public class LocationQueryVm : ObservableObject<LocationQueryVm>, IDisposable
 
     void StartQueryAfterEdit()
     {
-        eventSink.OnNext(new QueryVmStartQueryEvent());
+        eventSink.OnNext(new UiQueryVmStartQueryEvent());
     }
 
     public DnsOperationType GetDnsOperationType(Entity entity, String name)

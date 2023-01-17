@@ -18,15 +18,15 @@
         </ContentWithTooltip>
     </h6>
 
-    @if (QueryVm.ScanOption != null)
+    @if (UiQueryVm.ScanOption != null)
     {
         <div class="indexes-form">
-            <SearchLine Option="@QueryVm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            <SearchLine Option="@UiQueryVm.ScanOption" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
         </div>
     }
     else
     {
-        <p>@QueryVm.NoScanOptionReason</p>
+        <p>@UiQueryVm.NoScanOptionReason</p>
     }
 
     <h6 class="text-end mt-4">
@@ -45,27 +45,27 @@
     </h6>
 
     <div class="indexes-form mb-4">
-        @if (QueryVm.SearchOptions.Length > 0)
+        @if (UiQueryVm.SearchOptions.Length > 0)
         {
-            foreach (var option in QueryVm.SearchOptions)
+            foreach (var option in UiQueryVm.SearchOptions)
             {
                 if (!option.Index.IsSupported) continue;
 
-                <SearchLine Option="@option" HiddenPrefixLength="@QueryVm.Location.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+                <SearchLine Option="@option" HiddenPrefixLength="@UiQueryVm.Location.KeyValuesCount" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
             }
         }
-        else if (QueryVm.ScanOption?.IsCurrent ?? false == false)
+        else if (UiQueryVm.ScanOption?.IsCurrent ?? false == false)
         {
-            <SearchLine Option="@QueryVm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
+            <SearchLine Option="@UiQueryVm.NoIndex" SearchValues="@SearchValues" ShowSearchOptions="@ShowSearchOptions" />
         }
     </div>
 
-    @if (QueryVm.SearchOptions.Length == 0)
+    @if (UiQueryVm.SearchOptions.Length == 0)
     {
         <p>There are no suitable indexes to seek by.</p>
     }
 
-    <UnsupportedIndexesPanel Indexes="@QueryVm.UnsuitableIndexes" />
+    <UnsupportedIndexesPanel Indexes="@UiQueryVm.UnsuitableIndexes" />
 
 </div>
 
@@ -76,7 +76,7 @@
     Action HideSearchOptions => () => showSearchOptions = false;
 
     [CascadingParameter]
-    public LocationQueryVm QueryVm { get; set; }
+    public LocationUiQueryVm UiQueryVm { get; set; }
 
     [Parameter]
     public IMap<String, String> SearchValues { get; set; }

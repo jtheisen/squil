@@ -1,9 +1,9 @@
 ﻿@{
-    var areQueryEditing = QueryVm.AreInUpdateOrInsert;
+    var areQueryEditing = UiQueryVm.AreInUpdateOrInsert;
 
     var url = Url.If(!areQueryEditing);
 
-    var showEditValues = !QueryVm.CurrentResponse.IsChangeOk || Entity.EditState == EntityEditState.Modified;
+    var showEditValues = !UiQueryVm.CurrentResponse.IsChangeOk || Entity.EditState == EntityEditState.Modified;
 
     var nextDnsOperation = NextDnsOperation;
 
@@ -112,21 +112,21 @@
     public Boolean IsFocusColumn { get; set; }
 
     [CascadingParameter]
-    public LocationQueryVm QueryVm { get; set; }
+    public LocationUiQueryVm UiQueryVm { get; set; }
 
     Int32 rerenderHackCounter;
 
-    Boolean CanEdit => QueryVm.AreInUpdateOrInsert && !Column.IsIntrinsicallyUneditable && Entity.EditState != EntityEditState.Closed && Column.Type.IsSupported;
+    Boolean CanEdit => UiQueryVm.AreInUpdateOrInsert && !Column.IsIntrinsicallyUneditable && Entity.EditState != EntityEditState.Closed && Column.Type.IsSupported;
 
     Boolean isEditing;
 
-    Boolean IsEditing => QueryVm.AreInUpdateOrInsert && (isEditing || IsFocusColumn);
+    Boolean IsEditing => UiQueryVm.AreInUpdateOrInsert && (isEditing || IsFocusColumn);
 
-    DnsOperationType NextDnsOperation => QueryVm.GetDnsOperationType(Entity, Column.Name);
+    DnsOperationType NextDnsOperation => UiQueryVm.GetDnsOperationType(Entity, Column.Name);
 
     void HandleDnsButtonClick()
     {
-        QueryVm.ApplyDnsOperation(Entity, Column.Name, NextDnsOperation);
+        UiQueryVm.ApplyDnsOperation(Entity, Column.Name, NextDnsOperation);
 
         ++rerenderHackCounter;
     }
@@ -148,14 +148,14 @@
 
         Entity.SetEditValue(Column.Name, value);
 
-        QueryVm.AddChange(Entity);
+        UiQueryVm.AddChange(Entity);
     }
 
     void HandledFocused()
     {
         log.Debug($"Field edit started with focus");
 
-        QueryVm.NoteEditTouch(Entity);
+        UiQueryVm.NoteEditTouch(Entity);
 
         isEditing = true;
     }
@@ -166,7 +166,7 @@
 
         log.Debug($"Field edit started with click");
 
-        QueryVm.NoteEditTouch(Entity);
+        UiQueryVm.NoteEditTouch(Entity);
 
         isEditing = true;
     }

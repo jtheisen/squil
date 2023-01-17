@@ -28,12 +28,12 @@
     @if (!HideHeader)
     {
         <label>
-            <a href="@QueryVm.UrlCreateor.RenderEntitiesUrl(parentEntity, entities)">
+            <a href="@UiQueryVm.UrlCreateor.RenderEntitiesUrl(parentEntity, entities)">
                 <EntityRelationNameView RelationEnd="@entities.RelationEnd" />
             </a>
         </label>
     }
-    @if (QueryVm.InDebug)
+    @if (UiQueryVm.InDebug)
     {
         <DebugTooltip IsOpen="true">
             <RelationInfoView End0="@entities.RelationEnd" Index="@entities.Extent.IndexName" />
@@ -51,7 +51,7 @@
             else
             {
                 <li class="list-marker list-marker-empty">
-                    @if (QueryVm.AreInDelete)
+                    @if (UiQueryVm.AreInDelete)
                     {
                         <h4>The row will be removed</h4>
                         <p>Are you sure? This operation can't be undone.</p>
@@ -117,7 +117,7 @@
     public Boolean HideHeader { get; set; }
 
     [CascadingParameter]
-    public LocationQueryVm QueryVm { get; set; }
+    public LocationUiQueryVm UiQueryVm { get; set; }
 
     String GetColorForHue(Double hue, Int32 s, Int32 l)
     {

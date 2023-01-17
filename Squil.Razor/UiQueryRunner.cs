@@ -1,310 +1,10 @@
-﻿using Humanizer;
-using Microsoft.Data.SqlClient;
-using System.Collections.Specialized;
+﻿using Microsoft.Data.SqlClient;
 using System.Data;
 using TaskLedgering;
-using static Squil.StaticSqlAliases;
 
 namespace Squil;
 
-public enum QueryControllerQueryType
-{
-    Root,
-    Row,
-    Table,
-    TableSlice,
-    Column
-}
-
-public enum LocationQueryAccessMode
-{
-    QueryOnly,
-    Rollback,
-    Commit
-}
-
-[DebuggerDisplay("{ToString()}")]
-public class LocationQueryLocation
-{
-    public String Source { get; init; }
-    public String Schema { get; init; }
-    public String Table { get; init; }
-    public String Index { get; init; }
-    public String Column { get; init; }
-
-    public NameValueCollection KeyParams { get; init; }
-    public NameValueCollection RestParams { get; init; }
-
-    public Int32 KeyValuesCount { get; init; }
-
-    public QuerySearchMode? SearchMode { get; init; }
-
-    public String BackRelation { get; init; }
-
-    public LocationQueryLocation()
-    {
-        KeyParams = new NameValueCollection();
-        RestParams = new NameValueCollection();
-    }
-
-    public LocationQueryLocation(
-        String[] segments,
-        NameValueCollection queryParams
-    )
-    {
-        String Get(Int32 i)
-        {
-            var segment = segments.GetOrDefault(i)?.TrimEnd('/');
-
-            return segment != UrlRenderer.BlazorDefeatingDummySegment ? segment : null;
-        }
-
-        Debug.Assert(Get(0) == "ui");
-
-        Source = Get(1);
-
-        var section = Get(2);
-
-        switch (section)
-        {
-            case "views":
-            case "tables":
-                Schema = Get(3);
-                Table = Get(4);
-                Index = Get(5);
-                Column = Get(6);
-                break;
-            case "indexes":
-                Schema = Get(3);
-                Index = Get(4);
-                Column = Get(5);
-                break;
-        }
-
-        if (Enum.TryParse<QuerySearchMode>(queryParams["search"], true, out var searchMode))
-        {
-            SearchMode = searchMode;
-        }
-
-        (var keyParams, var restParams) = SplitParams(queryParams);
-
-        KeyParams = keyParams;
-        RestParams = restParams;
-
-        var keyKeysArray = KeyParams.Cast<String>().ToArray();
-
-        KeyValuesCount = keyKeysArray.Length;
-
-        BackRelation = queryParams["from"];
-    }
-
-    static (NameValueCollection keyParams, NameValueCollection restParams) SplitParams(NameValueCollection queryParams)
-    {
-        var groups =
-            from key in queryParams.AllKeys
-            group key by key?.StartsWith('$') ?? false into g
-            select g;
-
-        var keyParams = (
-            from g in groups.Where(g => g.Key == true)
-            from key in g
-            select (key[1..], queryParams[key])
-        ).ToMap().ToNameValueCollection();
-
-        var restParams = (
-            from g in groups.Where(g => g.Key == false)
-            from key in g
-            select (key, queryParams[key])
-        ).ToMap().ToNameValueCollection();
-
-        return (keyParams, restParams);
-    }
-
-    public override String ToString()
-    {
-        var writer = new StringWriter();
-
-        var tn = 6;
-
-        writer.Write($"{Source.Truncate(tn)}/{Schema.Truncate(tn)}/{Table.Truncate(tn)}");
-
-        if (Index is not null) writer.Write($"/{Index.Truncate(tn)}");
-        if (Column is not null) writer.Write($"/{Column.Truncate(tn)}");
-
-        writer.Write(RestParams.ToTruncatedString('{', '}'));
-
-        return writer.ToString();
-    }
-}
-
-[DebuggerDisplay("{ToString()}")]
-public class LocationQueryRequest
-{
-    static Int32 staticRequestCount = 0;
-
-    Int32 requestNo = ++staticRequestCount;
-
-    public Int32 RequestNo => requestNo;
-
-    public LocationQueryLocation Location { get; set; }
-
-    public ChangeEntry[] Changes { get; }
-    public LocationQueryAccessMode AccessMode { get; }
-    public LocationQueryOperationType? OperationType { get; }
-
-    public Int32 ListLimit { get; set; }
-
-    public NameValueCollection SearchValues { get; }
-
-    public Boolean IsIdentitizingPending => OperationType == LocationQueryOperationType.Insert && Changes == null;
-
-    public LocationQueryRequest(
-        LocationQueryLocation location,
-        NameValueCollection searchValues,
-        ChangeEntry[] changes = null,
-        LocationQueryAccessMode accessMode = default,
-        LocationQueryOperationType? operationType = null
-    )
-    {
-        Location = location;
-
-        Changes = changes?.Select(c => c.Clone()).ToArray();
-        AccessMode = accessMode;
-        OperationType = operationType;
-
-        SearchValues = searchValues;
-    }
-
-    public override String ToString()
-    {
-        var writer = new StringWriter();
-
-        var cs = Changes?.Length > 0 ? "*" : "";
-        var ams = AccessMode.ToString().ToLower().FirstOrDefault();
-        var os = OperationType?.Apply(ot => ot.ToString().FirstOrDefault()) ?? '?';
-
-        var ss = SearchValues.ToTruncatedString();
-
-        return $"request #{requestNo} {ams}{cs}{os}{ss} at {Location}";
-    }
-}
-
-[DebuggerDisplay("{ToString()}")]
-public class LocationQueryResponse
-{
-    public Int32 RequestNo { get; set; }
-
-    public QueryControllerQueryType QueryType { get; set; }
-    public QuerySearchMode? SearchMode { get; set; }
-    public ExtentFlavorType ExtentFlavorType { get; set; }
-    public Boolean MayScan { get; set; }
-    public String RootUrl { get; set; }
-    public String RootName { get; set; }
-    public CMTable Table { get; set; }
-    public CMIndexlike Index { get; set; }
-    public CMRelationEnd PrincipalRelation { get; set; }
-    public Boolean HaveValidationIssues { get; set; }
-    public ValidationResult[] ValidatedColumns { get; set; }
-    public String PrimaryIdPredicateSql { get; set; }
-
-    public Extent Extent { get; set; }
-    public LiveSource Source { get; set; }
-
-    public Task<LocationQueryResult> Task { get; set; }
-
-    public TaskLedger Ledger { get; set; }
-    public Exception ChangeException { get; set; }
-    public Exception Exception { get; set; }
-
-    public Boolean IsChangeOk => ChangeException == null;
-
-    public Boolean IsOk => !HaveValidationIssues && Exception == null;
-
-    public Boolean IsRunning => Task is not null && !Task.IsCompleted;
-    public Boolean IsCompleted => Task is not null && Task.IsCompleted;
-
-    public Boolean IsCompletedSuccessfully => Task?.IsCompletedSuccessfully ?? false;
-
-    public Boolean IsCanceled => Exception is OperationCanceledException;
-
-    public LocationQueryResult Result => Task?.IsCompletedSuccessfully == true ? Task.Result : null;
-
-    public async Task Wait()
-    {
-        if (Task is null) return;
-
-        try
-        {
-            await Task;
-        }
-        catch (Exception)
-        {
-        }
-    }
-
-    public override String ToString()
-    {
-        return $"response #{RequestNo} {ToStringInner()}";
-    }
-
-    String ToStringInner()
-    {
-        if (IsCanceled) return "is canceled";
-
-        if (Exception != null) return $"has exception: {Exception.Message}";
-
-        if (HaveValidationIssues) return $"has validation issues";
-
-        if (Task == null) return "is not started";
-
-        if (!Task.IsCompleted) return $"has status {Task.Status}";
-
-        if (IsChangeOk) return "is ok";
-
-        return $"has change exception: {ChangeException.Message}";
-    }
-
-    public String GetPrimaryIdPredicateSql(String alias)
-    {
-        var aliasPrefix = String.IsNullOrWhiteSpace(alias) ? "" : alias.EscapeNamePart() + ".";
-
-        return PrimaryIdPredicateSql?.Replace("\ue000", aliasPrefix);
-    }
-}
-
-public class LocationQueryResult
-{
-    public Int32 RequestNo { get; }
-
-    public Entity Entity { get; }
-    public RelatedEntities PrimaryEntities { get; }
-    public RelatedEntities PrincipalEntities { get; }
-    public Boolean HasCommitted { get; set; }
-
-    public LocationQueryResult(Int32 requestNo, Entity entity)
-    {
-        RequestNo = requestNo;
-        Entity = entity;
-        PrimaryEntities = entity.Related.GetRelatedEntitiesOrNull(PrimariesRelationAlias);
-        PrincipalEntities = entity.Related.GetRelatedEntitiesOrNull(PrincipalRelationAlias);
-    }
-
-    public override String ToString()
-    {
-        var items = new[] { "entity".If(Entity != null), "primaries".If(PrimaryEntities != null), "principals".If(PrincipalEntities != null) };
-
-        return $"result with {String.Join(", ", items.Where(i => i != null))}";
-    }
-}
-
-public enum CanLoadMoreStatus
-{
-    Unavailable,
-    Can,
-    Complete
-}
-
-public class LocationQueryRunner : IDisposable
+public class UiQueryRunner : IDisposable
 {
     static Logger log = LogManager.GetCurrentClassLogger();
 
@@ -312,7 +12,7 @@ public class LocationQueryRunner : IDisposable
 
     ConnectionHolder currentConnectionHolder;
 
-    LifetimeLogger<LocationQueryRunner> lifetimeLogger = new LifetimeLogger<LocationQueryRunner>();
+    LifetimeLogger<UiQueryRunner> lifetimeLogger = new LifetimeLogger<UiQueryRunner>();
 
     Boolean isDisposed;
 
@@ -320,7 +20,7 @@ public class LocationQueryRunner : IDisposable
 
     public ConnectionHolder CurrentConnectionHolder => currentConnectionHolder;
 
-    public LocationQueryRunner(ILiveSourceProvider connections, ConnectionHolder currentConnectionHolder)
+    public UiQueryRunner(ILiveSourceProvider connections, ConnectionHolder currentConnectionHolder)
     {
         this.connections = connections;
 
@@ -337,7 +37,7 @@ public class LocationQueryRunner : IDisposable
         return connections.GetLiveSource(connectionName);
     }
 
-    public LocationQueryResponse StartQuery(LiveSource source, String connectionName, LocationQueryRequest request)
+    public UiQueryState StartQuery(LiveSource source, String connectionName, UiQueryRequest request)
     {
         log.Info($"New {request}");
 
@@ -356,7 +56,7 @@ public class LocationQueryRunner : IDisposable
 
         var settings = connections.AppSettings;
 
-        var query = new LocationQueryResponse
+        var query = new UiQueryState
         {
             RequestNo = request.RequestNo,
             RootName = connectionName,
@@ -367,7 +67,7 @@ public class LocationQueryRunner : IDisposable
         if (source.ExceptionOnModelBuilding != null)
         {
             query.Exception = source.ExceptionOnModelBuilding;
-            query.Task = Task.FromException<LocationQueryResult>(source.ExceptionOnModelBuilding);
+            query.Task = Task.FromException<UiQueryResult>(source.ExceptionOnModelBuilding);
 
             return query;
         }
@@ -384,7 +84,7 @@ public class LocationQueryRunner : IDisposable
 
         if (isRoot)
         {
-            query.QueryType = QueryControllerQueryType.Root;
+            query.QueryType = UiQueryType.Root;
             extent = extentFactory.CreateRootExtentForRoot(cmTable);
         }
         else
@@ -465,23 +165,23 @@ public class LocationQueryRunner : IDisposable
                 principalLocation, scanValue, location.Column
             );
 
-            QueryControllerQueryType GetQueryType()
+            UiQueryType GetQueryType()
             {
                 if (isSingletonQuery)
                 {
                     if (location.Column != null)
                     {
-                        return QueryControllerQueryType.Column;
+                        return UiQueryType.Column;
                     }
                     else
                     {
-                        return QueryControllerQueryType.Row;
+                        return UiQueryType.Row;
                     }
                 }
 
-                if ((keyValueCount ?? 0) == 0) return QueryControllerQueryType.Table;
+                if ((keyValueCount ?? 0) == 0) return UiQueryType.Table;
 
-                return QueryControllerQueryType.TableSlice;
+                return UiQueryType.TableSlice;
             }
 
             query.QueryType = GetQueryType();
@@ -518,7 +218,7 @@ public class LocationQueryRunner : IDisposable
         return query;
     }
 
-    async Task<LocationQueryResult> RunQueryInternal(SqlConnection connection, LocationQueryRequest request, LocationQueryResponse query)
+    async Task<UiQueryResult> RunQueryInternal(SqlConnection connection, UiQueryRequest request, UiQueryState query)
     {
         var ct = StaticServiceStack.Get<CancellationToken>();
 
@@ -550,9 +250,9 @@ public class LocationQueryRunner : IDisposable
 
         var entity = await query.Source.QueryAsync(connection, query.Extent);
 
-        var result = new LocationQueryResult(query.RequestNo, entity);
+        var result = new UiQueryResult(query.RequestNo, entity);
 
-        if (query.QueryType != QueryControllerQueryType.Root)
+        if (query.QueryType != UiQueryType.Root)
         {
             if (result.PrimaryEntities == null) throw new Exception($"Unexpectedly no primary entities");
         }
@@ -562,7 +262,7 @@ public class LocationQueryRunner : IDisposable
             if (result.PrincipalEntities == null) throw new Exception($"Unexpectedly no principal entities");
         }
 
-        if (request.AccessMode == LocationQueryAccessMode.Commit && query.ChangeException == null)
+        if (request.AccessMode == UiQueryAccessMode.Commit && query.ChangeException == null)
         {
             await transaction.CommitAsync();
 
@@ -600,7 +300,7 @@ public class LocationQueryRunner : IDisposable
         }
 
         // Error-free commits don't replay
-        var replayRequired = query.ChangeException != null || request.AccessMode == LocationQueryAccessMode.Rollback;
+        var replayRequired = query.ChangeException != null || request.AccessMode == UiQueryAccessMode.Rollback;
 
         if (replayRequired)
         {
@@ -625,7 +325,7 @@ public class LocationQueryRunner : IDisposable
         return result;
     }
 
-    async Task<LocationQueryResult> RunQuery(LocationQueryRequest request, LocationQueryResponse query)
+    async Task<UiQueryResult> RunQuery(UiQueryRequest request, UiQueryState query)
     {
         using var ledger = LedgerControl.InstallTaskLedger();
 
@@ -643,7 +343,7 @@ public class LocationQueryRunner : IDisposable
         }
     }
 
-    ExtentFactory.PrincipalLocation GetPrincipalLocation(CMTable cmTable, LocationQueryRequest request)
+    ExtentFactory.PrincipalLocation GetPrincipalLocation(CMTable cmTable, UiQueryRequest request)
     {
         var location = request.Location;
 

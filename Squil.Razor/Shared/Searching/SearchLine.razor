@@ -46,10 +46,10 @@
     @if (Option.IsCurrent)
     {
         <div class="validation-area">
-            @if (QueryVm.CurrentResponse.HaveValidationIssues)
+            @if (UiQueryVm.CurrentResponse.HaveValidationIssues)
             {
                 <div class="validation-display">
-                    @foreach (var c in QueryVm.CurrentResponse.ValidatedColumns.Where(c => !c.IsOk))
+                    @foreach (var c in UiQueryVm.CurrentResponse.ValidatedColumns.Where(c => !c.IsOk))
                     {
                         <div>
                             @c.Error
@@ -69,7 +69,7 @@
 
 @code {
     [CascadingParameter]
-    public LocationQueryVm QueryVm { get; set; }
+    public LocationUiQueryVm UiQueryVm { get; set; }
 
     [Parameter]
     public SearchOptionVm Option { get; set; }
@@ -91,16 +91,16 @@
         {
             if (Option.IsCurrent) return null;
 
-            var result = QueryVm.Response;
+            var result = UiQueryVm.Response;
 
-            var keys = QueryVm.Location.KeyParams.AsMap();
+            var keys = UiQueryVm.Location.KeyParams.AsMap();
 
             switch (Option.OptionType)
             {
                 case SearchOptionType.Seek:
-                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, Option.Index, keys, QueryVm.Location.BackRelation, QuerySearchMode.Seek);
+                    return UiQueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, Option.Index, keys, UiQueryVm.Location.BackRelation, QuerySearchMode.Seek);
                 case SearchOptionType.Scan:
-                    return QueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, result.Index, keys, QueryVm.Location.BackRelation, QuerySearchMode.Scan);
+                    return UiQueryVm.UrlCreateor.RenderIndexOrTableUrl(result.Table, result.Index, keys, UiQueryVm.Location.BackRelation, QuerySearchMode.Scan);
                 default:
                     throw new Exception($"Unexpected option type {Option.OptionType}");
             }

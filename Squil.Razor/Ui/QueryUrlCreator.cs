@@ -12,7 +12,7 @@ public class QueryUrlCreator
     public static UrlRenderer MakeUrlRenderer(String source)
         => new UrlRenderer("ui/" + source);
 
-    public String RenderUrl(LocationQueryLocation l)
+    public String RenderUrl(UiQueryLocation l)
     {
         var query = new List<(String prefix, String key, String value)>();
 
