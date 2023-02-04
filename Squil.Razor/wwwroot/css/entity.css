@@ -223,12 +223,11 @@
 .entity-context .entity-column > div {
   display: flex;
 }
-.entity-context .entity-column[data-css-type=guid] .entity-column-content {
+.entity-context .entity-column[data-css-type=guid] .entity-column-content-wrapper {
   font-size: 0.45em;
-  margin-top: 0.3em;
 }
 @media (min-width: 1200px) {
-  .entity-context .entity-column[data-css-type=guid] .entity-column-content {
+  .entity-context .entity-column[data-css-type=guid] .entity-column-content-wrapper {
     font-size: 0.65em;
   }
 }
@@ -274,6 +273,9 @@
 }
 .entity-context .entity-column.entity-column-editable button:disabled > i {
   opacity: 50%;
+}
+.entity-context .entity-column.entity-column-edited label {
+  color: var(--bs-gray-800);
 }
 .entity-context .entity-column.entity-column-editing:not(.entity-column-focus-column) .entity-column-content {
   text-overflow: initial;

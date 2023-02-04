@@ -1,11 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Squil;
+﻿namespace Squil;
 
 public record CurrentLocation(String Location);
 
-public static class Extensions
+public static partial class Extensions
 {
     public static RelatedEntities GetRelatedEntities(this RelatedEntities[] relatedEntities, String alias)
         => relatedEntities.Where(e => e.Extent.RelationAlias == alias).Single($"Unexpectedly no single '{alias}' data");

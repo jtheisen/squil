@@ -7,10 +7,10 @@
 
     var nextDnsOperation = NextDnsOperation;
 
-    var nextDnsOperationLabel = nextDnsOperation.ToString()[0];
+    var nextDnsOperationLabel = nextDnsOperation.GetLabel();
 }
 
-<div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
+<div class="@ClassNames("entity-column", "entity-column-editing".If(IsEditing), "entity-column-editable".If(CanEdit), "entity-column-edited".If(IsEdited), "entity-column-focus-column".If(IsFocusColumn))" data-x-name="@Column.Name" data-css-type="@Column.Type.CssType" data-string-length-class="@Cls.GetCssClass()" data-is-focus-column=@IsFocusColumn>
     <label>
         <a href="@url">
             @Column.Name
@@ -83,7 +83,7 @@
             </div>
         </div>
 
-        @if (CanEdit && !IsFocusColumn)
+        @if (CanEdit && !IsFocusColumn && NextDnsOperation != DnsOperationType.None )
         {
             <button @onclick="HandleDnsButtonClick" disabled="@(NextDnsOperation == DnsOperationType.None)" class="entity-column-dns-button">@nextDnsOperationLabel</button>
         }
@@ -122,6 +122,8 @@
 
     Boolean IsEditing => UiQueryVm.AreInUpdateOrInsert && (isEditing || IsFocusColumn);
 
+    Boolean IsEdited => UiQueryVm.AreInUpdateOrInsert && (Entity.EditValues?.ContainsKey(Column.Name) ?? false);
+
     DnsOperationType NextDnsOperation => UiQueryVm.GetDnsOperationType(Entity, Column.Name);
 
     void HandleDnsButtonClick()
@@ -146,9 +148,14 @@
 
         isEditing = false;
 
-        Entity.SetEditValue(Column.Name, value);
+        var wontIgnore = (Entity.EditValues?.ContainsKey(Column.Name) ?? false) || (Entity.ColumnValues[Column.Name] != value);
 
-        UiQueryVm.AddChange(Entity);
+        if (wontIgnore)
+        {
+            Entity.SetEditValue(Column.Name, value);
+
+            UiQueryVm.AddChange(Entity);
+        }
     }
 
     void HandledFocused()

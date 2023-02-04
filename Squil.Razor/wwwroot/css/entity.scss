@@ -320,9 +320,8 @@ $bg-light-2: #e7e5e4;
             display: flex;
         }
 
-        &[data-css-type=guid] .entity-column-content {
+        &[data-css-type=guid] .entity-column-content-wrapper {
             font-size: .45em;
-            margin-top: .3em;
 
             @media (min-width: 1200px) {
                 & {
@@ -380,6 +379,12 @@ $bg-light-2: #e7e5e4;
 
             button:disabled > i {
                 opacity: 50%;
+            }
+        }
+
+        &.entity-column-edited {
+            label {
+                color: var(--bs-gray-800);
             }
         }
 

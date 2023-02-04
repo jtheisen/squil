@@ -36,7 +36,22 @@ public enum DnsOperationType
     None,
     Default,
     Null,
-    Special
+    Special,
+    BooleanFalse,
+    BooleanTrue
+}
+
+public static partial class Extensions
+{
+    public static String GetLabel(this DnsOperationType type) => type switch
+    {
+        DnsOperationType.Default => "D",
+        DnsOperationType.Null => "N",
+        DnsOperationType.Special => "S",
+        DnsOperationType.BooleanFalse => "0",
+        DnsOperationType.BooleanTrue => "1",
+        _ => " ",
+    };
 }
 
 public record ValidationValueVm(Boolean isInvalid = false);
@@ -660,6 +675,10 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
 
         var special = column.Type.SpecialValueOrNull;
 
+        var isBoolean = column.Type is IntegerColumnType ict && ict.IsBit;
+
+        var specialOperation = isBoolean ? DnsOperationType.BooleanFalse : DnsOperationType.Special;
+
         entity.ColumnValues.TryGetValue(name, out var originalValue);
 
         String editValue = null;
@@ -670,7 +689,11 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
         {
             if (editValue is null && special is not null)
             {
-                return DnsOperationType.Special;
+                return specialOperation;
+            }
+            else if (isBoolean && editValue == special)
+            {
+                return DnsOperationType.BooleanTrue;
             }
             else
             {
@@ -681,7 +704,7 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
         {
             if (originalValue is null && special is not null)
             {
-                return DnsOperationType.Special;
+                return specialOperation;
             }
             else if (column.IsNullable)
             {
@@ -689,7 +712,11 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
             }
             else if (originalValue != special && special is not null)
             {
-                return DnsOperationType.Special;
+                return specialOperation;
+            }
+            else if (isBoolean && originalValue != "1")
+            {
+                return DnsOperationType.BooleanTrue;
             }
             else
             {
@@ -710,6 +737,16 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
             case DnsOperationType.Null:
                 entity.SetEditValue(name, null);
                 
+                break;
+
+            case DnsOperationType.BooleanFalse:
+                entity.SetEditValue(name, "0");
+
+                break;
+
+            case DnsOperationType.BooleanTrue:
+                entity.SetEditValue(name, "1");
+
                 break;
 
             case DnsOperationType.Special:

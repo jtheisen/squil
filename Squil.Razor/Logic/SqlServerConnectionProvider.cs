@@ -43,8 +43,8 @@ public class SqlServerConnectionProvider
     {
         builder.ApplicationName = "SQuiL database browser";
         builder.CommandTimeout = 0;
-        builder.ConnectRetryCount = 0;
-        builder.ConnectRetryInterval = 1;
+        //builder.ConnectRetryCount = 0; // default is 1
+        builder.ConnectRetryInterval = 4; // default is 10
         builder.ConnectTimeout = 1;
     }
 

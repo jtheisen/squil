@@ -28,8 +28,6 @@ public record StallInvestigationResult(StallInvestigationResultType Type, Int32 
 
 public class StallDetective : ObservableObject<StallDetective>
 {
-    static Logger log = LogManager.GetCurrentClassLogger();
-
     private readonly String connectionString;
     private readonly SqlConnection connection;
 
