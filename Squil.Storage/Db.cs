@@ -2,6 +2,13 @@
 
 namespace Squil;
 
+public class LiveSourceDebugOptions
+{
+    public Boolean DebugFailOnModelCreation { get; set; }
+    public Boolean DebugSqlFailOnThirdQuery { get; set; }
+    public Boolean DebugExceptionFailOnThirdQuery { get; set; }
+}
+
 public class SqlServerHostConfiguration
 {
     [Key]
@@ -29,7 +36,7 @@ public class SqlServerHostConfiguration
 
     public DateTimeOffset ModifiedAt { get; set; }
 
-    public Boolean DebugFailOnModelCreation => false;
+    public LiveSourceDebugOptions DebugOptions => null;
 
     public SqlServerHostConfiguration Clone() => (SqlServerHostConfiguration)MemberwiseClone();
 }

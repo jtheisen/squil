@@ -2,15 +2,13 @@ using Microsoft.Extensions.Options;
 
 namespace Squil;
 
-public class ProminentSourceConfiguration
+public class ProminentSourceConfiguration : LiveSourceDebugOptions
 {
     public String Name { get; set; }
     public String LongName { get; set; }
     public String ConnectionString { get; set; }
     public String Description { get; set; }
     public String DescriptionSnippetType { get; set; }
-
-    public Boolean DebugFailOnModelCreation { get; set; }
 }
 
 public class LiveSqlServerHost : ObservableObject<LiveSqlServerHost>
@@ -90,7 +88,7 @@ public class LiveSqlServerHost : ObservableObject<LiveSqlServerHost>
 
             var connectionString = provider.GetConnectionString(configuration, catalogOverride: catalog);
 
-            liveSources[catalog] = liveSource = new LiveSource(connectionString, debugFailOnModelCreation: Configuration.DebugFailOnModelCreation);
+            liveSources[catalog] = liveSource = new LiveSource(connectionString, config.DebugOptions);
         }
 
         return liveSource;
@@ -132,7 +130,7 @@ public class LightLiveConfiguration : ILiveSourceProvider
         {
             foreach (var configuration in prominentSourceConfigurations)
             {
-                var source = sqlServerConnectionProvider.GetLiveSource(configuration.ConnectionString, configuration.DebugFailOnModelCreation);
+                var source = sqlServerConnectionProvider.GetLiveSource(configuration.ConnectionString, configuration);
 
                 prominentSources.Append(configuration.Name, (configuration, source));
             }

@@ -38,7 +38,7 @@ public class LiveSource
     static Logger log = LogManager.GetCurrentClassLogger();
 
     readonly string connectionString;
-    readonly Boolean debugFailOnModelCreation;
+    readonly LiveSourceDebugOptions debugOptions;
 
     volatile Model currentModel;
 
@@ -49,6 +49,8 @@ public class LiveSource
     AsyncLock modelBuildingLock = new AsyncLock();
 
     AsyncManualResetEvent modelReadyOrBroken = new AsyncManualResetEvent();
+
+    Int32 queryCount;
 
     DateTime lastAttemptAt = DateTime.MinValue;
 
@@ -72,10 +74,10 @@ public class LiveSource
 
     public QueryGenerator QueryGenerator => currentModel.QueryGenerator;
 
-    public LiveSource(String connectionString, Boolean debugFailOnModelCreation = false)
+    public LiveSource(String connectionString, LiveSourceDebugOptions debugOptions)
     {
         this.connectionString = connectionString;
-        this.debugFailOnModelCreation = debugFailOnModelCreation;
+        this.debugOptions = debugOptions ?? new LiveSourceDebugOptions();
     }
 
     public async Task EnsureModelAsync()
@@ -149,6 +151,20 @@ public class LiveSource
 
         try
         {
+            ++queryCount;
+
+            if ((queryCount % 3) == 0)
+            {
+                if (debugOptions.DebugSqlFailOnThirdQuery)
+                {
+                    await connection.ExecuteAsync("<invalid query>");
+                }
+                else if (debugOptions.DebugExceptionFailOnThirdQuery)
+                {
+                    throw new Exception($"Test exception");
+                }
+            }
+
             entity = await QueryGenerator.QueryAsync(connection, extent);
         }
         catch (SqlException ex)
@@ -218,7 +234,7 @@ public class LiveSource
         {
             using var connection = GetConnection();
 
-            if (debugFailOnModelCreation)
+            if (debugOptions.DebugFailOnModelCreation)
             {
                 connection.Execute("<invalid query>");
             }
