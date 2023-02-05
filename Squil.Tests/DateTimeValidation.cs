@@ -92,6 +92,32 @@ public class DateTimeValidation : DateOrTimeValidationTestBase
 }
 
 [TestClass]
+public class MinYearDateValidation : DateOrTimeValidationTestBase
+{
+    protected override DateOrTimeColumnType CreateColumnType()
+        => new DateOrTimeColumnType { Name = "date", WithDate = true, MinYear = 1745 };
+
+    [TestMethod]
+    public void TestMinYear()
+    {
+        ct.Validate("")
+            .AssertOk("1745-01-01", "9999-12-31");
+
+        ct.Validate("1")
+            .AssertOk("1745-01-01", "1999-12-31");
+
+        ct.Validate("12")
+            .AssertFail();
+
+        ct.Validate("17")
+            .AssertOk("1745-01-01", "1799-12-31");
+
+        ct.Validate("18")
+            .AssertOk("1801-01-01", "1899-12-31");
+    }
+}
+
+[TestClass]
 public class DateValidation : DateOrTimeValidationTestBase
 {
     protected override DateOrTimeColumnType CreateColumnType()
@@ -126,6 +152,9 @@ public class DateValidation : DateOrTimeValidationTestBase
     [TestMethod]
     public void TestIncompletes()
     {
+        ct.Validate("2")
+            .AssertOk("2001-01-01", "2999-12-31");
+
         ct.Validate("2001-0")
             .AssertOk("2001-01-01", "2001-09-30");
 

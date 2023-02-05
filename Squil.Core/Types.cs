@@ -151,6 +151,8 @@ public class DateOrTimeColumnType : ColumnType
     String lpattern, upattern;
     String error;
 
+    String minYearString;
+
     public Int32 MinYear { get; set; } = 1;
 
     public Boolean WithDate { get; set; }
@@ -181,6 +183,8 @@ public class DateOrTimeColumnType : ColumnType
         upattern = UpperBasePattern[range];
 
         error = $"text should be of the form {lpattern}";
+
+        minYearString = MinYear.ToString().PadLeft(4, '0');
     }
 
     Range GetRange()
@@ -233,11 +237,20 @@ public class DateOrTimeColumnType : ColumnType
 
         var result = Validate(text);
 
-        if (result.IsOk && MinYear > 1)
+        if (WithDate)
         {
-            var year = Int32.Parse(result.SqlLowerValue[..4]);
+            if (text.Length < 4 && minYearString.StartsWith(text))
+            {
+                // We are allowing the empty string to match everything possible
+                result.SqlLowerValue = minYearString + lpattern[4..];
+            }
 
-            if (year < MinYear) return Issue($"The earliest year in a {Name} is {MinYear}");
+            if (result.IsOk && MinYear > 1)
+            {
+                var year = Int32.Parse(result.SqlLowerValue[..4]);
+
+                if (year < MinYear) return Issue($"The earliest year in a {Name} is {MinYear}");
+            }
         }
 
         if (result.IsOk && WithOffset)
@@ -298,7 +311,7 @@ public class DateOrTimeColumnType : ColumnType
         {
             if (text.Length == 0)
             {
-                return OkWithPattern(MinYear.ToString().PadLeft(4, '0'));
+                return OkWithPattern(text);
             }
             else if (text.StartsWith("0000"))
             {
