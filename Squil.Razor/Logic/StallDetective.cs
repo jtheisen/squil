@@ -103,7 +103,7 @@ public class StallDetective : ObservableObject<StallDetective>
     [XmlRoot("investigation_root")]
     public class InvestigationRoot
     {
-        [XmlAttribute("can_view_server_state")]
+        [XmlElement("can_view_server_state")]
         public Boolean CanViewServerState { get; set; }
 
         [XmlArray("requests")]

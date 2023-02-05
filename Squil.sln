@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version.xml = version.xml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground", "Playground\Playground.csproj", "{D8C7A9D8-CCED-4995-8BE0-E99AC2913FAC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,6 +74,10 @@ Global
 		{F535F749-AACD-408E-AB1A-7A2C60203313}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F535F749-AACD-408E-AB1A-7A2C60203313}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F535F749-AACD-408E-AB1A-7A2C60203313}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8C7A9D8-CCED-4995-8BE0-E99AC2913FAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8C7A9D8-CCED-4995-8BE0-E99AC2913FAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8C7A9D8-CCED-4995-8BE0-E99AC2913FAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8C7A9D8-CCED-4995-8BE0-E99AC2913FAC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

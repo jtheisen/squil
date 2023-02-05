@@ -5,8 +5,10 @@ namespace Squil;
 public class LiveSourceDebugOptions
 {
     public Boolean DebugFailOnModelCreation { get; set; }
+    public Boolean DebugLagOnModelCreation { get; set; }
     public Boolean DebugSqlFailOnThirdQuery { get; set; }
     public Boolean DebugExceptionFailOnThirdQuery { get; set; }
+    public Boolean DebugLagOnThirdQuery { get; set; }
 }
 
 public class SqlServerHostConfiguration

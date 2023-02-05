@@ -163,6 +163,10 @@ public class LiveSource
                 {
                     throw new Exception($"Test exception");
                 }
+                else if (debugOptions.DebugLagOnThirdQuery)
+                {
+                    await Task.Delay(5000);
+                }
             }
 
             entity = await QueryGenerator.QueryAsync(connection, extent);
@@ -237,6 +241,10 @@ public class LiveSource
             if (debugOptions.DebugFailOnModelCreation)
             {
                 connection.Execute("<invalid query>");
+            }
+            else if (debugOptions.DebugLagOnModelCreation)
+            {
+                Thread.Sleep(15000);
             }
 
             var cmRoot = connection.GetCircularModel();
