@@ -26,13 +26,7 @@
             }
             else if (field is EntityRelationFieldUi r)
             {
-                if (!Entity.IsUnkeyed)
-                {
-                    // During inserts at the embryo stage, we display only the columns as without a key
-                    // we can't render the links to related entities yet
-
-                    <EntityRelationView Ui="@r" HideHeader="@HideHeaders" />                    
-                }
+                <EntityRelationView Ui="@r" HideHeader="@HideHeaders" />                    
             }
             else
             {
@@ -184,7 +178,7 @@
             select GetFieldset(extent, table, entity, g.Key, g)
             ;
 
-        
+
         var relations = (from r in entity.Related where !r.Extent.IgnoreOnRender group r by r.RelationEnd.IsMany).ToArray();
 
         var singulars = relations.FirstOrDefault(r => !r.Key)?.ToArray();
@@ -192,14 +186,19 @@
 
         var groupsList = groups.ToList();
 
-        if (singulars != null)
+        // During inserts at the embryo stage, we display only the columns as without a key
+        // we can't render the links to related entities yet
+        if (!entity.IsUnkeyed)
         {
-            groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page || flavorType == ExtentFlavorType.Block), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
-        }
+            if (singulars != null)
+            {
+                groupsList.Add(new Fieldset { legend = "singulars", layout = "grid3".If(flavorType == ExtentFlavorType.Page || flavorType == ExtentFlavorType.Block), items = singulars.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
+            }
 
-        if (plurals != null)
-        {
-            groupsList.Add(new Fieldset { legend = "plurals", items = plurals.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
+            if (plurals != null)
+            {
+                groupsList.Add(new Fieldset { legend = "plurals", items = plurals.Select(r => new EntityRelationFieldUi { Table = table, Entity = entity, RelatedEntities = r }) });
+            }
         }
 
         return groupsList;
