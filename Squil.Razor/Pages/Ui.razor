@@ -193,9 +193,9 @@
                             Building model for database schema. <span class="spinner-border spinner-border-sm"></span>
                         </div>
                     }
-                    else if (Vm.HaveState)
+                    else if (Vm.State is UiQueryState state)
                     {
-                        switch (Vm.State.QueryType)
+                        switch (state.QueryType)
                         {
                             case UiQueryType.Table:
                             case UiQueryType.TableSlice:
@@ -210,42 +210,12 @@
                                 <p class="d-block d-lg-none"><i class="fa fa-exclamation-triangle"></i> Note that there are some explanatory texts on larger screens.</p>
                             }
 
-                            @if (Vm.CurrentState.Exception is SqlException se)
-                            {
-                                <SqlErrorView AlertClass="alert alert-danger" Exception="@se" />
-                            }
-                            else if (Vm.CurrentState.Exception is OperationCanceledException)
-                            {
-                                // canceled
-                            }
-                            else if (Vm.CurrentState.Exception is SchemaChangedException)
-                            {
-                                if (showSchemaChangedException)
-                                {
-                                    <div class="alert alert-danger">
-                                        <div>
-                                            A schema change occured and the attempt to rebuild the model has failed.
-                                        </div>
-                                    </div>                                    
-                                }
-                            }
-                            else if (Vm.CurrentState.Exception is Exception e)
-                            {
-                                <div class="alert alert-danger">
-                                    <div>
-                                        An internal exception occurred on during this query, this is likely a bug.
-                                    </div>
-                                </div>
-                            }
-                            else if (Vm.CurrentState.ChangeException is SqlException cse)
-                            {
-                                <SqlErrorView AlertClass="alert alert-warning" Exception="@cse" />
-                            }
+                            <ExceptionView Exception="@state.Exception" ChangeException="@state.ChangeException" ShowSchemaChangedException="@showSchemaChangedException" />
 
                             @if (Vm.Result != null)
                             {
-                                <div class="@ClassNames("entity-context", "entity-invalid".If(!Vm.CurrentState.IsOk))">
-                                    <EntityContentView @key="Vm.Result.RequestNo" Entity="@Vm.Result.Entity" HideHeaders="@(Vm.CurrentState.QueryType != UiQueryType.Root)" />
+                                <div class="@ClassNames("entity-context", "entity-invalid".If(!state.IsOk))">
+                                    <EntityContentView @key="Vm.Result.RequestNo" Entity="@Vm.Result.Entity" HideHeaders="@(state.QueryType != UiQueryType.Root)" />
                                 </div>
 
                                 @switch (Vm.CanLoadMore())
@@ -292,7 +262,7 @@
                                 </small>
                             </HeaderExtra>
                             <Body>
-                                <LedgerScopeView Scope="@Vm.CurrentState?.Ledger?.Root" />
+                                <LedgerScopeView Scope="@state.Ledger?.Root" />
                             </Body>
                         </Modal>
 
@@ -300,7 +270,7 @@
                             <Title>Query report</Title>
                             <Body>
                                 <pre>
-                                    Vm.CurrentState?.Ledger?.Root
+                                    state.Ledger?.Root
                                 </pre>
                             </Body>
                         </Modal>

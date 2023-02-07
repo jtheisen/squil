@@ -4,6 +4,28 @@ using TaskLedgering;
 
 namespace Squil;
 
+public class NoSuchObjectException : Exception
+{
+    public NoSuchObjectException(ObjectName name)
+    {
+        ObjectName = name;
+    }
+
+    public ObjectName ObjectName { get; }
+}
+
+public class NoSuchIndexException : Exception
+{
+    public NoSuchIndexException(ObjectName table, String index)
+    {
+        Table = table;
+        Index = index;
+    }
+
+    public ObjectName Table { get; }
+    public String Index { get; }
+}
+
 public class UiQueryRunner : IDisposable
 {
     static Logger log = LogManager.GetCurrentClassLogger();
@@ -52,11 +74,11 @@ public class UiQueryRunner : IDisposable
         var table = location.Table;
         var index = location.Index;
 
-        var isRoot = table == null;
+        var isRoot = table is null;
 
         var settings = connections.AppSettings;
 
-        var query = new UiQueryState
+        var state = new UiQueryState
         {
             RequestNo = request.RequestNo,
             RootName = connectionName,
@@ -64,19 +86,23 @@ public class UiQueryRunner : IDisposable
             Source = source
         };
 
-        if (source.ExceptionOnModelBuilding != null)
+        if (source.ExceptionOnModelBuilding is not null)
         {
-            query.Exception = source.ExceptionOnModelBuilding;
-            query.Task = Task.FromException<UiQueryResult>(source.ExceptionOnModelBuilding);
-
-            return query;
+            return SetError(state, source.ExceptionOnModelBuilding);
         }
 
-        var cmTable = isRoot ? source.CircularModel.RootTable : source.CircularModel.GetTable(new ObjectName(schema, table));
+        var objectName = table?.Apply(t => new ObjectName(schema, t));
+
+        var cmTable = isRoot ? source.CircularModel.RootTable : source.CircularModel.GetTableOrNull(objectName);
+
+        if (cmTable is null)
+        {
+            return SetError(state, new NoSuchObjectException(objectName));
+        }
 
         var extentFactory = new ExtentFactory(2);
 
-        query.Table = cmTable;
+        state.Table = cmTable;
 
         Extent extent;
 
@@ -84,14 +110,24 @@ public class UiQueryRunner : IDisposable
 
         if (isRoot)
         {
-            query.QueryType = UiQueryType.Root;
+            state.QueryType = UiQueryType.Root;
             extent = extentFactory.CreateRootExtentForRoot(cmTable);
         }
         else
         {
             var isInsertQuery = request.OperationType == LocationQueryOperationType.Insert;
 
-            var cmIndex = query.Index = index?.Apply(i => cmTable.Indexes.Get(i, $"Could not find index '{index}' in table '{table}'"));
+            CMIndexlike cmIndex = null;
+
+            if (index is not null)
+            {
+                cmIndex = state.Index = cmTable.Indexes.GetValueOrDefault(index);
+
+                if (cmIndex is null)
+                {
+                    return SetError(state, new NoSuchIndexException(objectName, index));
+                }
+            }
 
             var extentOrder = cmIndex?.Columns.Select(c => c.Name).ToArray();
 
@@ -184,38 +220,38 @@ public class UiQueryRunner : IDisposable
                 return UiQueryType.TableSlice;
             }
 
-            query.QueryType = GetQueryType();
-            query.SearchMode = searchMode;
-            query.ExtentFlavorType = extentFlavorType;
-            query.ValidatedColumns = columnValues;
-            query.HaveValidationIssues = !(columnValues?.All(r => r.IsOk) ?? true);
-            query.MayScan = defaultSearchMode == QuerySearchMode.Scan; // ie "is small table/index"
+            state.QueryType = GetQueryType();
+            state.SearchMode = searchMode;
+            state.ExtentFlavorType = extentFlavorType;
+            state.ValidatedColumns = columnValues;
+            state.HaveValidationIssues = !(columnValues?.All(r => r.IsOk) ?? true);
+            state.MayScan = defaultSearchMode == QuerySearchMode.Scan; // ie "is small table/index"
 
             var primaryExtent = extent.Children.Single(c => c.RelationAlias == "primary");
 
-            query.PrimaryIdPredicateSql = source.QueryGenerator.GetIdPredicateSql(primaryExtent, "\ue000");
+            state.PrimaryIdPredicateSql = source.QueryGenerator.GetIdPredicateSql(primaryExtent, "\ue000");
 
             if (principalLocation != null)
             {
-                query.PrincipalRelation = principalLocation.Relation;
+                state.PrincipalRelation = principalLocation.Relation;
             }
         }
 
-        query.Extent = extent;
+        state.Extent = extent;
 
-        if (query.HaveValidationIssues) return query;
+        if (state.HaveValidationIssues) return state;
 
         source.SetConnectionInHolder(currentConnectionHolder);
 
-        query.Task = RunQuery(request, query);
+        state.Task = RunQuery(request, state);
 
-        query.Task.ContinueWith((task, result) =>
+        state.Task.ContinueWith((task, result) =>
         {
-            log.Info($"Ran {query}");
+            log.Info($"Ran {state}");
         },
         null);
 
-        return query;
+        return state;
     }
 
     async Task<UiQueryResult> RunQueryInternal(SqlConnection connection, UiQueryRequest request, UiQueryState query)
@@ -341,6 +377,13 @@ public class UiQueryRunner : IDisposable
 
             throw;
         }
+    }
+
+    UiQueryState SetError(UiQueryState state, Exception exception)
+    {
+        state.Exception = exception;
+        state.Task = Task.FromException<UiQueryResult>(exception);
+        return state;
     }
 
     ExtentFactory.PrincipalLocation GetPrincipalLocation(CMTable cmTable, UiQueryRequest request)

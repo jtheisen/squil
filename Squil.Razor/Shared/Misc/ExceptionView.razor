@@ -1,0 +1,65 @@
+﻿@using Microsoft.Data.SqlClient;
+
+@{
+    if (Exception is null) return;
+}
+
+@if (Exception is SqlException se)
+{
+    <SqlErrorView AlertClass="alert alert-danger" Exception="@se" />
+}
+else if (Exception is OperationCanceledException)
+{
+    // canceled
+}
+else if (Exception is SchemaChangedException)
+{
+    if (ShowSchemaChangedException)
+    {
+        <div class="alert alert-danger">
+            <div>
+                A schema change occured and the attempt to rebuild the model has failed.
+            </div>
+        </div>
+    }
+}
+else if (Exception is NoSuchObjectException nso)
+{
+    <div class="alert alert-warning">
+        <div>
+            There is no table <code>@nso.ObjectName.Simple</code>
+        </div>
+    </div>
+}
+else if (Exception is NoSuchIndexException nsi)
+{
+    <div class="alert alert-warning">
+        <div>
+            There is no index <code>@nsi.Index</code> on table <code>@nsi.Table.Simple</code>
+        </div>
+    </div>
+}
+else if (Exception is Exception e)
+{
+    <div class="alert alert-danger">
+        <div>
+            An internal exception occurred on during this query, this is likely a bug.
+        </div>
+    </div>
+}
+else if (ChangeException is SqlException cse)
+{
+    <SqlErrorView AlertClass="alert alert-warning" Exception="@cse" />
+}
+
+
+@code {
+    [Parameter]
+    public Exception Exception { get; set; }
+
+    [Parameter]
+    public Exception ChangeException { get; set; }
+
+    [Parameter]
+    public Boolean ShowSchemaChangedException { get; set; }
+}

@@ -21,6 +21,7 @@ public class CMRoot
         from i in t.Indexes?.Values ?? Empties<CMIndexlike>.Enumerable
         select i;
 
+    public CMTable GetTableOrNull(ObjectName name) => tables.GetValueOrDefault(name);
     public CMTable GetTable(ObjectName name) => tables[name];
     public IEnumerable<CMTable> GetTables() => tables.Values;
 
