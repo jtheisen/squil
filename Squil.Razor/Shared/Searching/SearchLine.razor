@@ -46,10 +46,10 @@
     @if (Option.IsCurrent)
     {
         <div class="validation-area">
-            @if (UiQueryVm.CurrentResponse.HaveValidationIssues)
+            @if (UiQueryVm.CurrentState.HaveValidationIssues)
             {
                 <div class="validation-display">
-                    @foreach (var c in UiQueryVm.CurrentResponse.ValidatedColumns.Where(c => !c.IsOk))
+                    @foreach (var c in UiQueryVm.CurrentState.ValidatedColumns.Where(c => !c.IsOk))
                     {
                         <div>
                             @c.Error
@@ -91,7 +91,7 @@
         {
             if (Option.IsCurrent) return null;
 
-            var result = UiQueryVm.Response;
+            var result = UiQueryVm.State;
 
             var keys = UiQueryVm.Location.KeyParams.AsMap();
 

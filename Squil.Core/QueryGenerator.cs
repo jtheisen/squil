@@ -82,7 +82,7 @@ public class QueryGenerator
 
     ChangeSql GetChangeSql(CMTable table, ChangeEntry entry)
     {
-        using var scope = GetCurrentLedger().TimedScope("create-change-sql");
+        using var scope = GetCurrentLedger().OpenScope("create-change-sql");
 
         var sql = GetChangeSqlInner(table, entry);
 
@@ -175,7 +175,7 @@ insert {from}{columnsSql}
 
     public QuerySql GetCompleteSql(Extent rootExtent)
     {
-        using var scope = GetCurrentLedger().TimedScope("create-query");
+        using var scope = GetCurrentLedger().OpenScope("create-query");
 
         var rootTable = cmRoot.GetTable(ObjectName.RootName);
 

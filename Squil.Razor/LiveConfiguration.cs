@@ -158,10 +158,6 @@ public class LiveConfiguration : LightLiveConfiguration
 
     IDbFactory dbf;
 
-    Exception lastLoadException;
-
-    Boolean inBatch;
-
     public LiveConfiguration(IOptions<AppSettings> options, IOptions<List<ProminentSourceConfiguration>> prominentSourceConfigurationsOptions, IDbFactory dbf, SqlServerConnectionProvider sqlServerConnectionProvider)
         : base(options, prominentSourceConfigurationsOptions, sqlServerConnectionProvider)
     {

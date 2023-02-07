@@ -22,7 +22,7 @@ public static class SqlConnectionExtensions
 
     public static async Task<(String c, String v)[][]> QueryRows(this SqlConnection connection, String sql)
     {
-        using var scope = GetCurrentLedger().TimedScope("query");
+        using var scope = GetCurrentLedger().OpenScope("query");
 
         var ct = StaticServiceStack.GetOptional<CancellationToken>();
 
@@ -46,7 +46,7 @@ public static class SqlConnectionExtensions
 
     public static String QueryXmlString(this SqlConnection connection, String sql, Boolean dontWrap = false)
     {
-        using var scope = GetCurrentLedger().TimedScope("query");
+        using var scope = GetCurrentLedger().OpenScope("query");
 
         if (!dontWrap)
         {
@@ -64,7 +64,7 @@ public static class SqlConnectionExtensions
 
     public static async Task<String> QueryXmlStringAsync(this SqlConnection connection, String sql, Boolean dontWrap = false)
     {
-        using var scope = GetCurrentLedger().TimedScope("query");
+        using var scope = GetCurrentLedger().OpenScope("query");
 
         if (!dontWrap)
         {
@@ -83,7 +83,7 @@ public static class SqlConnectionExtensions
     public static X Parse<X>(String xml)
         where X : class
     {
-        using var scope = GetCurrentLedger().TimedScope("parsing-and-binding");
+        using var scope = GetCurrentLedger().OpenScope("parsing-and-binding");
 
         var serializer = new XmlSerializer(typeof(X));
 
@@ -97,7 +97,7 @@ public static class SqlConnectionExtensions
     public static X QueryAndParseXml<X>(this SqlConnection connection, String sql, out String xml)
         where X : class
     {
-        using var scope = GetCurrentLedger().TimedScope("querying-parsing-and-binding");
+        using var scope = GetCurrentLedger().OpenScope("querying-parsing-and-binding");
 
         return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql, out xml));
     }
@@ -105,7 +105,7 @@ public static class SqlConnectionExtensions
     public static X QueryAndParseXml<X>(this SqlConnection connection, String sql, Boolean dontWrap = false)
         where X : class
     {
-        using var scope = GetCurrentLedger().TimedScope("querying-parsing-and-binding");
+        using var scope = GetCurrentLedger().OpenScope("querying-parsing-and-binding");
 
         return scope.SetResult(connection.QueryAndParseXmlSeparately<X>(sql, out _, dontWrap));
     }
@@ -121,7 +121,7 @@ public static class SqlConnectionExtensions
     public static X QueryAndParseXmlCombined<X>(this SqlConnection connection, String sql)
         where X : class
     {
-        using var _ = GetCurrentLedger().TimedScope("query-parsing-and-binding");
+        using var _ = GetCurrentLedger().OpenScope("query-parsing-and-binding");
 
         var command = connection.CreateSqlCommandFromSql(sql);
 
@@ -144,7 +144,7 @@ public static class SqlConnectionExtensions
 
     public static XElement QueryAndParseXml(this SqlConnection connection, String sql)
     {
-        using var scope = GetCurrentLedger().TimedScope("query-and-parsing");
+        using var scope = GetCurrentLedger().OpenScope("query-and-parsing");
 
         var command = connection.CreateSqlCommandFromSql(sql);
 
@@ -157,7 +157,7 @@ public static class SqlConnectionExtensions
 
     public static async Task<XElement> QueryAndParseXmlAsync(this SqlConnection connection, String sql)
     {
-        using var scope = GetCurrentLedger().TimedScope("query-and-parsing");
+        using var scope = GetCurrentLedger().OpenScope("query-and-parsing");
 
         var command = connection.CreateSqlCommandFromSql(sql);
 
@@ -173,7 +173,7 @@ public static class SqlConnectionExtensions
 
     public static void Execute(this SqlConnection connection, String sql)
     {
-        using var scope = GetCurrentLedger().TimedScope("executing");
+        using var scope = GetCurrentLedger().OpenScope("executing");
 
         var command = connection.CreateSqlCommandFromSql(sql);
 
@@ -182,7 +182,7 @@ public static class SqlConnectionExtensions
 
     public static async Task ExecuteAsync(this SqlConnection connection, String sql)
     {
-        using var scope = GetCurrentLedger().TimedScope("executing");
+        using var scope = GetCurrentLedger().OpenScope("executing");
 
         var command = connection.CreateSqlCommandFromSql(sql);
 

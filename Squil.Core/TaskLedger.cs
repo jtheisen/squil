@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.IO;
+using System.Threading;
 
 namespace TaskLedgering;
 
@@ -7,20 +8,32 @@ public interface IReportResult
     String ToReportString();
 }
 
-public class TimedScope : IDisposable
+public class LedgerScope : IDisposable
 {
+    Int32 nestingLevel;
     private readonly Stopwatch watch;
     private readonly TaskLedger report;
-    private readonly String name;
+    internal readonly String name;
     private Object result;
 
-    public TimedScope(TaskLedger report, String name, Stopwatch watch)
+    TimeSpan? time;
+    internal List<LedgerScope> children;
+
+    public String Name => name;
+    public TimeSpan? Time => time;
+    public Object Result => result;
+    public IEnumerable<LedgerScope> Children => children;
+    public Boolean IsLeaf => children.Count == 0;
+
+    internal LedgerScope(TaskLedger report, String name, Int32 nestingLevel, Stopwatch watch)
     {
         this.report = report;
         this.name = name;
+        this.nestingLevel = nestingLevel;
         this.watch = watch?.IsRunning == false ? watch : new Stopwatch();
-        watch.Reset();
-        watch.Start();
+        this.children = new List<LedgerScope>();
+        this.watch.Reset();
+        this.watch.Start();
     }
 
     public T SetResult<T>(T result)
@@ -30,11 +43,56 @@ public class TimedScope : IDisposable
         return result;
     }
 
+    public IEnumerable<LedgerScope> GetDescendants() => children.SelectMany(c => c.GetDescendants());
+    public IEnumerable<LedgerScope> GetDescendantLeaves() => GetDescendants().Where(c => c.IsLeaf);
+
     public void Dispose()
     {
         watch.Stop();
 
-        report.ReportTime(name, watch.Elapsed, result);
+        time = watch.Elapsed;
+
+        report.CloseScope(this);
+    }
+
+    public void Write(TextWriter writer, String indentation)
+    {
+        writer.Write(indentation);
+
+        if (name is not null)
+        {
+            writer.Write(name);
+        }
+        else
+        {
+            writer.Write("root");
+        }
+
+        if (time is not null)
+        {
+            writer.Write($" in {time}");
+        }
+
+        if (result is not null)
+        {
+            writer.Write($" with {result.GetType().Name}");
+        }
+
+        writer.WriteLine();
+
+        var nestedIndentation = indentation + "  ";
+
+        foreach (var child in children)
+        {
+            child.Write(writer, nestedIndentation);
+        }
+    }
+
+    public override String ToString()
+    {
+        var writer = new StringWriter();
+        Write(writer, "");
+        return writer.ToString();
     }
 }
 
@@ -45,20 +103,6 @@ class ActionScope : IDisposable
     public ActionScope(Action action) => this.action = action;
 
     public void Dispose() => action();
-}
-
-public struct LedgerEntry
-{
-    public String name;
-    public TimeSpan time;
-    public Object result;
-
-    public LedgerEntry(String name, TimeSpan time, Object result)
-    {
-        this.name = name;
-        this.time = time;
-        this.result = result;
-    }
 }
 
 public static class LedgerControl
@@ -79,36 +123,43 @@ public class TaskLedger : IDisposable
 
     Stopwatch watch = new Stopwatch();
 
-    List<LedgerEntry> entries = new List<LedgerEntry>();
+    LedgerScope root;
 
-    Stack<String> groups = new Stack<String>();
+    Stack<LedgerScope> stack = new Stack<LedgerScope>();
 
-    public TaskLedger(Action onDispose) => this.onDispose = onDispose;
+    public LedgerScope Root => root;
+
+    public IEnumerable<LedgerScope> GetAllScopes() => Root.GetDescendants();
+    public IEnumerable<LedgerScope> GetAllLeafScopes() => Root.GetDescendantLeaves();
+
+    public TaskLedger(Action onDispose)
+    {
+        root = new LedgerScope(this, "", 0, null);
+
+        stack.Push(root);
+
+        this.onDispose = onDispose;
+    }
 
     public void Dispose() => onDispose?.Invoke();
 
-    public IEnumerable<LedgerEntry> GetEntries() => entries;
-
-    public T GetLastEntry<T>()
+    internal void CloseScope(LedgerScope scope)
     {
-        return entries.Select(e => e.result).OfType<T>().LastOrDefault();
+        var top = stack.Pop();
+
+        if (!Object.ReferenceEquals(top, scope)) throw new Exception();
     }
 
-    public T[] GetEntries<T>()
+    public LedgerScope OpenScope(String name)
     {
-        return entries.Select(e => e.result).OfType<T>().ToArray();
+        var scope = new LedgerScope(this, name, stack.Count, watch);
+
+        stack.Peek().children.Add(scope);
+
+        stack.Push(scope);
+
+        return scope;
     }
-
-    public void ReportTime(String name, TimeSpan time, Object result) => entries.Add(new LedgerEntry(name, time, result));
-
-    public IDisposable GroupingScope(String name)
-    {
-        groups.Push(name);
-
-        return new ActionScope(() => groups.Pop());
-    }
-
-    public TimedScope TimedScope(String name) => new TimedScope(this, name, watch);
 }
 
 public static class LedgerExtensions

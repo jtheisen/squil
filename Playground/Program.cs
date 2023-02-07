@@ -16,7 +16,7 @@ public class InvestigationRoot
     public Boolean CanViewServerState { get; set; }
 
     [XmlArray("requests")]
-    public DmExecRequest[] Requests { get; set; }
+    public DmExecRequest[] Requests { get; set; } = null!;
 }
 
 [XmlType("r")]

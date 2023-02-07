@@ -7,11 +7,13 @@ using System.Text;
 
 namespace Squil;
 
+public record HashForModel(String Hash);
+
 public static class SchemaBuildingExtensions
 {
     static ISRoot GetISSchema(this SqlConnection connection)
     {
-        using var _ = GetCurrentLedger().GroupingScope(nameof(GetISSchema));
+        using var _ = GetCurrentLedger().OpenScope(nameof(GetISSchema));
 
         var cmRootForInfSch = new CMRoot("INFORMATION_SCHEMA");
         cmRootForInfSch.Populate(InformationSchemaSchema.GetSchema().CreateCsd());
@@ -238,37 +240,39 @@ select p.entity_name, p.subentity_name, p.permission_name from sys.fn_my_permiss
 
     static SysRoot GetSysSchema(this SqlConnection connection, out String hash)
     {
-        using var _ = GetCurrentLedger().GroupingScope(nameof(GetSysSchema));
+        using var _ = GetCurrentLedger().OpenScope(nameof(GetSysSchema));
 
         return sysRequester.Query(connection, out hash);
     }
 
     public static String GetHashForModel(this SqlConnection connection)
     {
+        using var scope = GetCurrentLedger().OpenScope(nameof(GetHashForModel));
+
         connection.GetSysSchema(out var hash);
+
+        scope.SetResult(new HashForModel(hash));
 
         return hash;
     }
 
     public static CMRoot GetCircularModel(this SqlConnection connection)
     {
-        using var _ = GetCurrentLedger().GroupingScope(nameof(GetCircularModel));
+        using var scope = GetCurrentLedger().OpenScope(nameof(GetCircularModel));
 
-        //var isSchema = connection.GetISSchema();
         var sysSchema = connection.GetSysSchema(out var hash);
 
-        // populate from sysschema
-        {
-            using var __ = GetCurrentLedger().TimedScope("circular-model-building");
+        using var _ = GetCurrentLedger().OpenScope("circular-model-building");
 
-            var cmRootForCs = new CMRoot("business model", hash);
-            cmRootForCs.Populate(sysSchema.CreateCsd());
-            cmRootForCs.PopulateRoot();
-            cmRootForCs.PopulateRelationsFromForeignKeys();
-            cmRootForCs.Closeup();
+        var cmRootForCs = new CMRoot("business model", hash);
+        cmRootForCs.Populate(sysSchema.CreateCsd());
+        cmRootForCs.PopulateRoot();
+        cmRootForCs.PopulateRelationsFromForeignKeys();
+        cmRootForCs.Closeup();
 
-            return cmRootForCs;
-        }
+        scope.SetResult(cmRootForCs);
+
+        return cmRootForCs;
     }
 
     //public static DateTime GetSchemaModifiedAt(this SqlConnection connection)

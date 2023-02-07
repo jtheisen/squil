@@ -110,12 +110,12 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
 
     public UiQueryRequest Request { get; private set; }
 
-    public UiQueryState Response => CurrentResponse;
-    public UiQueryState CurrentResponse { get; private set; }
+    public UiQueryState State => CurrentState;
+    public UiQueryState CurrentState { get; private set; }
 
-    public Boolean HaveResponse => CurrentResponse is not null;
+    public Boolean HaveState => CurrentState is not null;
 
-    public Boolean IsQuerying => CurrentResponse?.IsRunning ?? false;
+    public Boolean IsQuerying => CurrentState?.IsRunning ?? false;
 
     public UiQueryResult CommittedResult { get; private set; }
 
@@ -199,11 +199,11 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
             return;
         }
 
-        var response = Runner.StartQuery(source, Location.Source, request);
+        var state = Runner.StartQuery(source, Location.Source, request);
 
-        Update(request, response);
+        Update(request, state);
 
-        if (response.IsCompleted)
+        if (state.IsCompleted)
         {
             log.Debug($"Query completed synchronously");
         }
@@ -214,16 +214,16 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
 
         NotifyChange();
 
-        await response.Wait();
+        await state.Wait();
 
-        var resultOrNull = response.Result;
+        var resultOrNull = state.Result;
 
-        if (response.Exception is not null)
+        if (state.Exception is not null)
         {
-            eventSink.OnNext(new UiQueryVmExceptionEvent(response.Exception));
+            eventSink.OnNext(new UiQueryVmExceptionEvent(state.Exception));
         }
 
-        if (response.Exception is SchemaChangedException)
+        if (state.Exception is SchemaChangedException)
         {
             if (attempt == 0)
             {
@@ -240,11 +240,11 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
                 NotifyChange();
             }
         }
-        else if (CurrentResponse == response)
+        else if (CurrentState == state)
         {
-            var hadCommit = response.IsCompletedSuccessfully && response.Result.HasCommitted;
+            var hadCommit = state.IsCompletedSuccessfully && state.Result.HasCommitted;
 
-            UpdateResult(request, response, resultOrNull, hadCommit);
+            UpdateResult(request, state, resultOrNull, hadCommit);
 
             ShowSchemaChangedException = false;
 
@@ -258,7 +258,7 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
                 {
                     var values = insertEntry.EntityKey.GetKeyColumnsAndValuesDictionary().ToMap();
 
-                    eventSink.OnNext(new UiQueryVmNavigateToEvent(UrlCreateor.RenderEntityUrl(response.Table, values)));
+                    eventSink.OnNext(new UiQueryVmNavigateToEvent(UrlCreateor.RenderEntityUrl(state.Table, values)));
                 }
                 else
                 {
@@ -286,9 +286,9 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
 
         var keyValuesCount = Location.KeyValuesCount;
 
-        var response = Response;
+        var state = State;
 
-        var table = Response.Table;
+        var table = State.Table;
 
         var indexesToConsider = new HashSet<CMIndexlike>(table.Indexes.Values);
 
@@ -342,12 +342,12 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
             from i in table.Indexes.Values
             join itc in indexesToConsider on i equals itc into match
             where match.Any()
-            select new SearchOptionVm(i, keyValuesCount) { IsCurrent = Location.Index == i.Name && response.SearchMode == QuerySearchMode.Seek }
+            select new SearchOptionVm(i, keyValuesCount) { IsCurrent = Location.Index == i.Name && state.SearchMode == QuerySearchMode.Seek }
         ).ToArray();
 
-        if (Response.MayScan)
+        if (State.MayScan)
         {
-            ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = response.SearchMode == QuerySearchMode.Scan };
+            ScanOption = new SearchOptionVm(SearchOptionType.Scan) { IsCurrent = state.SearchMode == QuerySearchMode.Scan };
         }
         else
         {
@@ -359,12 +359,12 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
         CurrentIndex = SearchOptions.FirstOrDefault(i => i.IsCurrent);
     }
 
-    void Update(UiQueryRequest request, UiQueryState response)
+    void Update(UiQueryRequest request, UiQueryState state)
     {
         Request = request;
-        CurrentResponse = response;
+        CurrentState = state;
 
-        if (Response.ExtentFlavorType == ExtentFlavorType.BlockList && !HaveSearchOptions)
+        if (State.ExtentFlavorType == ExtentFlavorType.BlockList && !HaveSearchOptions)
         {
             InitSearchOptions();
 
@@ -373,19 +373,19 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
 
         if (CurrentIndex != null)
         {
-            CurrentIndex.SetValidatedValues(response.ValidatedColumns);
+            CurrentIndex.SetValidatedValues(state.ValidatedColumns);
         }
     }
 
-    void UpdateResult(UiQueryRequest request, UiQueryState response, UiQueryResult result, Boolean hasCommit)
+    void UpdateResult(UiQueryRequest request, UiQueryState state, UiQueryResult result, Boolean hasCommit)
     {
-        log.Info($"UpdateResult for #{response.RequestNo}");
+        log.Info($"UpdateResult for #{state.RequestNo}");
 
         if (result is not null)
         {
             Result = result;
 
-            log.Info($"UpdateResult setting for #{response.RequestNo}");
+            log.Info($"UpdateResult setting for #{state.RequestNo}");
 
             if (CommittedResult is null || hasCommit)
             {
@@ -407,7 +407,7 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
                 }
             }
 
-            if (response.IsChangeOk && AreSaving)
+            if (state.IsChangeOk && AreSaving)
             {
                 editType = null;
             }
@@ -422,11 +422,11 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
     {
         if (haveChanges) return UiQueryCanLoadMoreStatus.Unavailable;
 
-        if (CurrentResponse.Task is null) return UiQueryCanLoadMoreStatus.Unavailable;
+        if (CurrentState.Task is null) return UiQueryCanLoadMoreStatus.Unavailable;
 
-        if (!CurrentResponse.Task.IsCompletedSuccessfully) return UiQueryCanLoadMoreStatus.Unavailable;
+        if (!CurrentState.Task.IsCompletedSuccessfully) return UiQueryCanLoadMoreStatus.Unavailable;
 
-        var r = CurrentResponse.Task.Result.PrimaryEntities;
+        var r = CurrentState.Task.Result.PrimaryEntities;
 
         if (r == null) return UiQueryCanLoadMoreStatus.Unavailable;
 
@@ -475,13 +475,13 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
     {
         get
         {
-            if (CurrentResponse is null) return false;
+            if (CurrentState is null) return false;
 
-            if (!CurrentResponse.IsOk) return false;
+            if (!CurrentState.IsOk) return false;
 
-            if (!CurrentResponse.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Update)) return false;
+            if (!CurrentState.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Update)) return false;
 
-            switch (CurrentResponse.QueryType)
+            switch (CurrentState.QueryType)
             {
                 case UiQueryType.Row:
                 case UiQueryType.Column:
@@ -493,23 +493,23 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
     }
 
     public Boolean CanDelete =>
-        CurrentResponse is not null &&
-        CurrentResponse.IsOk &&
-        CurrentResponse.QueryType == UiQueryType.Row &&
-        CurrentResponse.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Delete)
+        CurrentState is not null &&
+        CurrentState.IsOk &&
+        CurrentState.QueryType == UiQueryType.Row &&
+        CurrentState.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Delete)
         ;
 
     public Boolean CanInsert
     {
         get
         {
-            if (CurrentResponse is null) return false;
+            if (CurrentState is null) return false;
 
-            if (!CurrentResponse.IsOk) return false;
+            if (!CurrentState.IsOk) return false;
 
-            if (!CurrentResponse.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Insert)) return false;
+            if (!CurrentState.Table.AccesssPermissions.HasFlag(CsdAccesssPermissions.Insert)) return false;
 
-            switch (CurrentResponse.QueryType)
+            switch (CurrentState.QueryType)
             {
                 case UiQueryType.Table:
                 case UiQueryType.TableSlice:
@@ -539,7 +539,7 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
     {
         if (AreInEdit) throw new Exception($"Edit already started");
 
-        if (!CurrentResponse.IsCompletedSuccessfully) throw new Exception($"No result");
+        if (!CurrentState.IsCompletedSuccessfully) throw new Exception($"No result");
 
         editType = state;
 
@@ -646,13 +646,13 @@ public class LocationUiQueryVm : ObservableObject<LocationUiQueryVm>, IDisposabl
     public Boolean ShouldRedirectAfterInsert(out String url)
     {
         var request = Request;
-        var response = CurrentResponse;
+        var state = CurrentState;
 
         url = null;
 
-        if (request.OperationType == LocationQueryOperationType.Insert && response.IsChangeOk && request.AccessMode == UiQueryAccessMode.Commit)
+        if (request.OperationType == LocationQueryOperationType.Insert && state.IsChangeOk && request.AccessMode == UiQueryAccessMode.Commit)
         {
-            var table = response.Table;
+            var table = state.Table;
             var change = Changes.Single();
             var keyColumnsAndValues = change.EntityKey.KeyColumnsAndValues.ToMap();
 

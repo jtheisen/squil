@@ -3,7 +3,7 @@
 
     var url = Url.If(!areQueryEditing);
 
-    var showEditValues = !UiQueryVm.CurrentResponse.IsChangeOk || Entity.EditState == EntityEditState.Modified;
+    var showEditValues = !UiQueryVm.CurrentState.IsChangeOk || Entity.EditState == EntityEditState.Modified;
 
     var nextDnsOperation = NextDnsOperation;
 

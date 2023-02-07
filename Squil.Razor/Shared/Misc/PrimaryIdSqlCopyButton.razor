@@ -1,5 +1,5 @@
 ﻿@{
-    String sql = Response?.GetPrimaryIdPredicateSql(primaryIdPredicateAlias);
+    String sql = State?.GetPrimaryIdPredicateSql(primaryIdPredicateAlias);
 
     Boolean disabled = String.IsNullOrWhiteSpace(sql);
 
@@ -13,7 +13,7 @@
 
 @code {
     [Parameter]
-    public UiQueryState Response { get; set; }
+    public UiQueryState State { get; set; }
 
     String primaryIdPredicateAlias;
 }

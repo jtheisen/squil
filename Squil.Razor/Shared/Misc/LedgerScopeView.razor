@@ -1,0 +1,40 @@
+﻿@using TaskLedgering
+
+@{
+    if (Scope is null) return;
+
+    var result = Scope.Result;
+
+    var isSchemaRetrieval = result is CMRoot or HashForModel;
+}
+
+@if (result is ChangeSql changeSql)
+{
+    <pre><CopyableContent>@changeSql.Sql</CopyableContent></pre>
+}
+else if (result is QuerySql querySql)
+{
+    <pre><CopyableContent>@querySql.Sql</CopyableContent></pre>
+}
+else if (isSchemaRetrieval)
+{
+    <p>Schema check</p>
+}
+
+@if (Scope.Children is IEnumerable<LedgerScope> children)
+{
+    foreach (var child in children)
+    {
+        <LedgerScopeView Scope="@child" />
+    }
+}
+
+@if (isSchemaRetrieval)
+{
+    <p>End of schema check</p>
+}
+
+@code {
+    [Parameter]
+    public LedgerScope Scope { get; set; }
+}

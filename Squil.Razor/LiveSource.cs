@@ -153,6 +153,8 @@ public class LiveSource
         {
             ++queryCount;
 
+            entity = await QueryGenerator.QueryAsync(connection, extent);
+
             if ((queryCount % 3) == 0)
             {
                 if (debugOptions.DebugSqlFailOnThirdQuery)
@@ -168,8 +170,6 @@ public class LiveSource
                     await Task.Delay(5000);
                 }
             }
-
-            entity = await QueryGenerator.QueryAsync(connection, extent);
         }
         catch (SqlException ex)
         {
