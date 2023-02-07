@@ -1,6 +1,6 @@
 variables:
   squilversionmajor: 1
-  squilversionminor: 2
+  squilversionminor: 3
   squilversionpatch: 0
 
   branchname: $(Build.SourceBranchName)
