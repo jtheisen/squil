@@ -24,15 +24,15 @@
         <div class="">
             @if (Vm.CanDelete == true)
             {
-                <button @onclick="Vm.StartDelete" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-trash" /></button>
+                <button @onclick="Vm.StartDelete" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-squil text-muted-unimportant"><i class="fas fa-trash" /></button>
             }
             @if (Vm.CanInsert == true)
             {
-                <button @onclick="HandleInsertClick" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-plus" /></button>
+                <button @onclick="HandleInsertClick" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-squil text-muted-unimportant"><i class="fas fa-plus" /></button>
             }
             @if (Vm.CanEdit == true)
             {
-                <button @onclick="Vm.StartUpdate" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-dark text-muted-unimportant"><i class="fas fa-pen" /></button>
+                <button @onclick="Vm.StartUpdate" disabled="@Vm.AreInEdit" class="ms-2 btn btn-sm btn-outline-squil text-muted-unimportant"><i class="fas fa-pen" /></button>
             }
         </div>
     </BreadcrumbActionItems>
