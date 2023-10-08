@@ -340,7 +340,7 @@ $bg-light-2: #e7e5e4;
             }
         }
 
-        &[data-is-focus-column] .entity-column-content {
+        &[data-is-focus-column] .entity-column-content-wrapper {
             white-space: pre-wrap;
         }
 

@@ -176,7 +176,7 @@
 }
 @media (min-width: 1200px) {
   .entity-context ol[data-flavor=page] > li > fieldset > legend,
-.entity-context ol[data-flavor=column-page] > li > fieldset > legend {
+  .entity-context ol[data-flavor=column-page] > li > fieldset > legend {
     display: block;
   }
 }
@@ -187,8 +187,7 @@
   content: "none";
 }
 .entity-context label {
-  display: block;
-  /* labels are inline by default */
+  display: block; /* labels are inline by default */
   margin-bottom: 0;
   font-variant: small-caps;
   text-transform: lowercase;
@@ -243,7 +242,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.entity-context .entity-column[data-is-focus-column] .entity-column-content {
+.entity-context .entity-column[data-is-focus-column] .entity-column-content-wrapper {
   white-space: pre-wrap;
 }
 .entity-context .entity-column.entity-column-editable:not(.entity-column-focus-column) .entity-column-content {
